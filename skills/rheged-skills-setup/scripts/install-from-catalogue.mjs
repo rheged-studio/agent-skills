@@ -143,11 +143,15 @@ function wipeBeforeInstall(repoRoot, installSkills) {
     }
   }
 
-  for (const shim of LEGACY_COMMAND_SHIM_NAMES) {
-    const commandPath = join(repoRoot, ".claude", "commands", `${shim}.md`);
-    if (existsSync(commandPath)) {
-      rmSync(commandPath, { force: true });
-      removed.push(relative(repoRoot, commandPath));
+  // Consumers lose the old vendored bundle shim; agent-skills dogfood keeps the
+  // tracked redirect at .claude/commands/initialise-skills.md (A-1904).
+  if (!isAgentSkillsSourceRepo(repoRoot)) {
+    for (const shim of LEGACY_COMMAND_SHIM_NAMES) {
+      const commandPath = join(repoRoot, ".claude", "commands", `${shim}.md`);
+      if (existsSync(commandPath)) {
+        rmSync(commandPath, { force: true });
+        removed.push(relative(repoRoot, commandPath));
+      }
     }
   }
 
