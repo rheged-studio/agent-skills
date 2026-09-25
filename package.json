@@ -56,10 +56,10 @@
       "bash -c 'pnpm exec markdownlint-cli2 --fix \"$@\" || true' --"
     ],
     "**/*.sh": [
-      "bash -c 'filtered=(); for f in \"$@\"; do case \"$f\" in .claude/skills/*|.agents/skills/*) ;; *) filtered+=(\"$f\"); esac; done; if [ ${#filtered[@]} -eq 0 ]; then exit 0; elif command -v shellcheck >/dev/null 2>&1; then shellcheck \"${filtered[@]}\"; elif [ \"$(uname -s)\" = \"Darwin\" ]; then echo \"⚠️  shellcheck not installed — skipping. Install: brew install shellcheck\"; else echo \"⚠️  shellcheck not installed — skipping. Install: apt-get install shellcheck\"; fi' --"
+      "bash -c 'filtered=(); for f in \"$@\"; do case \"$f\" in */.claude/skills/*|*/.agents/skills/*) ;; *) filtered+=(\"$f\"); esac; done; if [ ${#filtered[@]} -eq 0 ]; then exit 0; elif command -v shellcheck >/dev/null 2>&1; then shellcheck \"${filtered[@]}\"; elif [ \"$(uname -s)\" = \"Darwin\" ]; then echo \"⚠️  shellcheck not installed — skipping. Install: brew install shellcheck\"; else echo \"⚠️  shellcheck not installed — skipping. Install: apt-get install shellcheck\"; fi' --"
     ],
     "**/*.{yml,yaml}": [
-      "bash -c 'filtered=(); for f in \"$@\"; do case \"$f\" in .claude/skills/*|.agents/skills/*) ;; *) filtered+=(\"$f\"); esac; done; if [ ${#filtered[@]} -eq 0 ]; then exit 0; elif command -v yamllint >/dev/null 2>&1; then yamllint \"${filtered[@]}\"; elif [ \"$(uname -s)\" = \"Darwin\" ]; then echo \"⚠️  yamllint not installed — skipping. Install: brew install yamllint\"; else echo \"⚠️  yamllint not installed — skipping. Install: pip install --user yamllint==1.37.1\"; fi' --"
+      "bash -c 'filtered=(); for f in \"$@\"; do case \"$f\" in */.claude/skills/*|*/.agents/skills/*) ;; *) filtered+=(\"$f\"); esac; done; if [ ${#filtered[@]} -eq 0 ]; then exit 0; elif command -v yamllint >/dev/null 2>&1; then yamllint \"${filtered[@]}\"; elif [ \"$(uname -s)\" = \"Darwin\" ]; then echo \"⚠️  yamllint not installed — skipping. Install: brew install yamllint\"; else echo \"⚠️  yamllint not installed — skipping. Install: pip install --user yamllint==1.37.1\"; fi' --"
     ],
     ".github/workflows/*.{yml,yaml}": [
       "bash -c 'if command -v actionlint >/dev/null 2>&1; then actionlint \"$@\"; elif [ \"$(uname -s)\" = \"Darwin\" ]; then echo \"⚠️  actionlint not installed — skipping. Install: brew install actionlint\"; else echo \"⚠️  actionlint not installed — skipping. Install via the pinned bootstrap in infrastructure/scripts/ensure-actionlint.sh\"; fi' --"
