@@ -9,6 +9,13 @@ category: feature
 breaking: false
 issues:
   - A-1904
+merged_at: "2026-09-25T14:26:48Z"
+commit: 43b6267
+pr: 184
+stats:
+  loc_added: 7751
+  loc_removed: 330
+  files_changed: 211
 ---
 
 ## Changed
