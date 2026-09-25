@@ -36,12 +36,15 @@ import { join } from "node:path";
 // after one of these is a bespoke duplicate the shared skill replaces.
 const CANONICAL_SKILLS = [
   "send-it",
+  "commit",
   "preflight",
   "changelog",
   "linear-sync",
   "cleanup-repo",
+  "rheged-skills-setup",
   "initialise-skills",
   "triage-pr",
+  "release-status",
 ];
 
 // Where bespoke command shims live (removed on --apply).

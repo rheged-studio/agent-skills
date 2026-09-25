@@ -17,7 +17,7 @@ Pass `--skill` more than once (or omit it to install them all), and add an `--ag
 | [`changelog`](changelog/SKILL.md) | Author, refresh, or repair the current branch's dated changelog entry, run the enrichment scripts, and validate it against the changelog contract. |
 | [`cleanup-repo`](cleanup-repo/SKILL.md) | Clean up merged Git branches and worktrees, then prune filesystem cruft, behind a single confirmation gate. |
 | [`commit`](commit/SKILL.md) | Turn the working tree into logical, atomic Conventional Commits — classify files in-scope vs out-of-scope against the merge base, show a staging plan, and never `git add -A`. Commits only. |
-| [`initialise-skills`](initialise-skills/SKILL.md) | Scan the host repo and reconcile each installed skill's `config.json` with detected facts (base branch, package roots, changelog dir, Linear keys). |
+| [`rheged-skills-setup`](rheged-skills-setup/SKILL.md) | Install the estate catalogue (`--install`) and reconcile each installed skill's `config.json` with detected facts (base branch, package roots, changelog dir, Linear keys). |
 | [`linear-sync`](linear-sync/SKILL.md) | Transition the Linear issue(s) linked to the current branch to a target workflow state. |
 | [`preflight`](preflight/SKILL.md) | Run a change-gated, branch-scoped lint preflight (ESLint / markdownlint / actionlint) and classify each violation as introduced vs pre-existing. |
 | [`send-it`](send-it/SKILL.md) | The all-in-one ship pipeline: commit, lint, changelog, Conventional Commits PR title, push, open/update the PR, move linked Linear issues to In Review, then chain into `triage-pr` (Step 11). |

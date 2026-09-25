@@ -120,14 +120,15 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
     expect(args.at(-1)).toBe("--copy");
   });
 
-  it("resolveWipeTargets covers every mirror × install skill", () => {
+  it("resolveWipeTargets covers every mirror × install skill (plus legacy bundles)", () => {
     const targets = resolveWipeTargets(
       [".claude/skills", ".agents/skills"],
       ["send-it", "commit"],
     );
-    expect(targets).toHaveLength(4);
+    expect(targets).toHaveLength(6);
     expect(targets).toContain(".claude/skills/send-it");
     expect(targets).toContain(".agents/skills/commit");
+    expect(targets).toContain(".claude/skills/initialise-skills");
   });
 
   it("resolveWipeTargets targets only the install set — never a consumer-extra bundle", () => {
@@ -141,8 +142,10 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
     expect(targets).toContain(".claude/skills/send-it");
   });
 
-  it("resolveWipeTargets is empty when no skills resolve", () => {
-    expect(resolveWipeTargets([".claude/skills"], [])).toEqual([]);
+  it("resolveWipeTargets still wipes legacy bundles when install set is empty", () => {
+    expect(resolveWipeTargets([".claude/skills"], [])).toEqual([
+      ".claude/skills/initialise-skills",
+    ]);
   });
 
   it("skillsAddEnv sets CLAUDECODE=1 (non-interactive install, A-745) without mutating the base env", () => {

@@ -18,31 +18,52 @@ and reconcile — see [Re-install / upgrade behaviour](#re-install--upgrade-beha
 > specific target repo end-to-end is tracked under that repo's own adoption
 > issue.
 
-## The canonical skill set
+## Estate skill catalogue (A-1904)
 
-All skills live under `skills/<name>/`. The seven shared skills:
+The install set is defined in [`infrastructure/skill-catalogue.json`](../infrastructure/skill-catalogue.json): **Rheged** ship skills from this repo plus **Matt Pocock** engineering and productivity packs from `mattpocock/skills` (not copied into `skills/` here). Matt's `triage` and Rheged's `triage-pr` are different skills — keep both. Planning entry point: `/grill-me`; run `/setup-matt-pocock-skills` once if the pack requires it.
+
+**Consumer — one command after bootstrapping `rheged-skills-setup`:**
+
+```bash
+npx skills add https://github.com/rheged-studio/agent-skills \
+  --skill rheged-skills-setup --agent claude-code --agent cursor --copy
+# then from the consumer repo root:
+node .claude/skills/rheged-skills-setup/scripts/initialise.mjs --install --write
+```
+
+(or `/rheged-skills-setup --install --write` when the command shim is installed). The installer fetches the catalogue, runs `skills add --copy` per source, restores clobbered `config.json` (A-706), and reconciles. Legacy vendored `initialise-skills/` dirs and shims are removed during install.
+
+**Clacks / fleet recurring roll:** `fleet-update.mjs --apply` reads the same catalogue (multi-source install, Rheged-only `check-updates` verify, Matt presence check). `--print-skills` emits the **Rheged** CSV only.
+
+**Dogfood in this repo:** Rheged bundles stay under `skills/`; Matt packs vend into `.claude/skills/` and `.agents/skills/` via `--install` (the catalogue skips re-copying Rheged into mirrors on the source repo).
+
+## The Rheged ship set
+
+Published Rheged bundles live under `skills/<name>/` in agent-skills:
 
 | Skill | Purpose | Notes |
 | --- | --- | --- |
 | `send-it` | All-in-one finisher (commit → preflight → changelog → PR → Linear) | Delegates to `preflight`, `changelog`, `linear-sync` — install those alongside it. |
+| `commit` | Atomic Conventional Commits | Hard dependency of `send-it`. |
 | `preflight` | Change-gated, branch-scoped lint | Self-configuring; reads an optional root `preflight.config.json`, no in-bundle `config.json`. |
 | `changelog` | Author/refresh/validate dated changelog entries | Skip on repos with no changelog flow (see below). |
 | `linear-sync` | Transition linked Linear issues | — |
 | `cleanup-repo` | Prune merged branches, worktrees, filesystem cruft | — |
-| `initialise-skills` | Reconcile every installed skill's `config.json` from repo facts | Run as step 3 of this flow. |
-| `triage-pr` | Drive a PR from draft-with-failing-CI to merge-ready | Optional / standalone. |
+| `rheged-skills-setup` | Install catalogue + reconcile every skill's `config.json` | Renamed from `initialise-skills` (0.12.0). |
+| `triage-pr` | Drive a PR from draft-with-failing-CI to merge-ready | — |
+| `release-status` | Read-only release-please pipeline diagnosis | Sibling of `send-it`. |
 
 **Set per repo type:**
 
 - **Single-package repo with a release pipeline** — the full set.
 - **Repo with no changelog/release flow** — omit `changelog`; `send-it`'s
-  `changelog` config knob is detected as `false` by `initialise-skills`, so it
+  `changelog` config knob is detected as `false` by `rheged-skills-setup`, so it
   skips authoring rather than following an uninstalled skill (A-452).
-- **Monorepo** — the full set; `initialise-skills` detects the workspace and
+- **Monorepo** — the full set; `rheged-skills-setup` detects the workspace and
   turns on the changelog `affectedPackages` field (A-461). Single↔monorepo
   flips (including accepting drift on a previously written `false`) are
-  documented in the initialise-skills bundle:
-  [`skills/initialise-skills/references/monorepo-config.md`](../skills/initialise-skills/references/monorepo-config.md).
+  documented in the rheged-skills-setup bundle:
+  [`skills/rheged-skills-setup/references/monorepo-config.md`](../skills/rheged-skills-setup/references/monorepo-config.md).
 
 ## Step 1 — Wipe existing
 
@@ -92,16 +113,17 @@ remove by hand.
 Install the chosen set with `--copy` so each repo vendors a stable bundle (real
 files, not symlinks):
 
+Prefer the [estate catalogue](#estate-skill-catalogue-a-1904) (`--install`) for the full Rheged + Matt set. For Rheged-only manual installs:
+
 ```bash
 npx skills add https://github.com/rheged-studio/agent-skills \
   --skill send-it --skill commit --skill preflight --skill changelog \
-  --skill linear-sync --skill cleanup-repo --skill initialise-skills \
-  --skill release-status \
+  --skill linear-sync --skill cleanup-repo --skill rheged-skills-setup \
+  --skill triage-pr --skill release-status \
   --agent claude-code --agent cursor --copy
 ```
 
-Omit `--skill` entirely to install all skills, or repeat it per skill for a
-subset. Never use `-g` / `--global` — installs belong in the consumer repo.
+Never install without `--skill` flags (that would pull `scaffold-new-skill`, A-729). Never use `-g` / `--global` — installs belong in the consumer repo.
 
 > **`commit` is a hard dependency of `send-it`.** Since the `send-it` bundle
 > delegates its commit step to the standalone `commit` skill, install the two
@@ -168,12 +190,12 @@ symlink drift.
 Write each skill's `config.json` from detected repo facts (base branch, package
 roots, changelog dir, Linear keys, review bots, …). On a fresh install the
 consumer has only `config.example.json` (agent-skills ships no `config.json` —
-A-615), so `initialise-skills` **creates** each `config.json` from the example's
+A-615), so `rheged-skills-setup` **creates** each `config.json` from the example's
 key set plus the detected/supplied facts. **Commit those resolved configs** in
 the consumer — they are runtime identity, not secrets. Do **not** copy the
 agent-skills source gitignore rule (`skills/*/config.json`) into a consumer: that
 rule exists only so `skills add --copy` cannot leak ACME values from the source
-repo. `initialise-skills` also strips erroneous `.claude`/`.agents`
+repo. `rheged-skills-setup` also strips erroneous `.claude`/`.agents`
 `skills/*/config.json` ignore lines if a consumer inherited them (A-812). Dry-run
 first; it is idempotent and never clobbers a deliberate edit (drift is reported,
 not overwritten).
@@ -185,16 +207,16 @@ not overwritten).
 
 ```bash
 # Preview:
-node <skills-dir>/initialise-skills/scripts/initialise.mjs --dry-run
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --dry-run
 
 # Write, supplying the facts the script can't derive from git/fs:
 echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","issueKeys":["A"]}}' \
-  | node <skills-dir>/initialise-skills/scripts/initialise.mjs --write
+  | node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --write
 ```
 
 `<skills-dir>` is wherever `skills add` vendored the bundles (e.g.
 `.claude/skills/`). See
-[`skills/initialise-skills/references/detectable-keys.md`](../skills/initialise-skills/references/detectable-keys.md)
+[`skills/rheged-skills-setup/references/detectable-keys.md`](../skills/rheged-skills-setup/references/detectable-keys.md)
 for the full key → detection-source table.
 
 > **Renamed Linear team?** `issueKeys` is auto-detected from branch-name prefixes,
@@ -222,7 +244,7 @@ for the full key → detection-source table.
 - [ ] Previewed and wiped bespoke command shims / prototype skills (step 1).
 - [ ] Installed the repo-type-appropriate set via `skills add … --copy` (step 2).
 - [ ] On a re-vendor: restored the per-skill `config.json` the `--copy` install deleted, from the trunk, before reconciling (step 2 callout).
-- [ ] Reconciled config with `initialise-skills` `--dry-run` then `--write`, supplying `facts.issueKeys` for a renamed team (step 3).
+- [ ] Reconciled config with `rheged-skills-setup` `--dry-run` then `--write`, supplying `facts.issueKeys` for a renamed team (step 3).
 - [ ] Verified idempotency, safe previews, and CI (step 4).
 
 ## Automating a single-repo update (`fleet-update.mjs`)
@@ -231,8 +253,8 @@ Steps 1–4 above are the **human onboarding** path — the one-time wipe of bes
 prototypes plus the first install. The **recurring update** — rolling an
 already-onboarded repo onto newer bundles — is automated by
 [`infrastructure/scripts/fleet-update.mjs`](../infrastructure/scripts/fleet-update.mjs)
-(A-617). It runs **install → restore → reconcile → verify** for one repo (steps
-2–4; **no wipe**), driven by an install profile rather than interactive edits:
+(A-617). It runs **wipe (install set + legacy `initialise-skills`) → multi-source install → restore → reconcile → verify** for one repo (steps
+2–4 automated), driven by an install profile rather than interactive edits:
 
 ```bash
 # Preview (default — mutates nothing):
@@ -244,15 +266,11 @@ echo '{"repo":"…","agents":["claude-code"]}' \
   | node infrastructure/scripts/fleet-update.mjs --apply
 ```
 
-It vendors the bundles from the canonical GitHub URL — **not** the local checkout,
-so the consumer's `skills-lock.json` records a clean remote source rather than an
-absolute machine path (A-718); a URL install resolves the default branch, which is
-what the roll-onto-latest fan-out wants. It **restores every `config.json` the
+It reads [`infrastructure/skill-catalogue.json`](../infrastructure/skill-catalogue.json), vendors Rheged from the GitHub URL and Matt from `mattpocock/skills` — **not** a local path (A-718) — so lock provenance stays remote. It **restores every `config.json` the
 `--copy` re-vendor clobbers** from the consumer's trunk (`git checkout HEAD -- …`,
-baking in the A-706 workaround so no-detector keys survive), reconciles with
-`initialise-skills`, and verifies with `check-updates` (pointed at the local
-checkout via `--source`) that the repo is now current (`updatesAvailable === false`
-— the idempotency gate). A re-run is a clean no-op.
+A-706), reconciles with `rheged-skills-setup`, and verifies Rheged skills with
+`check-updates` scoped to the ship set (A-741) plus a Matt bundle presence check.
+A re-run is a clean no-op when already current.
 
 The script **holds no repo list.** It takes one repo's profile as input and is
 meant to run inside Clacks's fan-out (A-713), whose
@@ -270,9 +288,9 @@ is the only required field:
 | `repo` | string | ✔ | — | Path to the consumer repo (absolute, or relative to cwd). |
 | `skills` | string[] | | all canonical | Omit to install the full set; list a subset to narrow it. |
 | `agents` | string[] | | `["claude-code"]` | `--agent` targets; each maps to a vendored skills-dir mirror. |
-| `repoType` | `single` \| `mono` \| `no-changelog` | | `single` | Informational — actual behaviour is detected by `initialise-skills`. When `skills` is omitted, `no-changelog` subtracts `changelog` from the set (A-452). |
-| `facts.linearTeamName` | string | | — | Forwarded to `initialise-skills` (it can't derive this). |
-| `facts.linearWorkspaceSlug` | string | | — | Forwarded to `initialise-skills`. |
+| `repoType` | `single` \| `mono` \| `no-changelog` | | `single` | Informational — actual behaviour is detected by `rheged-skills-setup`. When `skills` is omitted, `no-changelog` subtracts `changelog` from the Rheged set (A-452). |
+| `facts.linearTeamName` | string | | — | Forwarded to `rheged-skills-setup` (it can't derive this). |
+| `facts.linearWorkspaceSlug` | string | | — | Forwarded to `rheged-skills-setup`. |
 | `facts.issueKeys` | string[] | | detected | Overrides branch-prefix detection (e.g. `["A"]`) — see the renamed-team note above. |
 | `facts.followUpProject` | string | | — | Fallback catch-all for triage-pr follow-ups that cannot inherit a live project from the PR's Linear issue (required when `linearTeamName` is set — A-1204 / A-1541). Rheged estate value: `Follow-up issues`. |
 

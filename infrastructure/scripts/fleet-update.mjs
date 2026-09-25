@@ -42,6 +42,19 @@
 // Exit codes: 0 success; 1 real failure (a pipeline step or the self-test
 //   failed); 2 usage error (bad args / profile / paths).
 
+import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
+import {
+  buildSkillsAddArgsForSource,
+  findMissingRhegedSourceSkills,
+  mattSkillNames,
+  parseCatalogue,
+  resolveInstallSkills,
+  resolveInstallSources,
+  resolveRhegedSkills,
+  resolveWipeTargetsWithLegacy,
+  rhegedSkillNames,
+  rhegedSourceUrl,
+} from "../../skills/rheged-skills-setup/scripts/lib/catalogue.mjs";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
@@ -53,33 +66,27 @@ import {
 } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
-// The canonical install source: `skills add` vendors from this URL and records it
-// (as `sourceType: github`) in the consumer's skills-lock.json. Installing from a
-// local path instead would leak an absolute machine path into every consumer
-// (A-718). Also used as the skills.lock `lockSource`.
-export const SOURCE_URL = "https://github.com/rheged-studio/agent-skills";
+const CATALOGUE_PATH = join(import.meta.dirname, "..", "skill-catalogue.json");
+
+/**
+ * @returns {ReturnType<typeof parseCatalogue>}
+ */
+export function loadFleetCatalogue() {
+  return parseCatalogue(readFileSync(CATALOGUE_PATH, "utf8"));
+}
+
+const FLEET_CATALOGUE = loadFleetCatalogue();
+
+// Rheged install URL — skills.lock provenance (A-718). Matt packs use a second source.
+export const SOURCE_URL = rhegedSourceUrl(FLEET_CATALOGUE);
+
+// Rheged ship set from the estate catalogue (for --print-skills / check-updates scope).
+export const CANONICAL_SKILLS = rhegedSkillNames(FLEET_CATALOGUE);
 
 // The local agent-skills checkout this script lives in — used ONLY as the
 // `check-updates --source` (a local checkout to read target versions from); the
 // install itself comes from SOURCE_URL. Overridable via --source.
 const SOURCE_DEFAULT = join(import.meta.dirname, "..", "..");
-
-// The shared skill set (mirrors docs/fleet-deployment.md). This is the DEFAULT
-// install set when a profile omits `skills` — a bare `skills add <url> --copy`
-// (no `--skill`) would otherwise vendor the entire published set, including the
-// repo-internal `scaffold-new-skill` that must never reach consumers (A-729). A
-// `no-changelog` repo installs this set minus `changelog`.
-const CANONICAL_SKILLS = [
-  "send-it",
-  "commit",
-  "preflight",
-  "changelog",
-  "linear-sync",
-  "cleanup-repo",
-  "initialise-skills",
-  "triage-pr",
-  "release-status",
-];
 
 const REPO_TYPES = ["single", "mono", "no-changelog"];
 
@@ -196,15 +203,16 @@ export function parseProfile(json) {
  * @returns {string[]}
  */
 export function resolveSkills(profile) {
-  if (Array.isArray(profile.skills)) {
-    return profile.skills;
-  }
+  return resolveRhegedSkills(profile, FLEET_CATALOGUE);
+}
 
-  if (profile.repoType === "no-changelog") {
-    return CANONICAL_SKILLS.filter((skill) => skill !== "changelog");
-  }
-
-  return CANONICAL_SKILLS;
+/**
+ * Full estate install set (Rheged + Matt) for wipe / post-install verify.
+ * @param {{ skills: string[] | undefined, repoType: string }} profile
+ * @returns {string[]}
+ */
+export function resolveFullInstallSkills(profile) {
+  return resolveInstallSkills(profile, FLEET_CATALOGUE);
 }
 
 /**
@@ -238,12 +246,27 @@ export function findMissingSourceSkills(skills, sourceHasSkill) {
  * @returns {string[]}
  */
 export function buildSkillsAddArgs(profile) {
-  const skillFlags = resolveSkills(profile).flatMap((skill) => [
-    "--skill",
-    skill,
-  ]);
-  const agentFlags = profile.agents.flatMap((agent) => ["--agent", agent]);
-  return ["add", SOURCE_URL, ...skillFlags, ...agentFlags, "--copy"];
+  const agents = profile.agents ?? ["claude-code"];
+  return buildSkillsAddArgsForSource(
+    SOURCE_URL,
+    resolveSkills(profile),
+    agents,
+  );
+}
+
+/**
+ * Per-source `skills add` argv for the estate catalogue (A-1904).
+ * @param {{ skills: string[] | undefined, agents: string[], repoType: string }} profile
+ * @returns {string[][]}
+ */
+export function buildCatalogueInstallArgvs(profile) {
+  const agents = profile.agents ?? ["claude-code"];
+  return resolveInstallSources(FLEET_CATALOGUE, {
+    isAgentSkillsSourceRepo: false,
+    profile,
+  }).map((source) =>
+    buildSkillsAddArgsForSource(source.url, source.skills, agents),
+  );
 }
 
 /**
@@ -259,9 +282,7 @@ export function buildSkillsAddArgs(profile) {
  * @returns {string[]}
  */
 export function resolveWipeTargets(mirrors, skills) {
-  return mirrors.flatMap((mirror) =>
-    skills.map((skill) => join(mirror, skill)),
-  );
+  return resolveWipeTargetsWithLegacy(mirrors, skills);
 }
 
 /**
@@ -471,8 +492,19 @@ function runSkillsAdd(consumer, args) {
  * first-ever install), and leaves consumer-extra bundles alone. The config.json a
  * wipe removes is restored right after the re-copy by restoreClobberedConfigs.
  */
+function wipeLegacyCommandShims(consumer) {
+  const shim = join(consumer, ".claude", "commands", "initialise-skills.md");
+  if (existsSync(shim)) {
+    rmSync(shim, { force: true });
+    console.log(
+      "fleet-update: removed legacy .claude/commands/initialise-skills.md",
+    );
+  }
+}
+
 function wipeVendoredBundles(consumer, skills) {
   const removed = [];
+  wipeLegacyCommandShims(consumer);
   for (const relativePath of resolveWipeTargets(CONSUMER_SKILL_DIRS, skills)) {
     const absolute = join(consumer, relativePath);
     if (existsSync(absolute)) {
@@ -567,7 +599,7 @@ function findConsumerSkillsDirectories(consumer) {
 function runInitialise(source, consumer, facts, apply, skillsDirectory) {
   const script = join(
     source,
-    "skills/initialise-skills/scripts/initialise.mjs",
+    "skills/rheged-skills-setup/scripts/initialise.mjs",
   );
   run(
     process.execPath,
@@ -597,7 +629,7 @@ function runInitialise(source, consumer, facts, apply, skillsDirectory) {
 function runVerify(source, consumer, ref, { assert }, skills) {
   const script = join(
     source,
-    "skills/initialise-skills/scripts/check-updates.mjs",
+    "skills/rheged-skills-setup/scripts/check-updates.mjs",
   );
   const lock = join(consumer, ".claude", "skills.lock");
   // Scope the diff to the install set so the repo-internal scaffold-new-skill isn't
@@ -721,19 +753,15 @@ function main(argv) {
   );
 
   const facts = buildInitialiseFacts(profile, { ref });
-  const installSkills = resolveSkills(profile);
+  const rhegedSkills = resolveSkills(profile);
+  const installSkills = resolveFullInstallSkills(profile);
 
-  // Fail-safe (A-757): every install-set skill must exist in the source before we
-  // touch the consumer. The apply path wipes `<mirror>/<skill>` for each of these
-  // BEFORE re-vendoring, and the install pulls from SOURCE_URL@ref — of which this
-  // --source checkout is the mirror — so a skill absent here is absent upstream and
-  // would be deleted with no way to restore it. Refusing here turns a permanent
-  // deletion into a no-op abort, and surfaces the bad manifest entry under --dry-run
-  // too. manifest-lint guards this at the orchestrator, but this is the last line of
-  // defence when that is bypassed (e.g. the `repos` canary override).
-  const missingFromSource = findMissingSourceSkills(installSkills, (skill) =>
-    existsSync(join(source, "skills", skill, "SKILL.md")),
-  );
+  // Fail-safe (A-757): every Rheged install-set skill must exist in the source before we
+  // touch the consumer. Matt packs are probed after install, not against this checkout.
+  const missingFromSource = findMissingRhegedSourceSkills(
+    FLEET_CATALOGUE,
+    (skill) => existsSync(join(source, "skills", skill, "SKILL.md")),
+  ).filter((skill) => rhegedSkills.includes(skill));
   if (missingFromSource.length > 0) {
     fail(
       `install set names skill(s) absent from --source (${source}): ${missingFromSource.join(", ")}. ` +
@@ -748,7 +776,10 @@ function main(argv) {
     // files land even if the CLI's copy is additive (A-741); the restore that
     // follows brings back the config.json the wipe removed (A-706).
     wipeVendoredBundles(consumer, installSkills);
-    runSkillsAdd(consumer, buildSkillsAddArgs(profile));
+    for (const addArgs of buildCatalogueInstallArgvs(profile)) {
+      runSkillsAdd(consumer, addArgs);
+    }
+
     restoreClobberedConfigs(consumer);
     const installedDirectories = findConsumerSkillsDirectories(consumer);
     if (installedDirectories.length === 0) {
@@ -759,7 +790,18 @@ function main(argv) {
       runInitialise(source, consumer, facts, true, directory);
     }
 
-    runVerify(source, consumer, ref, { assert: true }, installSkills);
+    const missingMatt = findMissingMattBundles(
+      consumer,
+      mattSkillNames(FLEET_CATALOGUE),
+    );
+    if (missingMatt.length > 0) {
+      fail(
+        `Matt pack install incomplete — missing bundles: ${missingMatt.join(", ")}`,
+        1,
+      );
+    }
+
+    runVerify(source, consumer, ref, { assert: true }, rhegedSkills);
     console.log("fleet-update: done.");
     return;
   }
@@ -767,10 +809,14 @@ function main(argv) {
   // Preview: skills.sh has no dry-run and the wipe/restore mutate, so all three are
   // described only; initialise/check-updates are read-only and run for real
   // against whatever bundles the consumer already has.
-  const addArgs = buildSkillsAddArgs(profile);
+  const addPlans = buildCatalogueInstallArgvs(profile);
   console.log(
-    `fleet-update: would wipe ${installSkills.length} bundle dir(s) per mirror, then run — skills ${addArgs.join(" ")}`,
+    `fleet-update: would wipe ${installSkills.length} bundle dir(s) per mirror (incl. legacy initialise-skills), then run ${addPlans.length} install(s):`,
   );
+  for (const addArgs of addPlans) {
+    console.log(`  skills ${addArgs.join(" ")}`);
+  }
+
   console.log(
     "fleet-update: would restore any config.json --copy clobbers (A-706).",
   );
@@ -785,7 +831,7 @@ function main(argv) {
     }
   }
 
-  runVerify(source, consumer, ref, { assert: false }, installSkills);
+  runVerify(source, consumer, ref, { assert: false }, rhegedSkills);
   console.log(
     "fleet-update: preview complete (re-run with --apply to execute).",
   );
@@ -916,9 +962,10 @@ function selfTest() {
     cases.push({
       name: "resolveWipeTargets covers every mirror × install skill",
       ok:
-        wipeTargets.length === 4 &&
+        wipeTargets.length === 6 &&
         wipeTargets.includes(".claude/skills/send-it") &&
-        wipeTargets.includes(".agents/skills/commit"),
+        wipeTargets.includes(".agents/skills/commit") &&
+        wipeTargets.includes(".claude/skills/initialise-skills"),
     });
     cases.push({
       name: "resolveWipeTargets targets only the install set (no consumer-extra bundles)",
@@ -927,8 +974,13 @@ function selfTest() {
       ),
     });
     cases.push({
-      name: "resolveWipeTargets is empty when no skills resolve",
-      ok: resolveWipeTargets([".claude/skills"], []).length === 0,
+      name: "resolveWipeTargets still wipes legacy bundles when install set is empty",
+      ok:
+        resolveWipeTargets([".claude/skills", ".agents/skills"], []).length ===
+          2 &&
+        resolveWipeTargets([".claude/skills"], []).includes(
+          ".claude/skills/initialise-skills",
+        ),
     });
 
     // findMissingSourceSkills (A-757) — the apply guard's pure core.

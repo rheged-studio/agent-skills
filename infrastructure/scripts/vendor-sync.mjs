@@ -40,7 +40,7 @@ const MANIFEST = [
   {
     destinations: [
       "skills/preflight/scripts/lib/vendor/base-branch.mjs",
-      "skills/initialise-skills/scripts/lib/vendor/base-branch.mjs",
+      "skills/rheged-skills-setup/scripts/lib/vendor/base-branch.mjs",
     ],
     source: "lib/base-branch.mjs",
   },

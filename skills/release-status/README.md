@@ -24,7 +24,7 @@ In the **source** repo this skill ships only
 `config.json` is generated on install, never vendored from source. In a **consumer**
 repo the resolved `config.json` **is** committed alongside the vendored bundle (it
 holds that repo's real values and SKILL.md reads it as required runtime config).
-Generate it by running the `initialise-skills` skill, or copy the example to
+Generate it by running the `rheged-skills-setup` skill, or copy the example to
 `config.json`, then edit it in your installed copy:
 
 | Key | Meaning | Default |

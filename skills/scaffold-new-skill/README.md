@@ -27,7 +27,7 @@ keys are the defaults the generator stamps into a new skill:
 | `scope` | The npm scope used in the generated `package.json` name (`<scope>/skill-<name>`). | `"@rheged-studio"` |
 | `author` | The default author string for the generated `SKILL.md` `metadata.author` and `package.json`. | `"Rob Easthope"` |
 
-Run the `initialise-skills` skill to generate `config.json` from the example, or
+Run the `rheged-skills-setup` skill to generate `config.json` from the example, or
 copy [`config.example.json`](config.example.json) to `config.json` and adjust.
 
 ## Usage
