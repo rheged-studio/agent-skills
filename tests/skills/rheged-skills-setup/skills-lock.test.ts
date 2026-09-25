@@ -10,7 +10,7 @@ import {
   resolveSource,
   serialiseLock,
   writeLock,
-} from "../../../skills/initialise-skills/scripts/lib/skills-lock.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/skills-lock.mjs";
 import {
   existsSync,
   mkdirSync,

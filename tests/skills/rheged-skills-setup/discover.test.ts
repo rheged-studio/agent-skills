@@ -6,7 +6,7 @@
 import {
   discoverSkills,
   isPreflightInstalled,
-} from "../../../skills/initialise-skills/scripts/lib/discover.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/discover.mjs";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

@@ -3,7 +3,7 @@
 // they never touch the filesystem. Regression cover for A-459: before this,
 // triage-pr's `promoteOnGreen` / `replyOnAccept` had no detector and were
 // reported `needs-manual-input` on every `initialise-skills` run.
-import { createDetectors } from "../../../skills/initialise-skills/scripts/lib/detectors.mjs";
+import { createDetectors } from "../../../skills/rheged-skills-setup/scripts/lib/detectors.mjs";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

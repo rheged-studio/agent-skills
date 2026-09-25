@@ -5,7 +5,7 @@ import {
   mergeConfig,
   sameSet,
   valuesEqual,
-} from "../../../skills/initialise-skills/scripts/lib/merge.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/merge.mjs";
 import { describe, expect, it } from "vitest";
 
 function detected(value: unknown): { value: unknown } {

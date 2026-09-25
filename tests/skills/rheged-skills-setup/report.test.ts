@@ -8,7 +8,7 @@ import {
   buildReviewReport,
   formatHuman,
   formatReview,
-} from "../../../skills/initialise-skills/scripts/lib/report.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/report.mjs";
 import { describe, expect, it } from "vitest";
 
 const SKILL_REPORTS = [

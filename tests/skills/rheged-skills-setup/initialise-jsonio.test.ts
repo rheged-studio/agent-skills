@@ -3,7 +3,7 @@
 import {
   parseConfig,
   serialiseConfig,
-} from "../../../skills/initialise-skills/scripts/lib/jsonio.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/jsonio.mjs";
 import { describe, expect, it } from "vitest";
 
 describe("parseConfig", () => {

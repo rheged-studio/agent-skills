@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Detect which installed skills are behind a target ref of the source repo (A-616).
 //
-// Compares a consumer's `.claude/skills.lock` (written by initialise-skills) against
+// Compares a consumer's `.claude/skills.lock` (written by rheged-skills-setup) against
 // the bundle versions in a checkout of the source agent-skills repo, and prints the
 // per-skill bump list. Used two ways:
 //   - locally ("is my repo behind?"): point --source at an up-to-date clone;
@@ -427,7 +427,7 @@ function main() {
     options.lock ?? join(process.cwd(), ".claude", "skills.lock");
   if (!existsSync(lockPathResolved)) {
     fail(
-      `no lock at ${lockPathResolved} — run initialise-skills first (it writes .claude/skills.lock)`,
+      `no lock at ${lockPathResolved} — run rheged-skills-setup first (it writes .claude/skills.lock)`,
     );
   }
 
@@ -534,7 +534,7 @@ export function formatHuman(report) {
 
 /**
  * Offline smoke test of the pure transforms (compareVersions, diffLock). The
- * exhaustive coverage is in tests/skills/initialise-skills/check-updates.test.ts;
+ * exhaustive coverage is in tests/skills/rheged-skills-setup/check-updates.test.ts;
  * this guards the CLI-discovered path so `pnpm test:self` gates it too.
  */
 function selfTest() {

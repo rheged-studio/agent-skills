@@ -7,7 +7,7 @@ import {
   jsonType,
   parseSetAssignment,
   resolveOverrides,
-} from "../../../skills/initialise-skills/scripts/lib/overrides.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/overrides.mjs";
 import { describe, expect, it } from "vitest";
 
 describe("parseSetAssignment", () => {

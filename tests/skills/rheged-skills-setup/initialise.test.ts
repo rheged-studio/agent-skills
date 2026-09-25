@@ -7,7 +7,7 @@ import {
   acceptedDriftFor,
   asKeyList,
   parseArgs,
-} from "../../../skills/initialise-skills/scripts/initialise.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/initialise.mjs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 

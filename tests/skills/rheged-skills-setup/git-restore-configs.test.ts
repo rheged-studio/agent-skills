@@ -1,11 +1,11 @@
 // A-706: a `skills add --copy` re-vendor clobbers each tracked config.json
 // (agent-skills ships none — A-615), so initialise-skills restores them from HEAD
 // before reconciling. Covers the pure parser and the real-git restore/detect path.
-import { restoreOutcomeSuffix } from "../../../skills/initialise-skills/scripts/initialise.mjs";
+import { restoreOutcomeSuffix } from "../../../skills/rheged-skills-setup/scripts/initialise.mjs";
 import {
   parseClobberedConfigs,
   restoreClobberedConfigs,
-} from "../../../skills/initialise-skills/scripts/lib/git.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/git.mjs";
 import { spawnSync } from "node:child_process";
 import {
   mkdirSync,

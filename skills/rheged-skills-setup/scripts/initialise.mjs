@@ -49,8 +49,11 @@ import {
   resolveSource,
   writeLock,
 } from "./lib/skills-lock.mjs";
+import { runCatalogueInstall } from "./install-from-catalogue.mjs";
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { relative } from "node:path";
+
+const CLI_NAME = "rheged-skills-setup";
 
 /**
  * A value-taking flag needs a real value — fail clearly rather than letting
@@ -59,7 +62,7 @@ import { relative } from "node:path";
  */
 function requireValue(flag, value) {
   if (value === undefined || value.startsWith("--")) {
-    console.error(`initialise-skills: ${flag} requires a value`);
+    console.error(`${CLI_NAME}: ${flag} requires a value`);
     process.exit(2);
   }
 
@@ -68,6 +71,9 @@ function requireValue(flag, value) {
 
 export function parseArgs(argv) {
   const options = {
+    agents: [],
+    catalogue: undefined,
+    install: false,
     json: false,
     repoRoot: process.cwd(),
     review: false,
@@ -97,10 +103,16 @@ export function parseArgs(argv) {
       options.repoRoot = requireValue(argument, argv[++index]);
     } else if (argument === "--skills-dir") {
       options.skillsDir = requireValue(argument, argv[++index]);
+    } else if (argument === "--install") {
+      options.install = true;
+    } else if (argument === "--catalogue") {
+      options.catalogue = requireValue(argument, argv[++index]);
+    } else if (argument === "--agent") {
+      options.agents.push(requireValue(argument, argv[++index]));
     } else if (argument === "--help" || argument === "-h") {
       options.help = true;
     } else {
-      console.error(`initialise-skills: unknown argument "${argument}"`);
+      console.error(`${CLI_NAME}: unknown argument "${argument}"`);
       process.exit(2);
     }
   }
@@ -111,6 +123,10 @@ export function parseArgs(argv) {
   // snapshot).
   if (options.review) {
     options.write = false;
+  }
+
+  if (options.agents.length === 0) {
+    options.agents = ["claude-code", "cursor"];
   }
 
   return options;
@@ -141,7 +157,7 @@ function readStdinPayload() {
     parsed = JSON.parse(raw);
   } catch (error) {
     console.error(
-      `initialise-skills: could not parse stdin JSON: ${error.message}`,
+      `${CLI_NAME}: could not parse stdin JSON: ${error.message}`,
     );
     process.exit(2);
   }
@@ -205,11 +221,11 @@ export function restoreOutcomeSuffix(clobberedCount, restoredCount, write) {
   return "— but the restore from HEAD FAILED; reconcile may regress these values";
 }
 
-function main() {
+async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log(
-      "Usage: node scripts/initialise.mjs [--dry-run|--write|--review] [--json] [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]",
+      `Usage: node scripts/initialise.mjs [--dry-run|--write|--review|--install] [--json] [--catalogue <url-or-path>] [--agent <name>]... [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]`,
     );
     return;
   }
@@ -218,12 +234,43 @@ function main() {
   // a usage error rather than a silent no-op preview.
   if (options.review && options.set.length) {
     console.error(
-      "initialise-skills: --set cannot be combined with --review (--review is read-only)",
+      `${CLI_NAME}: --set cannot be combined with --review (--review is read-only)`,
+    );
+    process.exit(2);
+  }
+
+  if (options.install && options.review) {
+    console.error(
+      `${CLI_NAME}: --install cannot be combined with --review (--review is read-only)`,
     );
     process.exit(2);
   }
 
   const { acceptDrift, facts } = readStdinPayload();
+
+  if (options.install) {
+    const installResult = await runCatalogueInstall({
+      agents: options.agents,
+      cataloguePath: options.catalogue,
+      dryRun: !options.write,
+      profile: { repoType: "single" },
+      repoRoot: options.repoRoot,
+    });
+    if (!facts.lockSource) {
+      facts.lockSource = installResult.lockSource;
+    }
+
+    if (!facts.lockRef) {
+      facts.lockRef = "main";
+    }
+
+    if (!options.write) {
+      console.log(
+        `${CLI_NAME}: --install preview complete — re-run with --write to vendor and reconcile.`,
+      );
+      return;
+    }
+  }
   let skills = discoverSkills(options.skillsDir);
 
   // A-706: a `skills add --copy` re-vendor clobbers each tracked config.json
@@ -243,7 +290,7 @@ function main() {
   );
   if (clobbered.length > 0) {
     console.error(
-      `initialise-skills: ${clobbered.length} config.json clobbered by a --copy re-vendor ${restoreOutcomeSuffix(
+      `${CLI_NAME}: ${clobbered.length} config.json clobbered by a --copy re-vendor ${restoreOutcomeSuffix(
         clobbered.length,
         restored.length,
         options.write,
@@ -268,7 +315,7 @@ function main() {
   );
   if (setErrors.length) {
     for (const message of setErrors) {
-      console.error(`initialise-skills: ${message}`);
+      console.error(`${CLI_NAME}: ${message}`);
     }
 
     process.exit(2);
@@ -310,7 +357,7 @@ function main() {
         writeFileSync(skill.configPath, text);
       } catch (error) {
         console.error(
-          `initialise-skills: could not write ${skill.configPath}: ${error.message}`,
+          `${CLI_NAME}: could not write ${skill.configPath}: ${error.message}`,
         );
         process.exit(2);
       }
@@ -359,7 +406,7 @@ function main() {
       // the per-skill config write handler above (A-583). The per-skill writes
       // are idempotent, so a re-run after fixing the I/O cause is safe.
       console.error(
-        `initialise-skills: could not reconcile .gitignore: ${error.message}`,
+        `${CLI_NAME}: could not reconcile .gitignore: ${error.message}`,
       );
       process.exit(2);
     }
@@ -377,7 +424,7 @@ function main() {
     };
   } catch (error) {
     console.error(
-      `initialise-skills: could not strip skill-config gitignore rules: ${error.message}`,
+      `${CLI_NAME}: could not strip skill-config gitignore rules: ${error.message}`,
     );
     process.exit(2);
   }
@@ -409,7 +456,7 @@ function main() {
       };
     } catch (error) {
       console.error(
-        `initialise-skills: could not reconcile skills.lock: ${error.message}`,
+        `${CLI_NAME}: could not reconcile skills.lock: ${error.message}`,
       );
       process.exit(2);
     }
@@ -445,13 +492,8 @@ function isCliEntry() {
 }
 
 if (isCliEntry()) {
-  try {
-    main();
-  } catch (error) {
-    // The CLI contract documents exit 2 for usage/IO errors — funnel any
-    // unexpected throw (discovery, detection, write, output) into it instead of
-    // a raw crash.
-    console.error(`initialise-skills: ${error.message}`);
+  main().catch((error) => {
+    console.error(`${CLI_NAME}: ${error.message}`);
     process.exit(2);
-  }
+  });
 }

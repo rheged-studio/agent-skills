@@ -21,13 +21,13 @@ const SELF_CONFIGURING = new Set(["preflight"]);
 
 /**
  * The directory holding sibling bundles: the parent of THIS bundle's own
- * directory. `import.meta.url` here is …/<skillsDir>/initialise-skills/scripts/lib/discover.mjs,
+ * directory. `import.meta.url` here is …/<skillsDir>/rheged-skills-setup/scripts/lib/discover.mjs,
  * so four `dirname` hops reach <skillsDir>.
  * @returns {string}
  */
 export function defaultSkillsDirectory() {
   const here = import.meta.dirname; // scripts/lib
-  const bundleDirectory = dirname(dirname(here)); // skills/initialise-skills
+  const bundleDirectory = dirname(dirname(here)); // skills/rheged-skills-setup
   return dirname(bundleDirectory); // skills/
 }
 

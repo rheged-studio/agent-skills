@@ -4,7 +4,7 @@
 import {
   loadDetectableKeys,
   parseDetectableKeys,
-} from "../../../skills/initialise-skills/scripts/lib/references.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/references.mjs";
 import { describe, expect, it } from "vitest";
 
 const FIXTURE = `# Detectable config keys

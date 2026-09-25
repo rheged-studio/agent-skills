@@ -6,7 +6,7 @@ import {
   parseSkillVersion,
   readBundleVersion,
   readInstalledVersions,
-} from "../../../skills/initialise-skills/scripts/lib/skill-version.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/skill-version.mjs";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

@@ -8,7 +8,7 @@ import {
   formatHuman,
   hasUpdates,
   restrictToAllowlist,
-} from "../../../skills/initialise-skills/scripts/check-updates.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/check-updates.mjs";
 import { describe, expect, it } from "vitest";
 
 // Build a report object of the shape formatHuman/updatesAvailable consume, with

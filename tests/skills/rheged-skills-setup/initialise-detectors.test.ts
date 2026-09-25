@@ -1,15 +1,15 @@
-import { createDetectors } from "../../../skills/initialise-skills/scripts/lib/detectors.mjs";
+import { createDetectors } from "../../../skills/rheged-skills-setup/scripts/lib/detectors.mjs";
 import {
   currentIssueKeys,
   detectIssueKeys,
   listBranchNames,
   parseIssueKeysFromBranches,
-} from "../../../skills/initialise-skills/scripts/lib/git.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/git.mjs";
 import {
   globsFromWorkspacesField,
   parseWorkspaceGlobs,
   rootsFromGlobs,
-} from "../../../skills/initialise-skills/scripts/lib/workspace.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/workspace.mjs";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

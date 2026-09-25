@@ -7,7 +7,7 @@ import {
   IGNORE_ENTRY,
   reconcilePreflightIgnore,
   stripSkillConfigIgnores,
-} from "../../../skills/initialise-skills/scripts/lib/gitignore.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/gitignore.mjs";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

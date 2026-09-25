@@ -1,6 +1,6 @@
 # `skills.lock` — installed-version inventory + update detection
 
-`initialise-skills` writes a committed **`.claude/skills.lock`** at the consumer
+`rheged-skills-setup` writes a committed **`.claude/skills.lock`** at the consumer
 repo root: a machine-readable record of which skill versions are installed and
 where they came from. It is the foundation for cross-repo update visibility — the
 data the `check-updates.mjs` diff tool (and a fleet-update orchestrator) reads to
@@ -24,7 +24,7 @@ decide which repos are behind.
 | --- | --- |
 | `source` | The source repo the skills were installed from. Provenance the script can't derive, so it is **supplied explicitly** as `facts.lockSource`. `null` until supplied. |
 | `ref` | The git ref installed from — `main` by convention, or a pinned tag/SHA. Supplied as `facts.lockRef`. `null` until supplied. |
-| `skills` | Every installed bundle → its version, read from each `SKILL.md` `metadata.version` (package.json `version` fallback). A full inventory, including `preflight` and `initialise-skills`. Keys are sorted; a version that can't be read is recorded as `null`. |
+| `skills` | Every installed bundle → its version, read from each `SKILL.md` `metadata.version` (package.json `version` fallback). A full inventory, including `preflight` and `rheged-skills-setup`. Keys are sorted; a version that can't be read is recorded as `null`. |
 
 ### Why provenance is explicit, not derived
 

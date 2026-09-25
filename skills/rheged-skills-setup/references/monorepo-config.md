@@ -1,7 +1,7 @@
 # Monorepo config (changelog `affectedPackages`)
 
 Changelog's `affected_packages` field is **opt-in**. Single-package repos leave
-the gate off; monorepos turn it on. `initialise-skills` detects the shape and
+the gate off; monorepos turn it on. `rheged-skills-setup` detects the shape and
 reconciles the related keys — this note is the agent-facing flip guide.
 
 ## Keys
@@ -33,7 +33,7 @@ Detection sources and fallbacks: [`detectable-keys.md`](detectable-keys.md).
 ## Single → monorepo
 
 1. Add a real workspace (`pnpm-workspace.yaml` or npm `workspaces`).
-2. Re-run `/initialise-skills` (dry-run first).
+2. Re-run `/rheged-skills-setup` (dry-run first).
 3. **`packageRoots`:** if still the example placeholder, it **infers** the
    detected roots.
 4. **`affectedPackages`:** a prior single-package run wrote the real value
@@ -43,10 +43,10 @@ Detection sources and fallbacks: [`detectable-keys.md`](detectable-keys.md).
 ```bash
 # Preview, then write — either accept the detected flip…
 echo '{"acceptDrift":{"changelog":["affectedPackages"]}}' \
-  | node <skills-dir>/initialise-skills/scripts/initialise.mjs --write
+  | node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --write
 
 # …or set it explicitly:
-node <skills-dir>/initialise-skills/scripts/initialise.mjs \
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs \
   --set changelog.affectedPackages=true --write
 ```
 
@@ -56,7 +56,7 @@ Turn the gate off; roots may stay as documentation or be left alone — runtime
 ignores them when the gate is off:
 
 ```bash
-node <skills-dir>/initialise-skills/scripts/initialise.mjs \
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs \
   --set changelog.affectedPackages=false --write
 ```
 

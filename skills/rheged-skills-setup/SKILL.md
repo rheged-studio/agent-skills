@@ -1,12 +1,13 @@
 ---
-name: initialise-skills
+name: rheged-skills-setup
 description: >-
-  Scan the host repo a set of agent skills is installed into and reconcile every
-  installed skill's config.json with detected facts — base branch, monorepo
-  package roots, changelog directory, Linear issue-key prefixes, review bots,
-  protected branches — plus the Linear team name and workspace slug fetched via
-  the Linear MCP. Use when first installing these skills into a repo, or to
-  refresh the configs after the skill set or repo layout changes. Also emits a
+  Rheged skills setup — install the estate skill catalogue (Rheged ship set +
+  Matt Pocock packs) with --install, then reconcile every installed skill's
+  config.json with detected facts — base branch, monorepo package roots, changelog
+  directory, Linear issue-key prefixes, review bots, protected branches — plus the
+  Linear team name and workspace slug fetched via the Linear MCP. Use when first
+  onboarding a repo to the estate set, or to refresh configs after the skill set or
+  repo layout changes. Also emits a
   committed `.claude/skills.lock` inventory of installed skill versions, and ensures
   the preflight skill's `.preflight-summary.json` scratch output is gitignored,
   and strips erroneous consumer rules that gitignore skill `config.json` (A-812).
@@ -24,12 +25,12 @@ compatibility: >-
   App / token check is optional — it uses `gh` when authenticated, else falls
   back to a reminder.
 metadata:
-  version: 0.11.2
+  version: 0.12.0
   author: Rob Easthope
-allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
+allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), Bash(npx:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
 ---
 
-# initialise-skills
+# rheged-skills-setup
 
 Populate and keep accurate the per-skill `config.json` files that the shared
 agent skills (`changelog`, `send-it`, `cleanup-repo`, `linear-sync`, `triage-pr`,
@@ -124,12 +125,32 @@ and where they came from:
 This is the foundation for detecting which repos are behind — see
 [Checking for updates](#checking-for-updates) below.
 
+## Install the estate catalogue (`--install`)
+
+To vendor the full Rheged + Matt Pocock set in one pass (consumers without a local
+`agent-skills` checkout):
+
+```bash
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --install --write
+```
+
+Preview first with `--install` alone (no `--write`). The script fetches
+`infrastructure/skill-catalogue.json` from this repo (local path when dogfooding
+here, else the public GitHub raw URL), runs `npx skills add --copy` per source,
+restores clobbered `config.json` from HEAD (A-706), then reconciles. On the
+**agent-skills source repo** it skips re-copying the Rheged tree and only vendors
+Matt packs into `.claude/skills/` and `.agents/skills/`.
+
+Planning entry point after install: `/grill-me` (Matt productivity pack). Run
+`/setup-matt-pocock-skills` once if the pack requires it. Matt `triage` and Rheged
+`triage-pr` are different skills — keep both.
+
 ## Process
 
 1. **Dry run.** From the host repo root, run the bundled script for a machine-readable preview:
 
    ```bash
-   node <skills-dir>/initialise-skills/scripts/initialise.mjs --dry-run --json
+   node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --dry-run --json
    ```
 
    `<skills-dir>` is wherever the bundles are installed (e.g. `skills/`,
@@ -165,7 +186,7 @@ This is the foundation for detecting which repos are behind — see
 
    ```bash
    echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","followUpProject":"…","lockSource":"https://github.com/rheged-studio/agent-skills","lockRef":"main"},"acceptDrift":{"changelog":["issueKeys"]}}' \
-     | node <skills-dir>/initialise-skills/scripts/initialise.mjs --write --json
+     | node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --write --json
    ```
 
    Report what was written from the returned `totals`, plus the `gitignore` field
@@ -227,7 +248,7 @@ To inspect what a repo's skills are currently configured with — without
 reconciling or writing anything — run the read-only review:
 
 ```bash
-node <skills-dir>/initialise-skills/scripts/initialise.mjs --review
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --review
 ```
 
 For each installed skill it prints its full `config.json`: every key's current
@@ -253,7 +274,7 @@ change a setting** — you don't have to route every change through this skill. 
 `skills/<name>/config.json` (or wherever the bundle is vendored), change the value,
 and save. It is a real file the consumer owns; the shared skills read it at runtime.
 
-A manual edit like that **survives future `initialise-skills` re-runs**. On the next
+A manual edit like that **survives future `rheged-skills-setup` re-runs**. On the next
 run the reconcile classifies your value as `drift` — a real value that differs from
 what detection would produce — and **keeps it**, reporting both the kept value and
 the detected one (see the [status table](#how-it-decides-what-to-write) above). It is
@@ -277,12 +298,12 @@ named skill's `config.json`:
 
 ```bash
 # dry-run first (default) — preview the change, write nothing
-node <skills-dir>/initialise-skills/scripts/initialise.mjs \
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs \
   --set changelog.baseBranch=develop \
   --set changelog.affectedPackages=false
 
 # re-run with --write to apply
-node <skills-dir>/initialise-skills/scripts/initialise.mjs \
+node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs \
   --set changelog.baseBranch=develop --write
 ```
 
@@ -338,7 +359,7 @@ To see which installed skills are behind the source repo, run the bundled
 old vendored copies, so the target versions come from the source):
 
 ```bash
-node <skills-dir>/initialise-skills/scripts/check-updates.mjs \
+node <skills-dir>/rheged-skills-setup/scripts/check-updates.mjs \
   --source <path-to-agent-skills-checkout> [--ref <tag-or-sha>] [--json]
 ```
 

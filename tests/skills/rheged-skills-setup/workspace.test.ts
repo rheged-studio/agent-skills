@@ -7,7 +7,7 @@ import {
   globsFromWorkspacesField,
   parseWorkspaceGlobs,
   rootsFromGlobs,
-} from "../../../skills/initialise-skills/scripts/lib/workspace.mjs";
+} from "../../../skills/rheged-skills-setup/scripts/lib/workspace.mjs";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

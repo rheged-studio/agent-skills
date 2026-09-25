@@ -167,8 +167,8 @@ export function formatHuman(report) {
   const lines = [];
   const header =
     report.mode === "write"
-      ? "initialise-skills — wrote inferred values"
-      : "initialise-skills — dry run (no files written)";
+      ? "rheged-skills-setup — wrote inferred values"
+      : "rheged-skills-setup — dry run (no files written)";
   lines.push(header, "");
 
   for (const skill of report.skills) {
@@ -328,7 +328,7 @@ export function buildReviewReport(skillReviews, descriptions) {
  * @returns {string}
  */
 export function formatReview(report) {
-  const lines = ["initialise-skills — review (read-only)", ""];
+  const lines = ["rheged-skills-setup — review (read-only)", ""];
 
   for (const skill of report.skills) {
     if (skill.malformed) {
