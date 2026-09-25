@@ -42,16 +42,7 @@
 // Exit codes: 0 success; 1 real failure (a pipeline step or the self-test
 //   failed); 2 usage error (bad args / profile / paths).
 
-import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  statSync,
-} from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
 import {
   buildSkillsAddArgsForSource,
   findMissingRhegedSourceSkills,
@@ -64,7 +55,16 @@ import {
   rhegedSkillNames,
   rhegedSourceUrl,
 } from "../../skills/rheged-skills-setup/scripts/lib/catalogue.mjs";
-import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { join, relative, resolve } from "node:path";
 
 const CATALOGUE_PATH = join(import.meta.dirname, "..", "skill-catalogue.json");
 
@@ -496,7 +496,9 @@ function wipeLegacyCommandShims(consumer) {
   const shim = join(consumer, ".claude", "commands", "initialise-skills.md");
   if (existsSync(shim)) {
     rmSync(shim, { force: true });
-    console.log("fleet-update: removed legacy .claude/commands/initialise-skills.md");
+    console.log(
+      "fleet-update: removed legacy .claude/commands/initialise-skills.md",
+    );
   }
 }
 
@@ -777,6 +779,7 @@ function main(argv) {
     for (const addArgs of buildCatalogueInstallArgvs(profile)) {
       runSkillsAdd(consumer, addArgs);
     }
+
     restoreClobberedConfigs(consumer);
     const installedDirectories = findConsumerSkillsDirectories(consumer);
     if (installedDirectories.length === 0) {
@@ -813,6 +816,7 @@ function main(argv) {
   for (const addArgs of addPlans) {
     console.log(`  skills ${addArgs.join(" ")}`);
   }
+
   console.log(
     "fleet-update: would restore any config.json --copy clobbers (A-706).",
   );

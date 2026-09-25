@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 // Validates infrastructure/skill-catalogue.json against the local skills/ tree (A-1904).
 
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   allCatalogueSkillNames,
   parseCatalogue,
   rhegedSkillNames,
 } from "../../skills/rheged-skills-setup/scripts/lib/catalogue.mjs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const REPO_ROOT = join(import.meta.dirname, "..", "..");
-const CATALOGUE_PATH = join(REPO_ROOT, "infrastructure", "skill-catalogue.json");
+const CATALOGUE_PATH = join(
+  REPO_ROOT,
+  "infrastructure",
+  "skill-catalogue.json",
+);
 const SKILLS_DIR = join(REPO_ROOT, "skills");
 
 function main() {
