@@ -514,7 +514,7 @@ the linked issues are already In Review before triage begins.
 
    > **Don't reach for it to finish sooner.** The opt-out exists for the cases where
    > the chain genuinely cannot work, not as a shortcut, and it is **never** the
-   > default: `triage: true` ships in `config.example.json`, and `initialise-skills`
+   > default: `triage: true` ships in `config.example.json`, and `rheged-skills-setup`
    > writes `true` when reconciling a consumer. Skipping leaves the PR un-triaged —
    > red CI unfixed, bot findings unread — which is the state this step exists to
    > prevent, so treat it the way Step 5 treats `--skip-preflight`: say **why** in the

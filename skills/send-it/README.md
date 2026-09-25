@@ -50,7 +50,7 @@ npx skills add https://github.com/rheged-studio/agent-skills --skill commit --sk
 
 This skill ships only [`config.example.json`](config.example.json), a neutral
 template — the per-skill `config.json` that parameterises the ship flow is
-generated on install, not vendored. Run the `initialise-skills` skill to generate
+generated on install, not vendored. Run the `rheged-skills-setup` skill to generate
 `config.json` from the example with your repo's facts, or copy it to `config.json`
 and fill it in by hand.
 

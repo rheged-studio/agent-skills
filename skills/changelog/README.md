@@ -24,7 +24,7 @@ template — the per-skill `config.json` is generated on install, not vendored.
 missing `config.json`, or either key absent, makes the scripts **fail loudly**
 rather than silently inherit another org's identity (which would emit wrong
 issue-ID detection and Linear links in a foreign repo). Run the
-`initialise-skills` skill to generate `config.json`, or copy
+`rheged-skills-setup` skill to generate `config.json`, or copy
 [`config.example.json`](config.example.json) to `config.json` and set them for
 your organisation. The remaining keys are structural and keep generic, overridable
 defaults.

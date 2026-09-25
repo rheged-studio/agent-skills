@@ -33,7 +33,7 @@ npx skills add https://github.com/rheged-studio/agent-skills --skill triage-pr -
 
 This skill ships only [`config.example.json`](config.example.json), a template —
 the per-skill `config.json` is generated on install, not vendored. Run the
-`initialise-skills` skill to generate `config.json`, or copy the example to
+`rheged-skills-setup` skill to generate `config.json`, or copy the example to
 `config.json`, then edit it in your installed copy:
 
 | Key | Meaning | Default |
