@@ -1,26 +1,21 @@
 // Catalogue install path (A-1904): vendor estate skills via skills.sh, restore configs, optional reconcile.
 
-import { spawnSync } from "node:child_process";
 import {
-  existsSync,
-  readFileSync,
-  rmSync,
-  statSync,
-} from "node:fs";
-import { join, resolve } from "node:path";
-import {
+  buildSkillsAddArgsForSource,
   DEFAULT_CATALOGUE_URL,
   LEGACY_COMMAND_SHIM_NAMES,
-  RHEGED_AGENT_SKILLS_PACKAGE,
-  buildSkillsAddArgsForSource,
   mattSkillNames,
   parseCatalogue,
   resolveInstallSkills,
   resolveInstallSources,
   resolveWipeTargetsWithLegacy,
+  RHEGED_AGENT_SKILLS_PACKAGE,
   rhegedSourceUrl,
 } from "./lib/catalogue.mjs";
 import { parseClobberedConfigs } from "./lib/git.mjs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 export const CONSUMER_SKILL_DIRS = [
   ".claude/skills",
@@ -64,14 +59,14 @@ export function isAgentSkillsSourceRepo(repoRoot) {
 export async function loadCatalogueText(repoRoot, catalogueOverride) {
   if (catalogueOverride) {
     if (/^https?:\/\//i.test(catalogueOverride)) {
-      const response = await fetch(catalogueOverride);
-      if (!response.ok) {
+      const catalogueResponse = await fetch(catalogueOverride);
+      if (!catalogueResponse.ok) {
         throw new Error(
-          `could not fetch catalogue from ${catalogueOverride}: HTTP ${response.status}`,
+          `could not fetch catalogue from ${catalogueOverride}: HTTP ${catalogueResponse.status}`,
         );
       }
 
-      return await response.text();
+      return await catalogueResponse.text();
     }
 
     const path = resolve(repoRoot, catalogueOverride);
@@ -244,7 +239,10 @@ export async function runCatalogueInstall(options) {
     `rheged-skills-setup: restored ${restored.length} config.json from HEAD (A-706).`,
   );
 
-  const missingMatt = findMissingMattBundles(repoRoot, mattSkillNames(catalogue));
+  const missingMatt = findMissingMattBundles(
+    repoRoot,
+    mattSkillNames(catalogue),
+  );
   if (missingMatt.length > 0) {
     throw new Error(
       `Matt pack install incomplete — missing bundles: ${missingMatt.join(", ")}`,

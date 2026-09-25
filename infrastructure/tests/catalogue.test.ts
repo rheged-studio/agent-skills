@@ -1,8 +1,8 @@
 import {
   buildSkillsAddArgsForSource,
   parseCatalogue,
-  resolveInstallSources,
   resolveInstallSkills,
+  resolveInstallSources,
   resolveRhegedSkills,
   resolveWipeTargetsWithLegacy,
 } from "../../skills/rheged-skills-setup/scripts/lib/catalogue.mjs";
@@ -38,7 +38,7 @@ describe("resolveInstallSources", () => {
       isAgentSkillsSourceRepo: true,
       profile: {},
     });
-    expect(sources.map((s) => s.id)).toEqual(["matt-pocock"]);
+    expect(sources.map((source) => source.id)).toEqual(["matt-pocock"]);
   });
 
   it("includes both sources on a consumer", () => {
@@ -46,7 +46,10 @@ describe("resolveInstallSources", () => {
       isAgentSkillsSourceRepo: false,
       profile: {},
     });
-    expect(sources.map((s) => s.id)).toEqual(["rheged", "matt-pocock"]);
+    expect(sources.map((source) => source.id)).toEqual([
+      "rheged",
+      "matt-pocock",
+    ]);
   });
 });
 

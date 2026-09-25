@@ -20,6 +20,7 @@
 //
 // Exit codes: 0 success; 2 usage/IO error.
 
+import { runCatalogueInstall } from "./install-from-catalogue.mjs";
 import { createDetectors } from "./lib/detectors.mjs";
 import {
   defaultSkillsDirectory,
@@ -49,7 +50,6 @@ import {
   resolveSource,
   writeLock,
 } from "./lib/skills-lock.mjs";
-import { runCatalogueInstall } from "./install-from-catalogue.mjs";
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { relative } from "node:path";
 
@@ -156,9 +156,7 @@ function readStdinPayload() {
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    console.error(
-      `${CLI_NAME}: could not parse stdin JSON: ${error.message}`,
-    );
+    console.error(`${CLI_NAME}: could not parse stdin JSON: ${error.message}`);
     process.exit(2);
   }
 
@@ -225,7 +223,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log(
-      `Usage: node scripts/initialise.mjs [--dry-run|--write|--review|--install] [--json] [--catalogue <url-or-path>] [--agent <name>]... [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]`,
+      "Usage: node scripts/initialise.mjs [--dry-run|--write|--review|--install] [--json] [--catalogue <url-or-path>] [--agent <name>]... [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]",
     );
     return;
   }
@@ -271,6 +269,7 @@ async function main() {
       return;
     }
   }
+
   let skills = discoverSkills(options.skillsDir);
 
   // A-706: a `skills add --copy` re-vendor clobbers each tracked config.json
@@ -492,8 +491,12 @@ function isCliEntry() {
 }
 
 if (isCliEntry()) {
-  main().catch((error) => {
-    console.error(`${CLI_NAME}: ${error.message}`);
-    process.exit(2);
-  });
+  void (async () => {
+    try {
+      await main();
+    } catch (error) {
+      console.error(`${CLI_NAME}: ${error.message}`);
+      process.exit(2);
+    }
+  })();
 }

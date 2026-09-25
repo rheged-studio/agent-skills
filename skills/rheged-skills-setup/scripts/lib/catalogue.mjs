@@ -6,10 +6,14 @@ export const DEFAULT_CATALOGUE_URL =
 
 export const RHEGED_AGENT_SKILLS_PACKAGE = "@rheged-studio/agent-skills";
 
-/** Bundles retired by rename; wipe on consumers but never re-install (A-1904). */
+/**
+ * Bundles retired by rename; wipe on consumers but never re-install (A-1904).
+ */
 export const LEGACY_BUNDLE_NAMES = ["initialise-skills"];
 
-/** Command shims to remove alongside legacy bundles. */
+/**
+ * Command shims to remove alongside legacy bundles.
+ */
 export const LEGACY_COMMAND_SHIM_NAMES = ["initialise-skills"];
 
 /**
@@ -83,8 +87,8 @@ export function parseCatalogue(json) {
 
     sources.push({
       id: entry.id.trim(),
-      skipWhenSourceRepo: entry.skipWhenSourceRepo === true,
       skills: [...entry.skills],
+      skipWhenSourceRepo: entry.skipWhenSourceRepo === true,
       url: entry.url.trim(),
     });
   }
@@ -181,11 +185,11 @@ export function resolveInstallSkills(profile, catalogue) {
 /**
  * Sources to run `skills add` for, honouring skipWhenSourceRepo on the agent-skills checkout.
  * @param {{ sources: Array<{ id: string, url: string, skills: string[], skipWhenSourceRepo?: boolean }> }} catalogue
- * @param {{ isAgentSkillsSourceRepo?: boolean, profile?: { repoType?: string, skills?: string[] } }} opts
+ * @param {{ isAgentSkillsSourceRepo?: boolean, profile?: { repoType?: string, skills?: string[] } }} options
  * @returns {Array<{ id: string, url: string, skills: string[] }>}
  */
-export function resolveInstallSources(catalogue, opts = {}) {
-  const { isAgentSkillsSourceRepo = false, profile = {} } = opts;
+export function resolveInstallSources(catalogue, options = {}) {
+  const { isAgentSkillsSourceRepo = false, profile = {} } = options;
   const rheged = resolveRhegedSkills(profile, catalogue);
   const matt = mattSkillNames(catalogue);
 
@@ -248,7 +252,7 @@ export function resolveWipeTargetsWithLegacy(
 ) {
   const names = [...new Set([...installSkills, ...legacyNames])];
   return mirrors.flatMap((mirror) =>
-    names.map((skill) => `${mirror}/${skill}`.replace(/\\/g, "/")),
+    names.map((skill) => `${mirror}/${skill}`.replaceAll("\\", "/")),
   );
 }
 
@@ -259,5 +263,7 @@ export function resolveWipeTargetsWithLegacy(
  * @returns {string[]}
  */
 export function findMissingRhegedSourceSkills(catalogue, rhegedSkillExists) {
-  return rhegedSkillNames(catalogue).filter((skill) => !rhegedSkillExists(skill));
+  return rhegedSkillNames(catalogue).filter(
+    (skill) => !rhegedSkillExists(skill),
+  );
 }
