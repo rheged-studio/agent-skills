@@ -1,6 +1,6 @@
 {
   "name": "@rheged-studio/agent-skills",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "private": false,
   "description": "Shared agent skills (Claude Code, Cursor) distributed as skills.sh-compatible bundles.",
   "keywords": [
