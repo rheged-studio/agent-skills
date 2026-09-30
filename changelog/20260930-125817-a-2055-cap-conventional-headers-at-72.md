@@ -2,10 +2,10 @@
 title: Cap send-it and commit Conventional headers at 72 characters
 release_note: /commit and /send-it now keep Conventional Commits headers — the entire first line — at or under 72 characters, so agents already emit short subjects before estate commitlint tightens from 100 to 72.
 created_at: "2026-09-30T12:58:17Z"
-merged_at:
+merged_at: "2026-09-30T13:25:57Z"
 branch: a-2055-cap-conventional-headers-at-72
-pr:
-commit:
+pr: 186
+commit: 3e2bba6
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2055
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 9
+  loc_added: 84
+  loc_removed: 13
   commits:
 version:
 ---
