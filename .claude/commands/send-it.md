@@ -67,7 +67,8 @@ handles those. The only gate it runs is the change-gated `preflight` lint.
 - `--base=<branch>` — override the `main` base for this run (stacked PRs / non-`main`
   targets); applies to the fetch, the branch diff, and the PR base.
 - `--title="<conventional subject>"` — set the PR title verbatim instead of deriving
-  it (must stay a valid Conventional Commits subject — CI lints it).
+  it (must stay a valid Conventional Commits subject — CI lints it; warn if it
+  exceeds 72 characters).
 - `--skip-preflight` — skip the lint gate entirely (prints a bypass warning).
 - `--skip-triage` — end the run at the open PR; skip the Step 11 `triage-pr` chain.
   Not a shortcut — see Step 11 for the narrow cases where it applies, and say why in

@@ -33,5 +33,7 @@ belong to another branch or worktree are flagged and never staged.
   is parked — A-374).
 - Author commit prose in the repo's documented language (British English across
   this estate); mark breaking changes honestly with `!` / `BREAKING CHANGE:`.
+- Keep each Conventional Commits header (the entire first line) at or under 72
+  characters; see the commit skill for the counting rules.
 - This command commits only. The lint gate, changelog, push, PR, and Linear
   transition are part of a ship flow (e.g. `/send-it`), not this command.
