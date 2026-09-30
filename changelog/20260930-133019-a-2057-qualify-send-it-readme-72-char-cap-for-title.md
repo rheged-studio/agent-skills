@@ -2,10 +2,10 @@
 title: Qualify send-it README 72-char cap for --title
 release_note: The send-it README now qualifies the 72-character PR-title cap so it applies to derived titles; a supplied `--title` stays verbatim and warns if overlong.
 created_at: "2026-09-30T13:30:19Z"
-merged_at:
+merged_at: "2026-09-30T13:47:18Z"
 branch: a-2057-qualify-send-it-readme-72-char-cap-for-title
-pr:
-commit:
+pr: 187
+commit: ddfa803
 author: rob@rheged.studio
 co_authors: []
 category: docs
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2057
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 4
+  loc_added: 32
+  loc_removed: 4
   commits:
 version:
 ---
