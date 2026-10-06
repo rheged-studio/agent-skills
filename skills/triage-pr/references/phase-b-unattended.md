@@ -23,15 +23,17 @@ without a Yes/No gate or a second prompt before Linear creates.
 
 2. If `humanThreads` is non-empty → **stop** after the plan is posted. Apply
    nothing (no commits, no Linear creates, no bot thread resolves). Leave human
-   threads untouched.
+   threads untouched. Item 4 does **not** apply — there is no critical-finding
+   exception when humans have open threads.
 
-3. Otherwise → Step 11 immediately (no Step 10).
+3. Otherwise → Step 11 immediately (no Step 10), subject to Item 4.
 
-4. **Stops without merge-ready:** in-scope critical/blocking finding that would be
-   its own PR (or size test unclear) — post plan, apply other dispositions, file
-   **Urgent** Linear (`priority: 1`), stop; do not revert pushed commits. Critical
-   lint/format/workflow finding that would need a gated surface — same stop (agent
-   still never edits those files / workflows).
+4. **Stops without merge-ready** (only when Item 2 did not apply): in-scope
+   critical/blocking finding that would be its own PR (or size test unclear) —
+   post plan, apply other dispositions, file **Urgent** Linear (`priority: 1`),
+   stop; do not revert pushed commits. Critical lint/format/workflow finding that
+   would need a gated surface — same stop (agent still never edits those files /
+   workflows).
 
 5. Ordinary / Urgent follow-ups: create in Step 11 with the body template in
    [`follow-up-routing.md`](follow-up-routing.md#unattended-follow-up-issue-body).

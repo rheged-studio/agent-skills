@@ -121,4 +121,5 @@ bodies must include: a falsifiable claim; what this agent verified; why it was
 deferred; a labelled leaning (not an instruction); permalinks and the SHA; a
 non-binding note of what was considered; an instruction to re-verify and to
 decline if the claim is wrong, already done, or out of scope. No prescribed patch.
-Urgent uses `priority: 1`; ordinary stays Backlog with no priority bump.
+Urgent uses `priority: 1`; ordinary issues use `followUpState` (default Backlog)
+with no priority bump.

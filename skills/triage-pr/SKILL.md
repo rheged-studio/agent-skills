@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.16.0
+  version: 0.16.1
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
 ---
@@ -486,7 +486,6 @@ For each finding record:
 - for `decline`: technical reasoning
 - for `follow-up`: draft Linear title + rationale, **and** the destination line
   (`→ file under …`) from the routing step below
-- for `gated`: surface touched + preferred alternative
 - for `outdated`: per [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps) (verify gone, not moved)
 - for `gated`: surface touched + preferred alternative — classify **before** impact;
   full lint-surface rules in
