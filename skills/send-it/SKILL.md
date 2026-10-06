@@ -5,8 +5,9 @@ description: >-
   lint preflight, author the dated changelog entry, compose a Conventional
   Commits PR title, push, open or update a PR, move linked Linear issues to In
   Review, then chain into `triage-pr` (Step 11) to drive the PR to merge-ready.
-  Incomplete until Step 11 has run, or `--skip-triage` / `triage: false` was
-  used with a stated reason. Use when asked to ship, send it, finish a branch,
+  Incomplete until triage-pr reaches a terminal outcome (its Step 13 report,
+  its human envelope, or a documented stop), or `--skip-triage` /
+  `triage: false` was used with a stated reason. Use when asked to ship, send it, finish a branch,
   open or update a PR, or wrap up and push. Thin orchestrator over `commit`,
   `preflight`, `changelog`, `linear-sync`, and `triage-pr`; owns branch guard,
   release-type decision, PR title, push, and PR. Serves monorepos and
@@ -51,8 +52,9 @@ composition, push, and the PR — and delegates the rest:
 - **Linear In Review** → the `linear-sync` skill (resolve state by team name,
   idempotent transition).
 - **Post-PR triage** → the `triage-pr` skill (Phase A CI fix loop and the
-  promote-on-proven-green flip, then Phase B review dispositions up to its human
-  envelope — Step 11, A-1151).
+  promote-on-proven-green flip, then Phase B review dispositions — ending on its
+  human envelope when `humanEnvelope` is `true`, or on its Step 13 report when
+  `false` — Step 11, A-1151).
 
 The delegated skills auto-detect their own scope, so monorepo features
 (per-workspace ESLint fan-out, changelog `affected_packages`) no-op cleanly in a
@@ -76,7 +78,9 @@ handles those. The only gate it runs is the change-gated `preflight` lint.
 
 > **Done criteria.** Opening or updating the PR (Step 9) and moving Linear issues
 > to In Review (Step 10) are mid-pipeline — **not** the end of `/send-it`. The run
-> is incomplete until Step 11 (`triage-pr`) has started, or you printed an explicit
+> is incomplete until Step 11's `triage-pr` reaches a **terminal outcome** — its
+> Step 13 report, its human envelope (`humanEnvelope: true`), or a documented stop
+> (Phase-A early stop, hard blocker, budget exhaustion) — or you printed an explicit
 > skip/degraded line with a stated reason (`ℹ️ triage chain skipped …` for
 > `--skip-triage` / `triage: false`, or `⚠️ triage-pr not installed …` when the
 > sibling is absent). Reporting a draft PR URL as the final outcome without one of
@@ -95,7 +99,7 @@ copied `config.json` to match the consuming repo (a neutral
 | `shippableManifestKeys` _(advisory)_ | `package.json` keys that form the published-`files` surface — same advisory role as `shippablePaths`, no longer a release gate. | `["name", "version", "files", "publishConfig"]` |
 | `changelog` _(optional)_ | Whether to author a dated `changelog/` entry at all (Steps 7–8). Set `false` for repos with **no changelog flow** — no `changelog/` directory and no `changelog` skill installed (e.g. a `private` repo with no release pipeline). When `false`, send-it skips changelog authoring entirely, and the category decision continues to drive only the PR title. **Omit it (or set `true`) whenever the `changelog` skill is installed.** | `true` |
 | `bundleVersioning` _(optional)_ | Enables the per-bundle version-bump check (Step 6) for repos that ship many independently-versioned skill bundles. An object `{ root, manifest, skillFile }` naming the bundle parent dir and the manifest / skill-manifest filenames each bundle carries. **Omit it entirely in single-package repos** — the check then no-ops. | unset (disabled) |
-| `triage` _(omit or `true` by default)_ | Whether the run chains into the [`triage-pr`](../triage-pr/SKILL.md) skill once the PR is open (Step 11) — the CI fix loop, the promote-on-proven-green flip, then Phase B up to triage-pr's human envelope. The **key** may be omitted (defaults to `true`); the **step** is not optional on a default run. Set `false` only in repos that deliberately stop at the open PR, or where `triage-pr` isn't installed. `--skip-triage` does the same for a single run (A-1151) — always state why. | `true` |
+| `triage` _(omit or `true` by default)_ | Whether the run chains into the [`triage-pr`](../triage-pr/SKILL.md) skill once the PR is open (Step 11) — the CI fix loop, the promote-on-proven-green flip, then Phase B through triage-pr's human envelope (`humanEnvelope: true`) or its Step 13 report (`false`). The **key** may be omitted (defaults to `true`); the **step** is not optional on a default run. Set `false` only in repos that deliberately stop at the open PR, or where `triage-pr` isn't installed. `--skip-triage` does the same for a single run (A-1151) — always state why. | `true` |
 
 The team name, issue-ID prefixes, and workspace slug are **not** configured here —
 they live in the `linear-sync` and `changelog` skills' own `config.json` files,
@@ -516,7 +520,10 @@ send-it opens the PR; [`triage-pr`](../triage-pr/SKILL.md) takes it the rest of 
 way (A-1151). **This step is part of the run — not an optional extra.** One
 `/send-it` drives the whole pipeline: Phase A fixes in-scope CI failures and promotes
 the proven-green draft to ready, then Phase B waits for the AI reviewers, verifies
-every finding, and halts at its human envelope. This step runs **after** Step 10 so
+every finding, and either halts at its human envelope (`humanEnvelope: true`) or
+applies the dispositions unattended and ends on its Step 13 report (`false`). Hand-off
+alone does not finish the run — it ends only when triage-pr reaches one of those
+terminal outcomes or a documented stop. This step runs **after** Step 10 so
 the linked issues are already In Review before triage begins.
 
 1. **Check the opt-out first — before anything else in this step.** If `--skip-triage`
@@ -577,6 +584,15 @@ the linked issues are already In Review before triage begins.
    done
    ```
 
+   **Run the loop the way the host can sustain it** (the same pattern as triage-pr's
+   [Waiting on long operations](../triage-pr/SKILL.md#waiting-on-long-operations)).
+   On **Claude Code**, a bare foreground `sleep` is blocked, so run the whole loop as
+   a **background command** (`run_in_background`) and continue when the harness
+   reports it has exited — or use the Monitor tool with an until-loop on the same
+   check-count condition. On **Cursor**, run it as the single bounded command shown
+   (three minutes is well inside the terminal timeout). Read the loop's exit status
+   and output the same way in every host.
+
    - **At least one check registered** → continue to sub-step 4.
    - **`gh` itself fails** → stop and surface the error (authentication, rate limit, a
      deleted PR). Do **not** fall through to the no-checks branch: an unverifiable
@@ -610,10 +626,12 @@ the linked issues are already In Review before triage begins.
 
 5. **Run the full chain.** Don't stop between phases: Phase A's fix→push→watch loop,
    the promotion gate, then Phase B's review wait and verify-then-propose. Halt where
-   `triage-pr` halts — its human envelope, its slow-bot micro-gate, a hard blocker, or
-   `maxCiRounds` exhaustion. The envelope **is** the run's natural stopping point: don't
-   answer it on the user's behalf, and don't print a send-it "all done" over the top of
-   it.
+   `triage-pr` halts — its human envelope (only when `humanEnvelope` is `true`), its
+   slow-bot micro-gate (envelope path only), a hard blocker, unattended stop rules, or
+   `maxCiRounds` / `maxReviewRounds` exhaustion. When `humanEnvelope` is `true`, the envelope **is** the
+   run's natural stopping point: don't answer it on the user's behalf, and don't print
+   a send-it "all done" over the top of it. When `false`, the run ends on triage-pr's
+   Step 13 report.
 
 6. **Report once.** `triage-pr`'s own final report is the run's report — prepend
    send-it's line items (branch, PR URL, changelog entry, Linear transitions) to it
@@ -629,8 +647,9 @@ the linked issues are already In Review before triage begins.
 > **Re-runs are safe.** A second `/send-it` re-enters the chain against the same PR.
 > `triage-pr` re-fetches threads every pass: resolved threads are filtered out, and
 > proposed follow-up threads already carry the non-resolving `follow-up-pending` marker (A-679),
-> so they arrive as `deferredThreads`, not fresh findings. The envelope therefore
-> re-prompts only for genuinely new bot findings.
+> so they arrive as `deferredThreads`, not fresh findings. Only genuinely new bot
+> findings are dispositioned again — re-prompted at the envelope when `humanEnvelope`
+> is `true`, or re-planned and applied unattended when `false`.
 
 ## Flags
 
@@ -665,8 +684,10 @@ the linked issues are already In Review before triage begins.
   **No effect on send-it's own steps.** (`--promote` is deliberately _not_ forwarded —
   promotion is already triage-pr's default.)
 - `--auto-apply` — forwarded verbatim to `triage-pr`: skip its Phase B human envelope
-  and restore its legacy auto path (impact-gated fix-now; Linear-only gate for
-  follow-ups). **No effect on send-it's own steps.**
+  and run its unattended disposition path. It can apply findings that meet the
+  unattended fix-now rubric and, when Linear follow-up capture is configured,
+  create eligible follow-ups without a human or Linear-only approval gate.
+  **No effect on send-it's own steps.**
 - `--ready` — open the PR ready-for-review instead of draft (default is draft).
 - `--worktree=<branch-or-path>` — `cd` into a worktree before running (Step 0).
 
@@ -696,8 +717,9 @@ the linked issues are already In Review before triage begins.
   0.7.0 it was a bounded finisher: seconds of work, ending in a report and an open
   PR. From 0.8.0 the default run continues into `triage-pr` (Step 11), so a single
   `/send-it` can stay unattended for roughly 30 minutes — CI fix rounds plus the
-  review wait — and ends on a **prompt** (triage-pr's disposition envelope), not a
-  report. That is a deliberate shift in what the command is. `--skip-triage`, or
+  review wait — and ends on triage-pr's disposition envelope when `humanEnvelope` is
+  `true`, or on its Step 13 report when `humanEnvelope` is `false`. That is a
+  deliberate shift in what the command is. `--skip-triage`, or
   `triage: false`, restores the old shape — only with a stated reason.
 - **send-it never merges, and never arms auto-merge.** Taking the PR through triage
   to green and ready-for-review is the end of its remit; landing it is a human

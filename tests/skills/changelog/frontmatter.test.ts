@@ -142,6 +142,21 @@ describe("stringifyFrontmatter — round-trips", () => {
     expect(back.numish).toBe("42");
   });
 
+  it("quotes commit SHAs that YAML would parse as numbers", () => {
+    const out = stringifyFrontmatter("body\n", {
+      commit: "6e95791",
+      commit_all_digits: "9799940",
+      commit_scientific: "1e10",
+    });
+    expect(out).toContain("commit: '6e95791'");
+    expect(out).toContain("commit_all_digits: '9799940'");
+    expect(out).toContain("commit_scientific: '1e10'");
+    const back = parseFrontmatter(out).data;
+    expect(back.commit).toBe("6e95791");
+    expect(back.commit_all_digits).toBe("9799940");
+    expect(back.commit_scientific).toBe("1e10");
+  });
+
   it("round-trips inline arrays as block arrays without losing items", () => {
     const data = { co_authors: ["alice", "bob"], issues: ["A-1"] };
     const out = stringifyFrontmatter("body\n", data);

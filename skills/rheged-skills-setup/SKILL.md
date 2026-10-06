@@ -25,7 +25,7 @@ compatibility: >-
   App / token check is optional — it uses `gh` when authenticated, else falls
   back to a reminder.
 metadata:
-  version: 0.12.0
+  version: 0.12.1
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), Bash(npx:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
 ---

@@ -23,8 +23,9 @@ to **In Review** (via the [`linear-sync`](../../skills/linear-sync/SKILL.md) ski
 
 It then **chains into [`triage-pr`](../../skills/triage-pr/SKILL.md)** (Step 11) to
 drive the PR to merge-ready: the Phase A CI fix loop, the promote-on-proven-green
-flip, then Phase B up to triage-pr's human envelope. So a default run is unattended
-for roughly 30 minutes and ends on a `[y/N]` prompt, not a report. `--skip-triage`
+flip, then Phase B through triage-pr (unattended by default — Step 13 report when
+`humanEnvelope` is `false`). So a default run is unattended for roughly 30 minutes
+and ends on triage-pr's closing report, not a `[y/N]` prompt. `--skip-triage`
 ends the run at the open PR instead.
 
 ## Process
