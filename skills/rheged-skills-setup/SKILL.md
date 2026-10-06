@@ -198,10 +198,32 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    # 3 — only if it isn't, and the owner is an organisation: org secrets
    #     (needs org-admin; an error here is "can't verify", not "absent")
    gh secret list --org <org> --app actions
-   # 4 — only if 3 succeeded: is the name in that output?
+   # 4 — only if 3 succeeded: is the name in that output, and with which
+   #     visibility (the third column: ALL, PRIVATE or SELECTED)?
+   # 5 — only for SELECTED: is this repo on the secret's list?
+   gh api orgs/<org>/actions/secrets/CLAUDE_CODE_OAUTH_TOKEN/repositories \
+     --jq '.repositories[].full_name'
+   # 6 — only if 5 succeeded: is <owner>/<repo> in that output?
    ```
 
-   - **present** (listed at repo or org level): report OK; nothing to do.
+   An org-level listing proves the secret exists, not that **this** repo receives
+   it, so check its visibility before reporting OK:
+
+   - `ALL` reaches every repo in the org.
+   - `PRIVATE` reaches private and internal repos only. Check this repo's
+     visibility (`gh repo view <owner>/<repo> --json visibility`); a public repo
+     doesn't receive it.
+   - `SELECTED` reaches only the repos on its list (step 5).
+
+   Outcomes:
+
+   - **present**: listed at repo level, or listed at org level with a visibility
+     that covers this repo. Report OK; nothing to do.
+   - **not shared with this repo**: an org secret exists, but its visibility
+     excludes this repo (a `SELECTED` list without it, or `PRIVATE` on a public
+     repo). In the step-4 gate, ask the operator to add this repo to the secret's
+     selected repositories (or widen its visibility), or to set a repo-level
+     secret as below.
    - **absent** (every listing succeeded and none shows the name): in the step-4
      gate, **ask the operator to add it**:
      - at **organisation** level (preferred when they have org-admin and will run
@@ -212,14 +234,14 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
 
      `gh secret set` prompts for the value, so the token never needs to enter the
      chat. Never ask for it to be pasted, and never run either command yourself.
-     Also say that an org secret with `visibility: selected` doesn't reach repos
-     outside its list, so the probe can report absent while the secret exists. The
-     fix then is adding this repo to the secret's selected repositories.
-   - **can't verify** (a listing itself errors, e.g. a `403` without admin scope,
-     or `gh` not installed): say "couldn't verify the token — please confirm
+     Also say that if the operator believes an org secret already exists, it may
+     have `visibility: selected` and leave this repo out. The fix then is adding
+     this repo to the secret's selected repositories.
+   - **can't verify** (a listing or the step-5 lookup errors, e.g. a `403`
+     without admin scope, or `gh` not installed): say "couldn't verify the token — please confirm
      `CLAUDE_CODE_OAUTH_TOKEN` is set manually". A can't-tell is not an absence.
 
-   Never block or fail the run on absent or can't-verify. Do **not** point the
+   Never block or fail the run on absent, not-shared or can't-verify. Do **not** point the
    operator at `/install-github-app` for the secret when estate callers exist.
    Since Claude Code 2.1.187 its workflow and secret steps are optional, so it can
    finish without writing a secret. It also tries to add Anthropic's boilerplate
