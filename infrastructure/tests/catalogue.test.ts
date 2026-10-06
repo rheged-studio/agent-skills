@@ -96,4 +96,24 @@ describe("resolveWipeTargetsWithLegacy", () => {
     expect(targets).toContain(".claude/skills/initialise-skills");
     expect(targets).toContain(".claude/skills/send-it");
   });
+
+  it("wipes skills removed upstream", () => {
+    const targets = resolveWipeTargetsWithLegacy([".agents/skills"], []);
+    expect(targets).toContain(".agents/skills/resolving-merge-conflicts");
+  });
+});
+
+describe("matt-pocock source (mattpocock/skills 1.3.1)", () => {
+  const catalogue = parseCatalogue(catalogueJson);
+  const matt = catalogue.sources.find((source) => source.id === "matt-pocock");
+
+  it("lists the skills added in 1.3.0", () => {
+    expect(matt?.skills).toEqual(
+      expect.arrayContaining(["implement-spec", "pr", "retro"]),
+    );
+  });
+
+  it("drops resolving-merge-conflicts", () => {
+    expect(matt?.skills).not.toContain("resolving-merge-conflicts");
+  });
 });
