@@ -201,7 +201,7 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    # 4 — only if 3 succeeded: is the name in that output, and with which
    #     visibility (the third column: ALL, PRIVATE or SELECTED)?
    # 5 — only for SELECTED: is this repo on the secret's list?
-   gh api orgs/<org>/actions/secrets/CLAUDE_CODE_OAUTH_TOKEN/repositories \
+   gh api --paginate orgs/<org>/actions/secrets/CLAUDE_CODE_OAUTH_TOKEN/repositories \
      --jq '.repositories[].full_name'
    # 6 — only if 5 succeeded: is <owner>/<repo> in that output?
    ```
