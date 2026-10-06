@@ -41,7 +41,7 @@ the per-skill `config.json` is generated on install, not vendored. Run the
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `reviewBots` | GitHub login names whose comments and threads are treated as first-class AI review feedback (matched on `author.login`; the `[bot]` suffix is normalised). Edit to match your install. `github-actions` is excluded by default. | `["claude", "coderabbitai"]` |
-| `reviewBotChecks` | Map from a review bot to the status or check it posts per review (e.g. `{"coderabbitai": "CodeRabbit"}`). A mapped bot settles only when that check is terminal on the current head and post-dates the ready flip; unmapped bots fall back to post-ready activity on the head. | `{}` |
+| `reviewBotChecks` | Map from a review bot to the status or check it posts per review — a string name (e.g. `{"coderabbitai": "CodeRabbit"}`) or `{ "name": "…", "producer": "…" }` to require the status creator or check-suite app slug. A mapped bot settles only when that check is terminal on the current head and post-dates the ready flip; unmapped bots fall back to post-ready activity on the head. | `{}` |
 | `maxCiRounds` | Maximum Phase-A re-watch iterations before stopping and reporting blockers. | `5` |
 | `maxReviewRounds` | Maximum Phase-B re-review rounds (re-plan or re-envelope after an apply push) before stopping and reporting blockers. | `2` |
 | `replyOnAccept` | Whether an **accepted** finding gets a factual thread reply referencing the fixing commit before resolve. | `true` |

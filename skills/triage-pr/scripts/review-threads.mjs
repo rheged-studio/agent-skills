@@ -59,6 +59,7 @@
 //   node review-threads.mjs <pr> --bots "a[bot],b[bot]"        # override review-bot logins
 //   node review-threads.mjs <pr> --repo owner/name             # set repo explicitly
 //   node review-threads.mjs <pr> --bot-checks '{"coderabbitai":"CodeRabbit"}'  # bot → status/check name
+//   node review-threads.mjs <pr> --bot-checks '{"coderabbitai":{"name":"CodeRabbit","producer":"coderabbitai"}}'  # optional producer pin
 //   node review-threads.mjs <pr> --include-resolved            # keep resolved threads too
 //   node review-threads.mjs --self-test                        # run built-in fixtures
 
@@ -313,6 +314,94 @@ function contextMatches(node, key) {
 }
 
 /**
+ * GitHub login or app slug for who posted a rollup node (when GraphQL selected it).
+ * @param {object} node
+ * @returns {string|null}
+ */
+function producerIdentity(node) {
+  if (node.__typename === "StatusContext") {
+    return node.creator?.login ?? null;
+  }
+
+  if (node.__typename === "CheckRun") {
+    return node.checkSuite?.app?.slug ?? null;
+  }
+
+  return null;
+}
+
+/**
+ * @param {string|null|undefined} identity
+ */
+function normaliseProducer(identity) {
+  return String(identity ?? "").replace(/\[bot\]$/, "").toLowerCase();
+}
+
+/**
+ * When `expectedProducer` is set, the rollup node must carry a matching producer.
+ * @param {object} node
+ * @param {string|undefined} expectedProducer
+ */
+function producerMatches(node, expectedProducer) {
+  if (!expectedProducer) {
+    return true;
+  }
+
+  const identity = producerIdentity(node);
+  if (!identity) {
+    return false;
+  }
+
+  return (
+    normaliseProducer(identity) === normaliseProducer(expectedProducer)
+  );
+}
+
+/**
+ * Normalise a bot-check mapping value (string or `{ name, producer? }`).
+ * @param {string|{ name: string, producer?: string }} spec
+ * @returns {{ name: string, producer?: string }}
+ */
+function normaliseCheckSpec(spec) {
+  if (typeof spec === "string") {
+    const name = spec.trim();
+    if (!name) {
+      throw new Error("check name must be a non-empty string");
+    }
+
+    return { name };
+  }
+
+  if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
+    throw new Error("check spec must be a string or { name, producer? } object");
+  }
+
+  const extra = Object.keys(spec).filter(
+    (key) => key !== "name" && key !== "producer",
+  );
+  if (extra.length > 0) {
+    throw new Error(
+      `check spec has unexpected keys: ${extra.join(", ")}`,
+    );
+  }
+
+  if (typeof spec.name !== "string" || !spec.name.trim()) {
+    throw new Error("check spec name must be a non-empty string");
+  }
+
+  if (spec.producer !== undefined) {
+    if (typeof spec.producer !== "string" || !spec.producer.trim()) {
+      throw new Error("check spec producer must be a non-empty string");
+    }
+  }
+
+  return {
+    name: spec.name.trim(),
+    ...(spec.producer ? { producer: spec.producer.trim() } : {}),
+  };
+}
+
+/**
  * Latest activity time of a rollup node (ms), used to order and date-filter it.
  * A freshly queued CheckRun has neither `startedAt` nor `completedAt`; date it
  * from its check suite's `createdAt` so a queued rerun still outranks an earlier
@@ -339,14 +428,16 @@ function contextTime(node) {
  * post-date the threshold count, so a draft-time "Review skipped" success or a
  * skipped draft run never reads as reported. The rollup is the head commit's, so
  * a fresh push resets this naturally.
- * @param {string} checkKey
+ * @param {string|{ name: string, producer?: string }} checkSpec
  * @param {object[]} checkContexts
  * @param {number|null} threshold
  * @returns {{state: string, evidence: string}}
  */
-function settleFromCheck(checkKey, checkContexts, threshold) {
+function settleFromCheck(checkSpec, checkContexts, threshold) {
+  const { name: checkKey, producer } = normaliseCheckSpec(checkSpec);
   const candidates = (checkContexts ?? [])
     .filter((node) => contextMatches(node, checkKey))
+    .filter((node) => producerMatches(node, producer))
     .filter((node) => {
       if (threshold === null) {
         return true;
@@ -452,7 +543,7 @@ function settleFromActivity({
  * superseded head never counts.
  * @param {object} input
  * @param {string[]} input.bots configured review bots
- * @param {Record<string, string>} [input.botChecks] bot → status/check name
+ * @param {Record<string, string|{ name: string, producer?: string }>} [input.botChecks] bot → status/check name or `{ name, producer? }`
  * @param {object[]} [input.checkContexts] head-commit statusCheckRollup nodes
  * @param {string|null} [input.readyAt] last ready-for-review time
  * @param {string|null} [input.headCommittedAt] head commit date
@@ -475,21 +566,6 @@ export function settleBots({
   reviewNodes = [],
   threadNodes = [],
 }) {
-  if (isDraft) {
-    // AI review is gated on ready-for-review, so nothing posted while the PR is
-    // a draft can settle it.
-    return (bots ?? DEFAULT_BOTS).map(normaliseBot).map((bot) => ({
-      bot,
-      evidence: "PR is still a draft",
-      state: "missing",
-      via: botChecks?.[bot] ? "check" : "activity",
-    }));
-  }
-
-  const times = [toMs(readyAt), toMs(headCommittedAt)].filter(
-    (ms) => ms !== null,
-  );
-  const threshold = times.length > 0 ? Math.max(...times) : null;
   const checksByBot = new Map(
     Object.entries(botChecks ?? {}).map(([bot, check]) => [
       normaliseBot(bot),
@@ -497,13 +573,29 @@ export function settleBots({
     ]),
   );
 
+  if (isDraft) {
+    // AI review is gated on ready-for-review, so nothing posted while the PR is
+    // a draft can settle it.
+    return (bots ?? DEFAULT_BOTS).map(normaliseBot).map((bot) => ({
+      bot,
+      evidence: "PR is still a draft",
+      state: "missing",
+      via: checksByBot.has(bot) ? "check" : "activity",
+    }));
+  }
+
+  const times = [toMs(readyAt), toMs(headCommittedAt)].filter(
+    (ms) => ms !== null,
+  );
+  const threshold = times.length > 0 ? Math.max(...times) : null;
+
   return (bots ?? DEFAULT_BOTS).map(normaliseBot).map((bot) => {
-    const checkKey = checksByBot.get(bot);
-    if (checkKey) {
+    const checkSpec = checksByBot.get(bot);
+    if (checkSpec) {
       return {
         bot,
         via: "check",
-        ...settleFromCheck(checkKey, checkContexts, threshold),
+        ...settleFromCheck(checkSpec, checkContexts, threshold),
       };
     }
 
@@ -652,9 +744,10 @@ export function buildResult({
 
 /**
  * Parse a `--bot-checks` value: a JSON object mapping bot login → status/check
- * name (e.g. `{"coderabbitai":"CodeRabbit"}`). Throws on anything else.
+ * name string or `{ name, producer? }` (e.g. `{"coderabbitai":"CodeRabbit"}`).
+ * Throws on anything else.
  * @param {string} value
- * @returns {Record<string, string>}
+ * @returns {Record<string, { name: string, producer?: string }>}
  */
 export function parseBotChecks(value) {
   let parsed;
@@ -668,15 +761,22 @@ export function parseBotChecks(value) {
     throw new Error("--bot-checks must be a JSON object of bot → check name");
   }
 
+  const result = {};
   for (const [bot, check] of Object.entries(parsed)) {
-    if (!bot.trim() || typeof check !== "string" || !check.trim()) {
+    if (!bot.trim()) {
+      throw new Error(`--bot-checks entry for "${bot}" must use a non-empty bot login`);
+    }
+
+    try {
+      result[bot] = normaliseCheckSpec(check);
+    } catch (error) {
       throw new Error(
-        `--bot-checks entry for "${bot}" must map to a non-empty check name`,
+        `--bot-checks entry for "${bot}" must map to a non-empty check name or { name, producer? }: ${error.message}`,
       );
     }
   }
 
-  return parsed;
+  return result;
 }
 
 /**
@@ -867,8 +967,8 @@ const STATE_QUERY = `query($owner:String!,$name:String!,$number:Int!,$cursor:Str
                 pageInfo{ hasNextPage endCursor }
                 nodes{
                   __typename
-                  ... on CheckRun{ name status conclusion startedAt completedAt checkSuite{ createdAt workflowRun{ workflow{ name } } } }
-                  ... on StatusContext{ context state description createdAt }
+                  ... on CheckRun{ name status conclusion startedAt completedAt checkSuite{ createdAt app { slug } workflowRun{ workflow{ name } } } }
+                  ... on StatusContext{ context state description createdAt creator { login } }
                 }
               }
             }
@@ -1542,6 +1642,93 @@ function selfTest() {
     ok: settleBotStateFromResult(claudeSucceeded, "claude") === "reported",
   });
 
+  const wrongProducerStatus = buildResult({
+    ...settleBase,
+    botChecks: {
+      coderabbitai: { name: "CodeRabbit", producer: "coderabbitai" },
+    },
+    checkContexts: [
+      {
+        __typename: "StatusContext",
+        context: "CodeRabbit",
+        createdAt: "2026-10-06T11:34:37Z",
+        creator: { login: "spoof-bot" },
+        description: "Review completed",
+        state: "SUCCESS",
+      },
+    ],
+  });
+  cases.push({
+    name: "settle: a same-named status from the wrong producer does not count",
+    ok: settleBotStateFromResult(wrongProducerStatus, "coderabbitai") === "missing",
+  });
+
+  const matchingProducerStatus = buildResult({
+    ...settleBase,
+    botChecks: {
+      coderabbitai: { name: "CodeRabbit", producer: "coderabbitai" },
+    },
+    checkContexts: [
+      {
+        __typename: "StatusContext",
+        context: "CodeRabbit",
+        createdAt: "2026-10-06T11:34:37Z",
+        creator: { login: "coderabbitai[bot]" },
+        description: "Review completed",
+        state: "SUCCESS",
+      },
+    ],
+  });
+  cases.push({
+    name: "settle: a same-named status from the expected creator reports",
+    ok:
+      settleBotStateFromResult(matchingProducerStatus, "coderabbitai") ===
+      "reported",
+  });
+
+  const wrongProducerCheckRun = buildResult({
+    ...settleBase,
+    botChecks: {
+      claude: { name: "claude-review", producer: "github-actions" },
+    },
+    checkContexts: [
+      {
+        __typename: "CheckRun",
+        checkSuite: { app: { slug: "other-app" } },
+        completedAt: "2026-10-06T11:29:07Z",
+        conclusion: "SUCCESS",
+        name: "claude-review / claude-review",
+        startedAt: "2026-10-06T11:27:06Z",
+        status: "COMPLETED",
+      },
+    ],
+  });
+  cases.push({
+    name: "settle: a same-named check run from the wrong app slug does not count",
+    ok: settleBotStateFromResult(wrongProducerCheckRun, "claude") === "missing",
+  });
+
+  const stringOnlyWrongCreator = buildResult({
+    ...settleBase,
+    botChecks: { coderabbitai: "CodeRabbit" },
+    checkContexts: [
+      {
+        __typename: "StatusContext",
+        context: "CodeRabbit",
+        createdAt: "2026-10-06T11:34:37Z",
+        creator: { login: "spoof-bot" },
+        description: "Review completed",
+        state: "SUCCESS",
+      },
+    ],
+  });
+  cases.push({
+    name: "settle: a string-only mapping ignores producer (backward compatible)",
+    ok:
+      settleBotStateFromResult(stringOnlyWrongCreator, "coderabbitai") ===
+      "reported",
+  });
+
   // A push after review: the old review and the old thread comment predate the
   // new head commit, so the bot must re-review before it counts again.
   const staleHead = buildResult({
@@ -1622,18 +1809,29 @@ function selfTest() {
     name: "parseArgs reads --bot-checks as a JSON map",
     ok:
       parseArgs(["1", "--bot-checks", '{"coderabbitai":"CodeRabbit"}'])
-        .botChecks.coderabbitai === "CodeRabbit",
+        .botChecks.coderabbitai.name === "CodeRabbit",
+  });
+  cases.push({
+    name: "parseArgs reads --bot-checks object form with producer",
+    ok:
+      parseArgs([
+        "1",
+        "--bot-checks",
+        '{"coderabbitai":{"name":"CodeRabbit","producer":"coderabbitai"}}',
+      ]).botChecks.coderabbitai.producer === "coderabbitai",
   });
   cases.push({
     name: "parseArgs rejects malformed --bot-checks",
-    ok: ["not json", "[]", '{"claude":""}'].every((value) => {
+    ok: ["not json", "[]", '{"claude":""}', '{"claude":{"producer":"x"}}'].every(
+      (value) => {
       try {
         parseArgs(["1", "--bot-checks", value]);
         return false;
       } catch {
         return true;
       }
-    }),
+    },
+    ),
   });
 
   // argument + PR-resolution parsing
