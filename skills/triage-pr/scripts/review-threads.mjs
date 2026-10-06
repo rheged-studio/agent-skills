@@ -365,19 +365,19 @@ function settleFromCheck(checkKey, checkContexts, threshold) {
   }
 
   if (latest.__typename === "StatusContext") {
-    const label = `${latest.context} ${latest.state}${latest.description ? ` (${latest.description})` : ""}`;
+    const statusLabel = `${latest.context} ${latest.state}${latest.description ? ` (${latest.description})` : ""}`;
     if (PENDING_STATUS_STATES.has(latest.state)) {
-      return { evidence: label, state: "pending" };
+      return { evidence: statusLabel, state: "pending" };
     }
 
     if (
       REPORTED_CONCLUSIONS.has(latest.state) &&
       !SKIPPED_DESCRIPTION.test(String(latest.description ?? ""))
     ) {
-      return { evidence: label, state: "reported" };
+      return { evidence: statusLabel, state: "reported" };
     }
 
-    return { evidence: label, state: "skipped" };
+    return { evidence: statusLabel, state: "skipped" };
   }
 
   const label = `${latest.name} ${latest.conclusion ?? latest.status}`;
@@ -406,7 +406,9 @@ function settleFromActivity({
   threadNodes,
   threshold,
 }) {
-  const byBot = (author) => normaliseBot(author?.login) === bot;
+  function byBot(author) {
+    return normaliseBot(author?.login) === bot;
+  }
 
   for (const node of commentNodes ?? []) {
     if (
@@ -456,6 +458,9 @@ function settleFromActivity({
  * @param {string|null} [input.headCommittedAt] head commit date
  * @param {string|null} [input.headRefOid] head commit oid
  * @param {boolean} [input.isDraft] a draft has had no review to settle on yet
+ * @param {object[]} [input.commentNodes] issue comments on the PR
+ * @param {object[]} [input.reviewNodes] review submissions on the PR
+ * @param {object[]} [input.threadNodes] review threads on the PR
  * @returns {Array<{bot: string, state: string, via: string, evidence: string}>}
  */
 export function settleBots({
@@ -609,10 +614,11 @@ export function buildResult({
     reviewNodes,
     threadNodes,
   });
-  const byState = (...states) =>
-    botStatus
+  function byState(...states) {
+    return botStatus
       .filter((status) => states.includes(status.state))
       .map((status) => status.bot);
+  }
 
   const summaryIds = new Set(
     aiSummaryComments.map((comment) => comment.commentId),
@@ -960,7 +966,9 @@ function fetchState(owner, name, number) {
     };
     const contexts = commit?.statusCheckRollup?.contexts;
     checkContexts.push(...(contexts?.nodes ?? []));
-    cursor = contexts?.pageInfo.hasNextPage ? contexts.pageInfo.endCursor : null;
+    cursor = contexts?.pageInfo.hasNextPage
+      ? contexts.pageInfo.endCursor
+      : null;
   } while (cursor);
 
   return { checkContexts, ...state };
@@ -978,6 +986,10 @@ function ids(array) {
 /**
  * Run the built-in fixtures (no network) and exit non-zero on any failure.
  */
+function settleBotStateFromResult(settleOut, bot) {
+  return settleOut.botStatus.find((status) => status.bot === bot)?.state;
+}
+
 function selfTest() {
   // GraphQL returns bot logins WITHOUT the `[bot]` suffix (e.g. `claude`,
   // `coderabbitai`), so the fixtures use the bare form.
@@ -1321,9 +1333,6 @@ function selfTest() {
     reviewNodes: [],
     threadNodes: [],
   };
-  const statusOf = (result, bot) =>
-    result.botStatus.find((status) => status.bot === bot)?.state;
-
   const draftOnly = buildResult({
     ...settleBase,
     botChecks: { coderabbitai: "CodeRabbit" },
@@ -1340,7 +1349,7 @@ function selfTest() {
   cases.push({
     name: "settle: a draft-time 'Review skipped' status does not count as reported",
     ok:
-      statusOf(draftOnly, "coderabbitai") === "missing" &&
+      settleBotStateFromResult(draftOnly, "coderabbitai") === "missing" &&
       draftOnly.botsMissing.includes("coderabbitai"),
   });
 
@@ -1367,12 +1376,12 @@ function selfTest() {
   const unmappedDraft = buildResult(settleBase);
   cases.push({
     name: "settle: a draft-time walkthrough summary does not count (unmapped bot)",
-    ok: statusOf(unmappedDraft, "coderabbitai") === "missing",
+    ok: settleBotStateFromResult(unmappedDraft, "coderabbitai") === "missing",
   });
   cases.push({
     name: "settle: a bot with no activity at all is missing",
     ok:
-      statusOf(unmappedDraft, "claude") === "missing" &&
+      settleBotStateFromResult(unmappedDraft, "claude") === "missing" &&
       unmappedDraft.botsReported.length === 0,
   });
 
@@ -1387,7 +1396,7 @@ function selfTest() {
   });
   cases.push({
     name: "settle: a sticky summary edited in place after ready counts (updatedAt)",
-    ok: statusOf(editedInPlace, "coderabbitai") === "reported",
+    ok: settleBotStateFromResult(editedInPlace, "coderabbitai") === "reported",
   });
 
   const reviewed = buildResult({
@@ -1406,7 +1415,7 @@ function selfTest() {
   cases.push({
     name: "settle: a post-ready terminal status on the head reports the mapped bot",
     ok:
-      statusOf(reviewed, "coderabbitai") === "reported" &&
+      settleBotStateFromResult(reviewed, "coderabbitai") === "reported" &&
       reviewed.botStatus.find((status) => status.bot === "coderabbitai")
         ?.via === "check",
   });
@@ -1426,7 +1435,7 @@ function selfTest() {
   cases.push({
     name: "settle: a pending mapped check is pending and still counted in botsMissing",
     ok:
-      statusOf(pendingCheck, "coderabbitai") === "pending" &&
+      settleBotStateFromResult(pendingCheck, "coderabbitai") === "pending" &&
       pendingCheck.botsMissing.includes("coderabbitai"),
   });
 
@@ -1436,7 +1445,9 @@ function selfTest() {
     checkContexts: [
       {
         __typename: "CheckRun",
-        checkSuite: { workflowRun: { workflow: { name: "Claude Code Review" } } },
+        checkSuite: {
+          workflowRun: { workflow: { name: "Claude Code Review" } },
+        },
         completedAt: "2026-10-06T11:16:33Z",
         conclusion: "SKIPPED",
         name: "claude-review / claude-review",
@@ -1445,7 +1456,9 @@ function selfTest() {
       },
       {
         __typename: "CheckRun",
-        checkSuite: { workflowRun: { workflow: { name: "Claude Code Review" } } },
+        checkSuite: {
+          workflowRun: { workflow: { name: "Claude Code Review" } },
+        },
         completedAt: "2026-10-06T11:29:07Z",
         conclusion: "CANCELLED",
         name: "claude-review / claude-review",
@@ -1457,7 +1470,7 @@ function selfTest() {
   cases.push({
     name: "settle: a post-ready cancelled check means skipped (won't report), not missing",
     ok:
-      statusOf(cancelledCheck, "claude") === "skipped" &&
+      settleBotStateFromResult(cancelledCheck, "claude") === "skipped" &&
       cancelledCheck.botsSkipped.includes("claude") &&
       !cancelledCheck.botsMissing.includes("claude"),
   });
@@ -1487,7 +1500,7 @@ function selfTest() {
   });
   cases.push({
     name: "settle: an undated queued rerun outranks an earlier cancelled run (suite createdAt)",
-    ok: statusOf(queuedRerun, "claude") === "pending",
+    ok: settleBotStateFromResult(queuedRerun, "claude") === "pending",
   });
 
   const queuedFromDraft = buildResult({
@@ -1507,7 +1520,7 @@ function selfTest() {
   });
   cases.push({
     name: "settle: an undated queued run whose suite predates ready does not count",
-    ok: statusOf(queuedFromDraft, "claude") === "missing",
+    ok: settleBotStateFromResult(queuedFromDraft, "claude") === "missing",
   });
 
   const claudeSucceeded = buildResult({
@@ -1526,7 +1539,7 @@ function selfTest() {
   });
   cases.push({
     name: "settle: a full 'workflow / job' check name matches the CheckRun",
-    ok: statusOf(claudeSucceeded, "claude") === "reported",
+    ok: settleBotStateFromResult(claudeSucceeded, "claude") === "reported",
   });
 
   // A push after review: the old review and the old thread comment predate the
@@ -1566,8 +1579,8 @@ function selfTest() {
   cases.push({
     name: "settle: activity on a superseded head commit does not count",
     ok:
-      statusOf(staleHead, "claude") === "missing" &&
-      statusOf(staleHead, "coderabbitai") === "missing",
+      settleBotStateFromResult(staleHead, "claude") === "missing" &&
+      settleBotStateFromResult(staleHead, "coderabbitai") === "missing",
   });
   cases.push({
     name: "settle: the activity fingerprint changes with the head",

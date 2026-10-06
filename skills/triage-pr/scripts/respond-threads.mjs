@@ -44,7 +44,9 @@ import { readFileSync, realpathSync } from "node:fs";
 // so a thread reply is never mistaken for the issue-level summary comment.
 export const THREAD_MARKER = "<!-- triage-pr:thread-ack -->";
 export const SUMMARY_MARKER = "<!-- triage-pr:summary-ack -->";
-/** Unattended Phase B disposition plan (upserted before apply; A-2013 / A-2014). */
+/**
+ * Unattended Phase B disposition plan (upserted before apply; A-2013 / A-2014).
+ */
 export const DISPOSITION_PLAN_MARKER = "<!-- triage-pr:disposition-plan -->";
 // Non-resolving marker written the moment a follow-up is filed (Step 8), before
 // its ticket exists (Step 10). Distinct from THREAD_MARKER on purpose: it must NOT
@@ -371,7 +373,6 @@ export function findExistingAckComment(comments) {
 /**
  * Build the unattended Phase B disposition-plan comment. Carries
  * {@link DISPOSITION_PLAN_MARKER} so a re-run edits it in place.
- *
  * @param {string} planMarkdown — full plan body (numbered items, detail sections).
  */
 export function buildDispositionPlanComment(planMarkdown) {

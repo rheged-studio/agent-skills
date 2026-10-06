@@ -509,9 +509,7 @@ describe("mergeConfig", () => {
       const { data, results } = mergeConfig({
         config: { reviewBots: ["claude", "cursor", "coderabbitai"] },
         detect: (key) =>
-          key === "reviewBots"
-            ? { value: ["claude", "coderabbitai"] }
-            : null,
+          key === "reviewBots" ? { value: ["claude", "coderabbitai"] } : null,
         example: triageExample,
       });
       expect(results.reviewBots.status).toBe("inferred");
