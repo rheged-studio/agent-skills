@@ -335,8 +335,8 @@ function producerIdentity(node) {
  */
 function normaliseProducer(identity) {
   return String(identity ?? "")
-    .replace(/\[bot\]$/, "")
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/\[bot\]$/, "");
 }
 
 /**
@@ -436,9 +436,8 @@ function contextTime(node) {
  */
 function settleFromCheck(checkSpec, checkContexts, threshold) {
   const { name: checkKey, producer } = normaliseCheckSpec(checkSpec);
-  const candidates = (checkContexts ?? [])
+  const byName = (checkContexts ?? [])
     .filter((node) => contextMatches(node, checkKey))
-    .filter((node) => producerMatches(node, producer))
     .filter((node) => {
       if (threshold === null) {
         return true;
@@ -446,10 +445,19 @@ function settleFromCheck(checkSpec, checkContexts, threshold) {
 
       const time = contextTime(node);
       return time !== null && time >= threshold;
-    })
+    });
+  const candidates = byName
+    .filter((node) => producerMatches(node, producer))
     .toSorted((a, b) => (contextTime(b) ?? 0) - (contextTime(a) ?? 0));
   const latest = candidates[0];
   if (!latest) {
+    if (producer && byName.some((node) => !producerMatches(node, producer))) {
+      return {
+        evidence: `"${checkKey}" status or check posted by an unexpected producer (expected "${producer}")`,
+        state: "missing",
+      };
+    }
+
     return {
       evidence: `no "${checkKey}" status or check since ready on the head commit`,
       state: "missing",
@@ -1665,7 +1673,10 @@ function selfTest() {
     name: "settle: a same-named status from the wrong producer does not count",
     ok:
       settleBotStateFromResult(wrongProducerStatus, "coderabbitai") ===
-      "missing",
+        "missing" &&
+      wrongProducerStatus.botStatus
+        .find((status) => status.bot === "coderabbitai")
+        ?.evidence.includes("unexpected producer"),
   });
 
   const matchingProducerStatus = buildResult({
@@ -1688,6 +1699,29 @@ function selfTest() {
     name: "settle: a same-named status from the expected creator reports",
     ok:
       settleBotStateFromResult(matchingProducerStatus, "coderabbitai") ===
+      "reported",
+  });
+
+  const uppercaseProducerConfig = buildResult({
+    ...settleBase,
+    botChecks: {
+      coderabbitai: { name: "CodeRabbit", producer: "CODERABBITAI[BOT]" },
+    },
+    checkContexts: [
+      {
+        __typename: "StatusContext",
+        context: "CodeRabbit",
+        createdAt: "2026-10-06T11:34:37Z",
+        creator: { login: "coderabbitai" },
+        description: "Review completed",
+        state: "SUCCESS",
+      },
+    ],
+  });
+  cases.push({
+    name: "settle: producer config normalises [bot] suffix case-insensitively",
+    ok:
+      settleBotStateFromResult(uppercaseProducerConfig, "coderabbitai") ===
       "reported",
   });
 
