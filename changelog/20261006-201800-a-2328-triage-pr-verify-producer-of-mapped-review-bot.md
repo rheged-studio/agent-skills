@@ -7,6 +7,13 @@ category: feature
 breaking: false
 issues:
   - A-2328
+merged_at: "2026-10-06T19:35:11Z"
+commit: c922758
+pr: 191
+stats:
+  loc_added: 286
+  loc_removed: 27
+  files_changed: 4
 ---
 
 ## Added
