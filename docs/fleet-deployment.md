@@ -37,6 +37,47 @@ node .claude/skills/rheged-skills-setup/scripts/initialise.mjs --install --write
 
 **Dogfood in this repo:** Rheged bundles stay under `skills/`; Matt packs vend into `.claude/skills/` and `.agents/skills/` via `--install` (the catalogue skips re-copying Rheged into mirrors on the source repo).
 
+### Catalogue decisions (A-2298)
+
+The Matt Pocock source lists every skill in upstream's **Engineering** and
+**Productivity** buckets as of `mattpocock/skills` 1.3.1. Recorded choices:
+
+- **Excluded on purpose:** upstream's `misc` (`git-guardrails-claude-code`,
+  `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`) and
+  `in-progress` buckets. They are personal or experimental and are not
+  distributed as the core packs.
+- **`pr` is adopted, and `send-it` defers to it.** When `pr` is installed,
+  `send-it` Step 9 writes the PR body in its shape (Summary visual, Evidence,
+  Merge Danger). It still adds its own `## Related Issues` section and the
+  no-release note. Without `pr`, send-it falls back to its built-in template.
+- **`implement-spec` and `retro`** were added in 1.3.0 and are listed.
+- **`resolving-merge-conflicts` was removed upstream** in 1.3.0, with no
+  replacement. It is out of the catalogue, and `LEGACY_BUNDLE_NAMES` in
+  `rheged-skills-setup` now wipes stale vendored copies on the next install, so
+  `--install` no longer fails its Matt-bundle presence check on a skill upstream
+  no longer ships.
+- **Unattended Phase B (`humanEnvelope`)** from the Tempest trial is upstream in
+  `triage-pr` and `send-it` (A-2015, PR #189). A re-vendor no longer loses it,
+  and no Tempest-only override is needed.
+
+### `CONTEXT.md` → `GLOSSARY.md` rename (mattpocock/skills 1.3.0)
+
+Matt's skills now read and write only `GLOSSARY.md` / `GLOSSARY-MAP.md`. The
+rename ships as a **per-repo fan-out step**, done during each repo's re-vendor
+(A-2299 and its per-repo sub-issues). `rheged-skills-setup` doesn't automate it,
+because `docs/agents/domain.md` is written by Matt's `setup-matt-pocock-skills`,
+not by this repo's tooling. In each consumer that has the old files:
+
+```bash
+git mv CONTEXT.md GLOSSARY.md             # if present at the root
+git mv CONTEXT-MAP.md GLOSSARY-MAP.md     # if present
+# and any per-context CONTEXT.md under the paths CONTEXT-MAP.md listed
+```
+
+Then update `docs/agents/domain.md` (and any `AGENTS.md` / `CLAUDE.md` pointer) to
+name `GLOSSARY.md` / `GLOSSARY-MAP.md`, re-running `/setup-matt-pocock-skills` if
+that's simpler. Commit it as its own `docs:` commit alongside the re-vendor.
+
 ## The Rheged ship set
 
 Published Rheged bundles live under `skills/<name>/` in agent-skills:
@@ -245,6 +286,7 @@ for the full key → detection-source table.
 - [ ] Installed the repo-type-appropriate set via `skills add … --copy` (step 2).
 - [ ] On a re-vendor: restored the per-skill `config.json` the `--copy` install deleted, from the trunk, before reconciling (step 2 callout).
 - [ ] Reconciled config with `rheged-skills-setup` `--dry-run` then `--write`, supplying `facts.issueKeys` for a renamed team (step 3).
+- [ ] On a mattpocock/skills 1.3+ re-vendor: renamed `CONTEXT.md` / `CONTEXT-MAP.md` to `GLOSSARY.md` / `GLOSSARY-MAP.md` and updated `docs/agents/domain.md` (see [the rename](#contextmd--glossarymd-rename-mattpocockskills-130)).
 - [ ] Verified idempotency, safe previews, and CI (step 4).
 
 ## Automating a single-repo update (`fleet-update.mjs`)
