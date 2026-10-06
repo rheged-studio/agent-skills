@@ -21,7 +21,7 @@ compatibility: >-
   silently; missing `triage-pr` warns and stops at the open PR (not a successful
   default run — install it).
 metadata:
-  version: 0.9.1
+  version: 0.9.2
   author: Rob Easthope
 allowed-tools: Write, Read, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(pnpm:*), Bash(node:*), Bash(npx:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects
 ---
@@ -517,14 +517,10 @@ Skip silently if `linear-sync` or the Linear MCP server is unavailable.
 > `/send-it` run (A-1645).
 
 send-it opens the PR; [`triage-pr`](../triage-pr/SKILL.md) takes it the rest of the
-way (A-1151). **This step is part of the run — not an optional extra.** One
-`/send-it` drives the whole pipeline: Phase A fixes in-scope CI failures and promotes
-the proven-green draft to ready, then Phase B waits for the AI reviewers, verifies
-every finding, and either halts at its human envelope (`humanEnvelope: true`) or
-applies the dispositions unattended and ends on its Step 13 report (`false`). Hand-off
-alone does not finish the run — it ends only when triage-pr reaches one of those
-terminal outcomes or a documented stop. This step runs **after** Step 10 so
-the linked issues are already In Review before triage begins.
+way (A-1151). **This step is part of the run — not an optional extra.** Hand-off alone
+does not finish the run — follow triage-pr through to a **terminal outcome** (Step 13
+report, human envelope when `humanEnvelope` is `true`, or a documented stop). This step
+runs **after** Step 10 so linked issues are already In Review before triage begins.
 
 1. **Check the opt-out first — before anything else in this step.** If `--skip-triage`
    was passed, or `config.json` sets `triage: false`, print
@@ -624,14 +620,10 @@ the linked issues are already In Review before triage begins.
    send-it configures nothing about it, exactly as it configures nothing about
    `commit`, `preflight`, `changelog`, or `linear-sync`.
 
-5. **Run the full chain.** Don't stop between phases: Phase A's fix→push→watch loop,
-   the promotion gate, then Phase B's review wait and verify-then-propose. Halt where
-   `triage-pr` halts — its human envelope (only when `humanEnvelope` is `true`), its
-   slow-bot micro-gate (envelope path only), a hard blocker, unattended stop rules, or
-   `maxCiRounds` / `maxReviewRounds` exhaustion. When `humanEnvelope` is `true`, the envelope **is** the
-   run's natural stopping point: don't answer it on the user's behalf, and don't print
-   a send-it "all done" over the top of it. When `false`, the run ends on triage-pr's
-   Step 13 report.
+5. **Run the full triage-pr skill** — do not stop between its phases. Halt only where
+   triage-pr halts (including its human envelope when `humanEnvelope` is `true` — do
+   not answer on the user's behalf). See [`triage-pr`](../triage-pr/SKILL.md) for
+   Phase A/B behaviour.
 
 6. **Report once.** `triage-pr`'s own final report is the run's report — prepend
    send-it's line items (branch, PR URL, changelog entry, Linear transitions) to it
@@ -644,12 +636,8 @@ the linked issues are already In Review before triage begins.
 > print `no PR to triage yet` and exit 0. A dry run therefore makes **read-only** `gh`
 > calls; it still writes nothing, commits nothing, and pushes nothing.
 >
-> **Re-runs are safe.** A second `/send-it` re-enters the chain against the same PR.
-> `triage-pr` re-fetches threads every pass: resolved threads are filtered out, and
-> proposed follow-up threads already carry the non-resolving `follow-up-pending` marker (A-679),
-> so they arrive as `deferredThreads`, not fresh findings. Only genuinely new bot
-> findings are dispositioned again — re-prompted at the envelope when `humanEnvelope`
-> is `true`, or re-planned and applied unattended when `false`.
+> **Re-runs are safe.** A second `/send-it` re-enters triage-pr against the same PR;
+> see [`triage-pr`](../triage-pr/SKILL.md).
 
 ## Flags
 
