@@ -11,7 +11,7 @@ issues:
 
 ## Added
 
-- **triage-pr 0.17.0 ([A-2328](https://linear.app/rheged-studio/issue/A-2328)).**
+- **triage-pr 0.17.1 ([A-2328](https://linear.app/rheged-studio/issue/A-2328)).**
   `reviewBotChecks` values may be a string check name (unchanged) or
   `{ "name": "…", "producer": "…" }`. When `producer` is set, settle matches
   `StatusContext.creator.login` or `CheckRun.checkSuite.app.slug` as well as the
