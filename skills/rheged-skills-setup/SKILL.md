@@ -25,7 +25,7 @@ compatibility: >-
   token check is optional. It uses `gh` when authenticated; otherwise it asks the
   operator to confirm the secret.
 metadata:
-  version: 0.12.1
+  version: 0.13.0
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), Bash(npx:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
 ---
