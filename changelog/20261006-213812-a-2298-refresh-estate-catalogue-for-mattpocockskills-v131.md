@@ -36,7 +36,9 @@ version:
 
 - **rheged-skills-setup 0.13.0 ([A-1621](https://linear.app/rheged-studio/issue/A-1621)).** The `CLAUDE_CODE_OAUTH_TOKEN` probe
   runs before the confirmation gate, applies only when estate Claude callers are
-  present, and also lists org secrets when it can. When the secret is absent, the
+  present, and also lists org secrets when it can, checking that an org secret's
+  visibility (`ALL` / `PRIVATE` / `SELECTED`) actually reaches this repo before
+  reporting OK. When the secret is absent, the
   gate asks for it at org or repo level (`claude setup-token`, then
   `gh secret set … --org` or `--repo`) and explains the `visibility: selected`
   caveat. It no longer points to `/install-github-app` for the secret.
