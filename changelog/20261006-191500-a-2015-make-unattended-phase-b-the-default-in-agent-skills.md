@@ -1,17 +1,19 @@
 ---
 title: make unattended Phase B the default in agent-skills
-release_note: >-
-  triage-pr now defaults to unattended Phase B (plan on the PR, no Yes/No or
-  Linear prompt), with follow-up destination cascade, head-commit settle, and
-  send-it hand-off when humanEnvelope is false; rheged-skills-setup stops wiping
-  follow-up labels and drops cursor from review bots; changelog quotes SHA-like
-  frontmatter values so they stay strings.
-created_at: '2026-10-06T19:15:00Z'
+release_note: triage-pr now defaults to unattended Phase B (plan on the PR, no Yes/No or Linear prompt), with follow-up destination cascade, head-commit settle, and send-it hand-off when humanEnvelope is false; rheged-skills-setup stops wiping follow-up labels and drops cursor from review bots; changelog quotes SHA-like frontmatter values so they stay strings.
+created_at: "2026-10-06T19:15:00Z"
 branch: a-2015-make-unattended-phase-b-the-default-in-agent-skills
 category: feature
 breaking: false
 issues:
   - A-2015
+merged_at: "2026-10-06T18:31:10Z"
+commit: 14f8e37
+pr: 189
+stats:
+  loc_added: 1755
+  loc_removed: 443
+  files_changed: 28
 ---
 
 ## Added
