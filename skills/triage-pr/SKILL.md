@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.16.0
+  version: 0.17.0
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
 ---
@@ -34,17 +34,11 @@ phases, choosing the phase from the PR's draft state:
 - **Phase A — while the PR is a draft:** inspect failing checks, pull GitHub
   Actions logs, and fix failures **in PR scope only**. Loop until CI is green or
   report blockers. Phase A runs unattended — no human gate except hard blockers.
-- **Phase B — after the PR is ready-for-review:** AI review is gated on
-  `draft == false`, so once the PR is flipped to ready — by `promoteOnGreen` or a
-  human — wait for configured reviewers (Claude Code Review, CodeRabbit)
-  to post feedback, **verify-then-propose** dispositions for every finding, then
-  — when `humanEnvelope` is `true` — **halt** for one batch approval
-  (structured Questions UI when available — A-1647) before applying accepts,
-  declines, or Linear follow-ups. When `humanEnvelope` is `false` or
-  `--auto-apply`, use the **unattended** path (A-2013): upsert the disposition plan
-  on the PR, act without Yes/No or a Linear prompt, skip the slow-bot micro-gate.
-  After apply, re-watch CI; **re-envelope** when `humanEnvelope` is `true`, or
-  **re-plan and continue** when unattended — bounded by `maxReviewRounds`.
+- **Phase B — after the PR is ready-for-review:** wait for configured reviewers,
+  **verify-then-propose** dispositions (Step 9), then follow
+  [`references/phase-b-envelope.md`](references/phase-b-envelope.md) or
+  [`references/phase-b-unattended.md`](references/phase-b-unattended.md) per
+  `humanEnvelope` / `--auto-apply`. Bounded by `maxReviewRounds`.
 
 Since send-it 0.8.0, `/send-it` **opens or updates** the pull request and then
 **invokes this skill as its final step** (Step 11, A-1151): it waits for at least
@@ -88,25 +82,12 @@ The first ten govern the **CI + review** loop:
 | `replyOnAccept` | Whether an **accepted** finding gets a factual thread reply referencing the fixing commit before the thread is resolved (the audit trail). `false` resolves accepted threads silently for maintainers who dislike bot-reply noise — declines always reply with reasoning regardless. | `true` |
 | `promoteOnGreen` | The single control for the draft→ready flip. When `true`, after Phase A finishes with **every** required check genuinely green on a **draft** PR, run `gh pr ready <pr>` to flip it to ready-for-review (the gate that turns AI review on), then continue into Phase B — instead of stopping at green. **Default-on**, and an enabled config _is_ the human authorisation for the flip: proceed on proven green without seeking a separate sign-off. Set `false` (or pass `--no-promote`) to opt out and stop at green. Promotion is suppressed unless the green is _proven_ (Step 6's watched rollup, never "no failures yet"), there are **no unresolved human review threads**, and `mergeStateStatus` shows no unresolved base drift (`BEHIND` / `DIRTY`). An explicit user prompt — or `--promote` / `--no-promote` — overrides this per run; `--ci-only` and `--dry-run` never promote. | `true` |
 | `deferNonBlocking` | When `true` (the default), a valid **in-scope** finding is proposed as **accept** only if it is **high-impact** under the impact rubric in [`references/review-discipline.md`](references/review-discipline.md#when-to-fix-now-vs-follow-up); otherwise it is proposed as **follow-up** (same path as out-of-scope). Set `false` to restore scope-only behaviour on the envelope path (every valid in-scope finding is proposed as accept; only out-of-scope findings become follow-ups). The unattended path always applies the rubric. | `true` |
-| `humanEnvelope` | When `false` (the default), use the **unattended** path (A-2013): upsert the plan on the PR (`respond-threads.mjs plan`), act without Yes/No or a Linear prompt, skip the slow-bot micro-gate; `deferNonBlocking` applies only on the `true` path. When `true`, Phase B **halts** after verify-then-propose with a full disposition plan and waits for one batch **Yes / No / Other** approval (**default yes**) before code changes, Linear create, or resolving replies — via Cursor `AskQuestion` or Claude Code `AskUserQuestion` when available, else prose `[Y/n]` (Step 10). Proposed follow-up threads get a non-resolving `follow-up-pending` mark when the plan is presented so restarts do not re-emit them. Same gate covers findings from later AI re-reviews (including `/send-it` → triage chains). `--auto-apply` forces the unattended path for one run. Legacy CLI aliases `defer` / `defer-pending` still work. An explicit user prompt overrides the config per run. | `false` |
+| `humanEnvelope` | When `false` (the default), load [`references/phase-b-unattended.md`](references/phase-b-unattended.md); when `true`, load [`references/phase-b-envelope.md`](references/phase-b-envelope.md). `deferNonBlocking` applies only on the envelope path. `--auto-apply` forces unattended for one run. Legacy CLI aliases `defer` / `defer-pending` still work. An explicit user prompt overrides the config per run. | `false` |
 | `reviewIdleMinutes` | Hybrid review-settle idle window: after at least one configured bot has reported on the current head (and no mapped bot's check is still pending), treat reviews as settled when the fetcher's `activityFingerprint` has not changed for this many minutes. | `10` |
 | `reviewWaitMaxMinutes` | Hard cap on the hybrid wait after the ready flip (or Phase B entry on an already-ready PR). If bots are still missing when this expires, run the **slow-bot micro-gate** (proceed / wait longer / abort) before the disposition envelope. | `20` |
 
-The remaining five configure the **follow-up capture** path — turning a follow-up
-finding into a tracked Linear issue. Under `humanEnvelope: true`, capture is part of
-the same envelope approval (not a second prompt). Under unattended
-(`humanEnvelope: false` / `--auto-apply`), create follow-ups in Step 11 after the
-plan is posted — no second prompt. Capture is
-**opt-in**: when `linearTeamName` is empty, it is disabled (no Linear MCP calls);
-skip silently when the Linear MCP server is unavailable.
-
-| Key | Meaning | Default |
-| --- | --- | --- |
-| `linearTeamName` | Linear team **name** (not the key — the key is renamed over time, the name is stable) the follow-up issues are created under. Empty disables capture entirely. | `""` |
-| `issueKeys` | Team-key prefixes that may appear in branch names, used to recognise issue ids the same way `linear-sync` does. Mirrors the established `issueKeys` convention. | `[]` |
-| `followUpLabel` | Label applied to every created follow-up (provenance: this came from a review disposition). **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never mint without the label). Do not also apply the repo's agent-ready triage label. Rheged estate value: `follow-up`. | `"follow-up"` |
-| `followUpProject` | Linear project (name, id, or slug) used as the **catch-all** when a follow-up cannot inherit a live project from the PR's Linear issue. **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never file with no project). Rheged estate value: `Follow-up issues`. | `""` |
-| `followUpState` | Optional initial workflow state (type, name, or id — e.g. `Backlog`) for created issues. Empty = the team's default state. | `"Backlog"` |
+**Follow-up capture** (Linear) keys and routing live in
+[`references/follow-up-routing.md`](references/follow-up-routing.md).
 
 Only the configured `reviewBots` are actioned in Phase B. Human review comments
 are surfaced in the final report but never auto-actioned, replied to, or
@@ -505,314 +486,50 @@ For each finding record:
 - for `decline`: technical reasoning
 - for `follow-up`: draft Linear title + rationale, **and** the destination line
   (`→ file under …`) from the routing step below
-- for `gated`: surface touched + preferred alternative
-- for `outdated`: how you verified the cited code is gone (not just moved); if the
-  concern still applies to the current code, propose a normal disposition instead
+- for `outdated`: per [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps) (verify gone, not moved)
+- for `gated`: surface touched + preferred alternative — classify **before** impact;
+  full lint-surface rules in
+  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision)
 
-Classify impact with the single rubric in
+Classify impact with the rubric in
 [`references/review-discipline.md`](references/review-discipline.md#when-to-fix-now-vs-follow-up)
-on both paths (on the envelope path, `deferNonBlocking: false` switches it off and
-proposes every valid in-scope finding as accept).
+(on the envelope path, `deferNonBlocking: false` proposes every valid in-scope finding
+as accept).
 
-**Resolve follow-up destination before mint.** When the plan includes
-any `follow-up` — or, on the unattended path, any `[gated]` item (which becomes a
-follow-up there) — and capture is enabled (`linearTeamName` set), run the Step 11
-destination cascade **read-only in this step** — before Step 10 on
-the envelope path, and before mint on the unattended path —
-so each follow-up item can show `→ file under …`. Use only `get_issue`,
-`list_projects`, `list_milestones`, and `list_issue_labels`; do **not** call
-`save_milestone` or `save_issue` in this step. Mint in Step 11: after Step 10
-approval on the envelope path (`humanEnvelope: true`); after the plan comment
-on the unattended path (`humanEnvelope: false` / `--auto-apply`) with no
-Linear-only gate.
-Reuse that destination on mint in Step 11; do not re-decide it then.
-If routing fail-closes (empty or unresolved catch-all, or empty or unresolved
-`followUpLabel`), keep the item as a follow-up candidate but say on the
-envelope line that capture will decline / `Follow-up not tracked`. On the
-catch-all, when the repo milestone does not yet exist, still show
-`file under <catch-all> / <repo> (no live parent project)` on the
-envelope line — Step 11 creates the milestone on mint. Skip this resolve when
-capture is disabled (`linearTeamName` empty). Under `--dry-run`, this resolve
-stays read-only too (no Linear writes).
+When the plan includes follow-ups (or unattended `[gated]` items), resolve destinations
+read-only per
+[`references/follow-up-routing.md`](references/follow-up-routing.md#step-9--read-only-destination-resolve).
 
-**Lint-surface findings are gated, whatever their impact.** When a finding's fix
-would edit lint / format / static-analysis config or add an ignore / disable
-directive, mark the plan item `[gated]` — naming the surface it would touch and the
-preferred alternative (code fix, or a change to the shared config package). `[gated]`
-**displaces every other disposition**, not just `accept`: classify the surface
-_before_ applying `deferNonBlocking`, so a valid but low-impact lint-surface finding
-is gated rather than routed to `follow-up` and the Linear follow-up flow. Under
-`humanEnvelope` it rides the **same** envelope so the developer
-sees it in one batch — never a second prompt, and never applied without their explicit
-go-ahead. Under unattended paths (`humanEnvelope: false` / `--auto-apply`) there is
-no envelope to sign it off, so a gated item becomes a **Linear follow-up**: resolve
-its destination with the follow-up cascade above, mint it in Step 11 — Urgent
-(`priority: 1`) plus the Step 9 stop when it is critical/blocking, ordinary
-otherwise — and only then resolve its thread with the `follow-up` reply. When
-capture is disabled (`linearTeamName` empty) or fails closed (unresolved project or
-label), there is no ticket to point at: leave the gated thread **unresolved** and
-report it in Step 13 as an outstanding gated item. When unsure whether a gated item
-matters, file the follow-up rather than drop it. Never apply a lint-surface edit
-unattended.
+**Branch on `humanEnvelope`:**
 
-**When `humanEnvelope` is true** → continue to Step 10. As soon as the
-plan includes any per-thread `follow-up`, **immediately** mark those threads with the
-non-resolving `follow-up-pending` decision (below) so a restart or overlapping run
-does not re-emit them as fresh findings while the human decides. Do **not**
-resolve them yet — Step 11 finalises after approval.
-**When `humanEnvelope` is false / `--auto-apply`** (unattended path):
+- `true` → follow [`references/phase-b-envelope.md`](references/phase-b-envelope.md)
+  (Step 10 gate, then Step 11 apply).
+- `false` / `--auto-apply` → follow
+  [`references/phase-b-unattended.md`](references/phase-b-unattended.md) (post plan,
+  then Step 11 apply).
 
-1. Upsert the full disposition plan on the PR (chat detail + numbered plan):
+### Step 10 — Phase B: human envelope
 
-   ```bash
-   node scripts/respond-threads.mjs plan --pr <pr> --body @/tmp/disposition-plan.md
-   ```
+When `humanEnvelope` is `true`, run Step 10 in
+[`references/phase-b-envelope.md`](references/phase-b-envelope.md). When `false` or
+`--auto-apply`, skip — unattended flow starts in Step 9 above.
 
-   Use the same Option A grouped markdown as Step 10's detail block. Under
-   `--dry-run`, print the body only — do not call `plan`.
+### Step 11 — Phase B: apply dispositions
 
-2. If `humanThreads` is non-empty → **stop** after the plan is posted. Apply
-   nothing (no commits, no Linear creates, no bot thread resolves). Leave human
-   threads untouched.
-
-3. Otherwise → Step 11 immediately (no Step 10). Classify using the impact
-   rubric in [`references/review-discipline.md`](references/review-discipline.md#when-to-fix-now-vs-follow-up).
-   **Stops without merge-ready:** in-scope critical/blocking finding that would be
-   its own PR (or size test unclear) — post plan, apply other dispositions, file
-   **Urgent** Linear (`priority: 1`), stop; do not revert pushed commits. Critical
-   lint/format/workflow finding that would need a gated surface — same stop (agent
-   still never edits those files / workflows).
-
-4. Ordinary / Urgent follow-ups: create in Step 11 with the expanded body template
-   (falsifiable claim, verified, deferred why, leaning, permalinks + SHA, considered,
-   re-verify instruction — no prescribed patch). Urgent uses `priority: 1`; ordinary
-   stays Backlog with no priority bump.
-
-### Step 10 — Phase B: human envelope (same-session gate)
-
-Present the disposition plan as **one batch** and ask **once** (**default yes** —
-plans are generally accurate). Nothing is applied until the human answers.
-
-#### 1. Detail block (chat message, above the gate)
-
-Use **Option A — grouped by disposition**. Omit empty disposition sections.
-Full cards for `accept` / `follow-up` / `gated`. Routine `decline` / `outdated`
-items go in one compressed list unless the reason is non-obvious (then promote
-to a full card). Include a GitHub **thread permalink** on every item when the
-fetcher (or comment) provides `url`.
-
-```markdown
-## Disposition details
-
-### [accept] Null guard in src/api.ts:42
-- **Source:** CodeRabbit · [thread](https://github.com/org/repo/pull/12#discussion_r1)
-- **Finding:** Optional `user` used without a check before `.id`.
-- **Verify:** Real, in-scope, high-impact (would throw on anonymous).
-- **Fix:** Early return when `!user`.
-
-### [follow-up] Extract retry helper
-- **Source:** Claude · [thread](…)
-- **Finding:** Duplicated fetch-retry in three callers.
-- **Verify:** Real but non-blocking for this PR.
-- **Linear:** "Add retry backoff to fetch layer" → file under Triage PR upgrades
-
-### [gated] eslint.config.mjs rule change
-- **Source:** … · [thread](…)
-- **Finding:** …
-- **Verify:** …
-- **Why gated:** Would edit lint config; prefer shared package change unless signed off.
-
-### [decline] / [outdated]
-1. CodeRabbit · `README.md:14` — pinning wording already correct · [thread](…)
-2. Claude · exact-pinned astro — YAGNI for this PR · [thread](…)
-```
-
-#### 2. Compact plan + structured Yes / No / Other
-
-Keep a short numbered plan (for Other overrides by number) plus any bot-wait
-footer. Prefer a structured question tool when available — **at most one** such
-call per turn. Do **not** dump the full detail block into the question prompt.
-
-**Compact plan shape** (also used in the prose fallback):
-
-```text
-Phase B disposition plan (nothing applied yet):
-  1. [accept] Fix null guard in src/api.ts:42 — …
-  2. [decline] Suggested rewrite is YAGNI — …
-  3. [follow-up] Extract retry helper — draft: "Add retry backoff to fetch layer"
-     → file under Triage PR upgrades (inherited from A-1541)
-  4. [gated] Would need `eslint.config.mjs` rule change — your call; prefer a
-     change to @rheged-studio/eslint-config
-  Bots still outstanding at wait end: coderabbitai (if any)
-```
-
-**Cursor — `AskQuestion` when available:**
-
-- Prompt: apply this Phase B disposition plan? (default yes; nothing applied yet).
-- Options: **Yes** | **No** | **Other (type overrides)**.
-
-**Claude Code — `AskUserQuestion` when available** (listed in `allowed-tools`):
-
-- `header`: `Apply plan` (≤12 chars).
-- `question`: apply this Phase B disposition plan? (default yes; nothing applied yet).
-- Options: **Yes (Recommended)** (apply as proposed) | **No** (apply nothing).
-- Rely on Claude Code’s automatic **Other** free-text path for typed overrides;
-  if a host build does not append Other, list an explicit third **Other** option.
-
-**Fallback** (neither `AskQuestion` nor `AskUserQuestion`):
-
-```text
-Apply this plan? [Y/n]
-  (optional overrides: "yes except decline #1, follow-up #2 as …")
-```
-
-#### 3. Interpret the answer
-
-Keep the session open — this gate **is** the actionable interrupt.
-Proposed follow-up threads should already carry the `follow-up-pending` marker from
-Step 9 (durable, still open).
-
-- **Yes** (default / Recommended / empty Enter on `[Y/n]`) → apply the plan in
-  Step 11.
-- **No** / Skip / dismiss-as-cancel → apply **nothing**: no commits, no Linear
-  creates, no replies or resolves. Threads already marked `follow-up-pending` stay
-  open with their marks, so a later run rediscovers them as `deferredThreads`. Stop;
-  no Step 13 "all done" claim beyond "envelope declined; nothing applied".
-- **Other** / typed overrides → interpret freeform changes (`yes except decline
-  #1, follow-up #2 as …`). If unclear, **one** clarifying turn — still no apply
-  until resolved.
-- Under `--dry-run`, print the detail block + plan that _would_ be proposed and
-  create nothing (do not call the question tools).
-
-The same envelope covers findings from **later** AI re-reviews on this PR
-(Step 12 re-envelope) — one gate for all dispositions, including new Linear
-follow-ups, using this same Questions contract (including when `/send-it` chained
-into this run).
-
-Fleet rollout of this Questions pattern to other skills is tracked under A-1655.
-
-### Step 11 — Phase B: apply approved dispositions
-
-Execute the approved plan (or the auto-apply path) one finding at a time:
-
-- **Accept** → IMPLEMENT, prove locally, commit/push, re-watch CI (Step 6), then
-  reply+resolve via `respond-threads.mjs` only once that fix's CI round is green.
-- **Decline** / **outdated** → reply+resolve immediately (no code). An `outdated`
-  disposition requires Step 9 to have verified the cited code is really gone, not
-  just moved; its reply is one line (the default, or `--reason`).
-- **Follow-up (unattended path)** → as soon as you classify the finding as follow-up,
-  mark it with `follow-up-pending` (non-resolving); create the Linear issue when capture
-  is enabled (Urgent or ordinary per Step 9), then post the final `follow-up`
-  reply+resolve (or decline `Follow-up not tracked`).
-- **Follow-up (envelope path)** → thread should already be `follow-up-pending` from
-  Step 9; on approval create the Linear issue (when capture enabled) then final
-  `follow-up` reply+resolve; when capture is disabled or the human excluded a follow-up,
-  fall back to decline (`Follow-up not tracked`).
-- **Gated (lint surface)** → apply **only** when the developer explicitly approved
-  that item in the envelope. Their sign-off is what turns it into an accept, so from
-  there it runs the **Accept** path exactly: IMPLEMENT the signed-off config or ignore
-  change, prove locally, commit/push, re-watch CI (Step 6), then reply+resolve once
-  that fix's CI round is green — with `--decision accept`, referencing the fixing
-  commit. `gated` is a **plan label only**; `respond-threads.mjs` has no such decision
-  (its set is `accept` / `decline` / `follow-up` / `follow-up-pending` / `outdated`;
-  legacy aliases `defer` / `defer-pending` still accepted) and
-  passing one would throw. **Except `.github/workflows/*`** — approval never
-  authorises a workflow edit. **Never greenwash** bans those outright, and this gate
-  does not relax it: when a signed-off item would touch a workflow (e.g. a CI
-  lint-step severity knob), report that the developer must make the change
-  themselves, and reply+resolve without a code change. Without sign-off, leave the
-  thread untouched and carry the
-  item into the Step 13 report. If it only becomes clear **mid-apply** that an approved
-  accept needs a lint-config edit or an ignore directive, stop that item, apply
-  nothing, and re-present it as `[gated]` in the Step 12 re-envelope. The gate holds
-  under `--auto-apply` / `humanEnvelope: false` too — there it is never auto-applied:
-  file it as a Linear follow-up (Urgent when critical/blocking) and resolve the
-  thread with the `follow-up` reply once the issue exists — or, when capture is
-  disabled or fails closed, leave the thread unresolved and report it — exactly as
-  Step 9 says.
+Execute the approved plan (envelope) or the posted plan (unattended) per
+[`references/phase-b-envelope.md`](references/phase-b-envelope.md) or
+[`references/phase-b-unattended.md`](references/phase-b-unattended.md). Mint Linear
+follow-ups per [`references/follow-up-routing.md`](references/follow-up-routing.md).
 
 ```bash
 node scripts/respond-threads.mjs thread --thread <PRRT_id> --decision accept --sha <sha> --bots "<config.reviewBots joined by commas>"
 node scripts/respond-threads.mjs thread --thread <PRRT_id> --decision decline --reason "<technical reasoning>" --bots "<config.reviewBots joined by commas>"
-# mark a follow-up candidate without resolving (envelope Step 9, or auto-apply as you classify):
 node scripts/respond-threads.mjs thread --thread <PRRT_id> --decision follow-up-pending --bots "<config.reviewBots joined by commas>"
-# after Linear mint (envelope: after Step 10 approval; unattended: no extra gate):
 node scripts/respond-threads.mjs thread --thread <PRRT_id> --decision follow-up --reference <issue-id> --bots "<config.reviewBots joined by commas>"
 ```
 
 `respond-threads.mjs` only acts on threads whose author is in `--bots`. For an
-`otherBotThreads` item, append that thread's author to the list for the call
-(`--bots "<config.reviewBots>,<thread author>"`).
-
-Linear create details (team by **name**, state by **type**, links, the
-required **label**, **project**, and **milestone** when the cascade has one) —
-resolve via `list_issue_statuses` / `list_projects` / `list_milestones` /
-`list_issue_labels` and fail loudly on typos.
-
-**Fail closed on project and label.** When capture is enabled (`linearTeamName`
-set), every minted issue **must** have a resolved `project` and the configured
-`followUpLabel`. Never omit `project`. Never omit the label, and do not also
-apply the repo's agent-ready triage label. Never call `save_issue` if routing or the label fails.
-Resolve the destination **read-only** in **Step 9** so the plan can show it,
-then reuse that destination on mint (creating the catch-all milestone with
-`save_milestone` if needed). Mint after Step 10 approval on the envelope path;
-after the plan comment on the unattended path, with no Linear-only gate.
-
-1. **Require `followUpLabel`.** Resolve the configured name with
-   `list_issue_labels` (exact name). If `followUpLabel` is empty or the label
-   does not exist → **do not** call `save_issue`. Abort capture loudly (tell
-   the human to set `followUpLabel` in `config.json` and to create that label),
-   and fall back to decline / `Follow-up not tracked` for each follow-up
-   candidate. On success, pass that label on every `save_issue` create. Rheged
-   estate value: `follow-up`.
-2. **Resolve the parent id.** Extract issue ids using the same `issueKeys`
-   regex as `linear-sync` (`lib/issue-keys.mjs` / `buildIssueRe`: `\bA-\d+\b`
-   for a single key; grouped alternation when there are several). Skip lookup
-   if there are no configured keys. Match in this order — **stop at the first
-   source that yields a match**:
-   1. the **upper-cased** branch name — if it has at least one match, the
-      **first** match is the primary parent (later matches on the branch, and
-      every match on the PR title, are ignored);
-   2. else the PR title — if it has at least one match, the **first** match is
-      the parent;
-   3. else there is **no** parent id.
-   When a parent id was resolved, `get_issue` on that id and set `relatedTo` to
-   that id on every `save_issue` create, including the catch-all. **Do not**
-   nest as a sub-issue (`parentId`). When there is no parent id, omit
-   `relatedTo`.
-3. **Live project, then milestone.** Only when step 2 resolved a parent. If it
-   has a `project`, resolve that project with `list_projects` and inspect its
-   status **type**. Types `completed` and `canceled` are **not live** — treat
-   as no inherit and go to step 4, even if the issue still has a milestone. On
-   a live project:
-   - If `projectMilestone` is set, `list_milestones` on that project. An exact
-     name match (a completed milestone still counts) → pass both `project` and
-     `milestone` on `save_issue`. Do **not** attach the repo milestone.
-     Envelope line:
-     `file under <project> / <milestone> (inherited from A-NNNN)`.
-   - If there is no milestone, or it is not in the list → pass `project` only.
-     Do **not** invent a milestone, and do **not** attach the repo milestone.
-     Envelope line: `file under <project> (inherited from A-NNNN)`.
-4. **Otherwise fall back to `followUpProject` (the catch-all).** Typical
-   reasons: no parent id, parent has no project, or the parent project is
-   completed/canceled. If `followUpProject` is empty → **do not** call
-   `save_issue`. Abort capture loudly (tell the human to set `followUpProject`
-   in `config.json`), and fall back to decline / `Follow-up not tracked` for
-   each follow-up candidate. If set → resolve it with `list_projects` (name,
-   id, or slug). On a miss → **do not** call `save_issue`; fail loudly with the
-   unresolved value (same decline fallback).
-5. **On the catch-all, bucket by repo milestone.** GitHub repo **short name**
-   from `gh repo view --json name --jq .name` (not the worktree directory).
-   In Step 9, `list_milestones` only — never `save_milestone`. If a milestone
-   with that exact name exists, use it on mint. If not, still show the envelope
-   line below; **on mint in this step** `save_milestone` to create it
-   (`project` + `name`), then use the created milestone. Pass both `project`
-   and `milestone` on `save_issue`. Envelope line:
-   `file under <catch-all> / <repo> (no live parent project)`. Still `relatedTo`
-   the parent when step 2 resolved one.
-6. On a successful inherit **or** fallback, always pass the resolved `project`
-   and the resolved `followUpLabel` on every `save_issue` create. Never omit
-   `project`. Never omit the label.
+`otherBotThreads` item, append that thread's author (`--bots "<config.reviewBots>,<thread author>"`).
 
 ### Step 12 — Phase B: issue-level ack + re-envelope
 
@@ -823,20 +540,12 @@ approved plan has been applied:
 node scripts/respond-threads.mjs summary --pr <pr> --findings '[{"title":"…","status":"accepted","reference":"<sha>"}]'
 ```
 
-Then re-fetch (Step 8). **Any push in Phase B moves the head**, so the bots have
-not reviewed it yet: record the new `headRefOid`, reset the Step 7 wait clocks,
-and return to **Step 7** — wait for every bot to settle on the new head (the
-fetcher only counts checks and activity on the current head) before deciding
-there are no new findings. If **new** unresolved bot findings appear (fresh review
-after the apply push), continue Step 7 → Step 9. When `humanEnvelope` is `true`,
-continue through **Step 10 envelope again** (same Option A detail + structured
-Yes/No/Other contract, including any new Linear candidates). When unattended,
-upsert an updated plan comment and continue through Step 11 — no envelope. Bound
-by `maxReviewRounds`. If CI is terminal green, the bots have settled on the current
-head, and there are no new bot findings, continue to Step 13.
-
-Under unattended, if only `deferredThreads` remain, finish Linear capture and
-summary ack in Step 11 — no Linear-only batch prompt.
+Then re-fetch (Step 8). **Any push in Phase B moves the head** — record the new
+`headRefOid`, reset the Step 7 wait clocks, and return to **Step 7** before deciding
+there are no new findings. If new bot findings appear, continue Step 7 → Step 9 and
+follow the path file's Step 12 section (re-envelope or re-plan). Bound by
+`maxReviewRounds`. If CI is terminal green, bots have settled on the current head,
+and there are no new bot findings, continue to Step 13.
 
 ### Step 13 — Report
 
@@ -891,19 +600,8 @@ Summarise:
 - **Never greenwash.** Never edit `.github/workflows/*`, disable or loosen a lint
   rule, delete or skip a test, or relax a CI threshold to make a check pass. Fix
   the code, or report the failure as a blocker.
-- **Lint surfaces are a developer decision.** Never edit lint / format /
-  static-analysis config, and never add an ignore or disable directive, on your own
-  initiative — not even a plausible, narrowly scoped one. Greenwashing (weakening a
-  gate purely to pass CI) is the **hard ban** above; everything else that touches a
-  lint surface is the **human-gated grey zone** — it may well be legitimate, but it is
-  the **developer's** call, not yours. Classify it as **gated** (Step 3), keep fixing
-  everything else, and report it at the next natural stopping point: the Step 6
-  Phase-A early stop, the Step 10 envelope (as a `[gated]` plan item), or Step 13 —
-  never a mid-loop prompt. Prefer fixing the offending code; if the rule is genuinely
-  wrong, propose the change in the shared config package rather than a local override.
-  The one exception is Step 4's carve-out: you may repair a genuine syntax or schema
-  error in a lint config the developer already put in this PR's diff — never loosening
-  a rule or widening an ignore. Surface list in
+- **Lint surfaces are a developer decision.** Classify as **gated** (Step 3 / Step 9);
+  never apply without explicit envelope sign-off. Full policy and surface list:
   [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision).
 - **In-scope only.** Fix what this PR's diff is responsible for; don't fix
   unrelated repo problems.
@@ -923,14 +621,10 @@ Summarise:
   (promotion disabled / gate failed / gated lint-surface items outstanding /
   `--ci-only` / `--dry-run`), the slow-bot micro-gate, or a hard blocker / budget
   exhaustion — never with interim "still waiting" pings mid-watch.
-- **Two Phase B paths.** When `humanEnvelope` is `true`, do not apply Phase B
-  dispositions until the same-session batch **Yes / No / Other** gate succeeds
-  (**default yes**; `AskQuestion` / `AskUserQuestion` when available, else
-  `[Y/n]`) — except the non-resolving `follow-up-pending` mark when the plan is
-  presented. Re-envelope when new bot findings appear after apply. When
-  `humanEnvelope` is `false` or `--auto-apply`, use the unattended path (plan
-  comment + act; human-thread stop; Urgent stop rules per Step 9). Re-plan and
-  continue when new bot findings appear — no re-envelope.
+- **Two Phase B paths.** Load
+  [`references/phase-b-envelope.md`](references/phase-b-envelope.md) or
+  [`references/phase-b-unattended.md`](references/phase-b-unattended.md); do not apply
+  dispositions outside those files.
 - **Draft → ready is guarded, and on by default.** `promoteOnGreen` is the single
   control for the flip, and an enabled config _is_ the authorisation: with it on (the
   default) the skill flips the PR — **only** after a _proven_-green Phase A, with **no
@@ -951,10 +645,9 @@ Summarise:
 - The review-thread fetcher exits non-zero (rate limit, permissions, GraphQL
   error) → report it and fall back to `gh pr view <pr> --json reviews,comments`.
   Never treat "couldn't fetch" as "no findings".
-- A finding cites a file or line that no longer exists (outdated thread) → first
-  check the code is really gone, not moved (search for it). If the concern still
-  applies, treat it as a normal finding. Otherwise reply with one line and resolve
-  without a code change (`--decision outdated`).
+- Outdated thread → follow
+  [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps)
+  (`--decision outdated`).
 - `respond-threads.mjs` exits non-zero (reply or resolve mutation fails on
   permissions) → fall back to a manual `gh api graphql` reply with the reasoning
   rather than aborting; the marker convention still applies so a later run skips it.

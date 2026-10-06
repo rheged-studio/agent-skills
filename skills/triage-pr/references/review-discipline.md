@@ -6,67 +6,12 @@ the body stays lean and an agent can load this on demand. They are adapted from
 the community `receiving-code-review` and `verification-before-completion` skills
 (obra/superpowers).
 
-## Human envelope (default)
-
-When `humanEnvelope` is `true`, run READ → UNDERSTAND → VERIFY →
-EVALUATE for every finding and produce a disposition plan — then **halt** for one
-same-session batch **Yes / No / Other** approval (**default yes**) before IMPLEMENT /
-Linear create / resolving replies.
-
-### Presentation (A-1647)
-
-1. **Detail block** (chat, above the gate) — Option A, grouped by disposition:
-   full `### [accept|follow-up|gated] …` cards; routine `[decline]` / `[outdated]`
-   compressed under one heading unless the reason is non-obvious. Soft-cap keeps
-   high-signal items readable. Include a GitHub **thread or summary-comment
-   permalink** when the fetcher provides `url` on the thread (or summary comment).
-2. **Structured Questions UI** when available:
-   - **Cursor:** `AskQuestion` with **Yes** / **No** / **Other (type overrides)**.
-   - **Claude Code:** `AskUserQuestion` (`header` e.g. `Apply plan`) with
-     **Yes (Recommended)** / **No** (host usually appends **Other** for free text).
-3. **Fallback:** prose `Apply this plan? [Y/n]` plus typed overrides when neither
-   tool exists.
-
-**No** / Skip applies nothing. **Other** accepts freeform overrides (`yes except
-decline #1…`); one clarify turn if ambiguous. The same contract applies to the
-slow-bot micro-gate (Proceed / Wait / Abort), to Step 12 **re-envelopes**, and when
-`/send-it` chains into triage. Proposed follow-up threads are marked
-`follow-up-pending` (non-resolving) when the plan is presented so a restart does
-not re-emit them while the human decides.
-
-`--auto-apply` / `humanEnvelope: false` uses the **unattended** Phase B path (A-2013).
-See [Unattended path](#unattended-path-humanenvelope-false) below. Legacy CLI aliases
-`defer` / `defer-pending` still work. Fleet rollout of the Questions pattern to other
-skills: A-1655.
-
-## Unattended path (`humanEnvelope: false`)
-
-When `humanEnvelope` is `false` (or `--auto-apply`), run READ → UNDERSTAND → VERIFY →
-EVALUATE for every finding, then **post the full disposition plan** as a single PR
-comment (upsert via `respond-threads.mjs plan` — marker `<!-- triage-pr:disposition-plan -->`)
-and **act** without a Yes/No gate or a second prompt before Linear creates.
-
-1. **Slow bots** — if max wait expires with bots still missing, **do not** run the
-   Proceed / Wait / Abort micro-gate. Continue with whoever has reported; name missing
-   bots in the Step 13 report.
-2. **Impact on this path** — `deferNonBlocking` does **not** apply. Use the impact
-   rubric in [When to fix now vs follow-up](#when-to-fix-now-vs-follow-up).
-3. **RESPOND / IMPLEMENT** — after the plan is posted, apply dispositions immediately:
-   accepts, declines, outdated resolves, and Linear follow-ups (no envelope approval).
-   Mark `follow-up-pending` on threads when classifying a follow-up, then create issues
-   and post final follow-up replies in Step 11.
-4. **Human threads** — if any unresolved **human** review threads exist after the plan
-   is posted, apply **nothing** (no commits, no Linear, no bot thread resolves); leave
-   human threads untouched; stop. Threads from bot accounts outside `reviewBots`
-   (`otherBotThreads`) are **not** human threads: they never trigger this stop.
-5. **Re-review** — after pushes, re-fetch and re-verify; **update the same plan comment**
-   and continue under the same rules until CI is terminal or `maxReviewRounds` exhausts.
-   No re-envelope.
-
-Follow-up issue bodies on this path must include: a falsifiable claim; what this agent
-verified; why it was deferred; a labelled leaning (not an instruction); permalinks and
-the SHA; a non-binding note of what was considered; an instruction to re-verify and to
-decline if the claim is wrong, already done, or out of scope. No prescribed patch.
+**Phase B path** (after verify-then-propose in Step 9): load
+[`phase-b-envelope.md`](phase-b-envelope.md) when `humanEnvelope` is `true`, or
+[`phase-b-unattended.md`](phase-b-unattended.md) when `humanEnvelope` is `false` or
+`--auto-apply`. **Follow-up capture** (Linear routing and mint): load
+[`follow-up-routing.md`](follow-up-routing.md) when the plan includes follow-ups and
+`linearTeamName` is set.
 
 ## Receiving review feedback — the six steps
 
