@@ -32,10 +32,10 @@ describe("createDetectors — triage-pr boolean defaults", () => {
     expect(detect("deferNonBlocking")).toEqual({ value: true });
   });
 
-  it("infers humanEnvelope=true (disposition gate is the default-on opt-out model)", () => {
+  it("infers humanEnvelope=false (unattended Phase B is the default)", () => {
     const { detect, has } = detectorsFor();
     expect(has("humanEnvelope")).toBe(true);
-    expect(detect("humanEnvelope")).toEqual({ value: true });
+    expect(detect("humanEnvelope")).toEqual({ value: false });
   });
 
   // A-1151: send-it's Step 11 triage chain. Fixed `true` rather than "is triage-pr
@@ -46,10 +46,10 @@ describe("createDetectors — triage-pr boolean defaults", () => {
     expect(detect("triage")).toEqual({ value: true });
   });
 
-  it("infers reviewIdleMinutes=5 and reviewWaitMaxMinutes=20", () => {
+  it("infers reviewIdleMinutes=10 and reviewWaitMaxMinutes=20", () => {
     const { detect, has } = detectorsFor();
     expect(has("reviewIdleMinutes")).toBe(true);
-    expect(detect("reviewIdleMinutes")).toEqual({ value: 5 });
+    expect(detect("reviewIdleMinutes")).toEqual({ value: 10 });
     expect(detect("reviewWaitMaxMinutes")).toEqual({ value: 20 });
   });
 
@@ -69,10 +69,10 @@ describe("createDetectors — triage-pr boolean defaults", () => {
 // confident structural defaults; project is required when capture is on
 // (linearTeamName supplied via facts) and otherwise stays empty.
 describe("createDetectors — triage-pr follow-up capture defaults", () => {
-  it("infers empty followUpLabel / followUpProject and a Backlog state when capture is off", () => {
+  it("infers followUpLabel follow-up / empty followUpProject and a Backlog state when capture is off", () => {
     const { detect, has } = detectorsFor();
     expect(has("followUpLabel")).toBe(true);
-    expect(detect("followUpLabel")).toEqual({ value: "" });
+    expect(detect("followUpLabel")).toEqual({ value: "follow-up" });
     expect(detect("followUpProject")).toEqual({ value: "" });
     expect(detect("followUpState")).toEqual({ value: "Backlog" });
   });

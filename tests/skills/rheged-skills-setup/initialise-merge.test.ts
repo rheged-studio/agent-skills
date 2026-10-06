@@ -502,6 +502,22 @@ describe("mergeConfig", () => {
       expect(data.packageRoots).toEqual(["apps", "packages"]);
     });
 
+    it("heals reviewBots drift when the only difference is deprecated cursor (A-2054)", () => {
+      const triageExample = {
+        reviewBots: ["claude", "coderabbitai"],
+      };
+      const { data, results } = mergeConfig({
+        config: { reviewBots: ["claude", "cursor", "coderabbitai"] },
+        detect: (key) =>
+          key === "reviewBots"
+            ? { value: ["claude", "coderabbitai"] }
+            : null,
+        example: triageExample,
+      });
+      expect(results.reviewBots.status).toBe("inferred");
+      expect(data.reviewBots).toEqual(["claude", "coderabbitai"]);
+    });
+
     it("--set affectedPackages=false silences packageRoots needs-manual-input", () => {
       const { results } = mergeConfig({
         config: {
