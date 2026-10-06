@@ -14,6 +14,8 @@ stats:
   loc_added: 1755
   loc_removed: 443
   files_changed: 28
+  commits: 5
+version: 1.10.0
 ---
 
 ## Added
