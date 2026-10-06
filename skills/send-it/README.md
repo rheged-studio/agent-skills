@@ -88,6 +88,10 @@ which send-it's delegated steps read.
 - `triage-pr` for the final chain — **required for the default pipeline**. A missing
   install only warns and the run finishes at the open PR; that soft-skip is a
   degraded outcome, not a successful finish.
+- Matt Pocock's `pr` skill — optional. When it is installed, send-it writes the PR
+  body in its shape (Summary visual, Evidence, Merge Danger) and adds its own
+  `## Related Issues` section; otherwise it uses its built-in Summary / Related
+  Issues / Test Plan template.
 
 ## What it does not do
 

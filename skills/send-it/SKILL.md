@@ -479,7 +479,24 @@ fan-out automation keep using squash outside this skill.
 > could land the branch while that plan is still awaiting approval. Merge by hand, or
 > arm auto-merge yourself once you're happy with the PR.
 
-**PR body template:**
+**PR body — defer to the `pr` skill when it is installed (A-2298).** Matt
+Pocock's model-invoked [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr)
+skill (vendored by the estate catalogue) is the estate's PR-body shape. Look for
+it beside this bundle (`../pr/SKILL.md`) or in the consumer's skill mirrors
+(`.claude/skills/pr/SKILL.md`, `.agents/skills/pr/SKILL.md`). If present, write
+the body by following that skill's template and section guidance (its `Summary`
+visual, `Evidence` before/after, and `Merge Danger` door + blast radius) in place
+of the fallback template below. send-it still owns two additions whichever shape
+is used:
+
+- a `## Related Issues` section listing the Linear identifiers from the branch and
+  commits (dropped when there are none), so `linear-sync` and reviewers can trace
+  the work; and
+- the Step 6 notes — `no release (<type>-only)` and any publish-surface
+  cross-check — placed under `## Merge Danger` when following `pr`, or at the end
+  of `## Summary` otherwise.
+
+**Fallback PR body template** (when `pr` is not installed):
 
 ```markdown
 ## Summary
