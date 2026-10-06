@@ -334,7 +334,9 @@ function producerIdentity(node) {
  * @param {string|null|undefined} identity
  */
 function normaliseProducer(identity) {
-  return String(identity ?? "").replace(/\[bot\]$/, "").toLowerCase();
+  return String(identity ?? "")
+    .replace(/\[bot\]$/, "")
+    .toLowerCase();
 }
 
 /**
@@ -352,9 +354,7 @@ function producerMatches(node, expectedProducer) {
     return false;
   }
 
-  return (
-    normaliseProducer(identity) === normaliseProducer(expectedProducer)
-  );
+  return normaliseProducer(identity) === normaliseProducer(expectedProducer);
 }
 
 /**
@@ -373,26 +373,27 @@ function normaliseCheckSpec(spec) {
   }
 
   if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
-    throw new Error("check spec must be a string or { name, producer? } object");
+    throw new Error(
+      "check spec must be a string or { name, producer? } object",
+    );
   }
 
   const extra = Object.keys(spec).filter(
     (key) => key !== "name" && key !== "producer",
   );
   if (extra.length > 0) {
-    throw new Error(
-      `check spec has unexpected keys: ${extra.join(", ")}`,
-    );
+    throw new Error(`check spec has unexpected keys: ${extra.join(", ")}`);
   }
 
   if (typeof spec.name !== "string" || !spec.name.trim()) {
     throw new Error("check spec name must be a non-empty string");
   }
 
-  if (spec.producer !== undefined) {
-    if (typeof spec.producer !== "string" || !spec.producer.trim()) {
-      throw new Error("check spec producer must be a non-empty string");
-    }
+  if (
+    spec.producer !== undefined &&
+    (typeof spec.producer !== "string" || !spec.producer.trim())
+  ) {
+    throw new Error("check spec producer must be a non-empty string");
   }
 
   return {
@@ -764,7 +765,9 @@ export function parseBotChecks(value) {
   const result = {};
   for (const [bot, check] of Object.entries(parsed)) {
     if (!bot.trim()) {
-      throw new Error(`--bot-checks entry for "${bot}" must use a non-empty bot login`);
+      throw new Error(
+        `--bot-checks entry for "${bot}" must use a non-empty bot login`,
+      );
     }
 
     try {
@@ -1660,7 +1663,9 @@ function selfTest() {
   });
   cases.push({
     name: "settle: a same-named status from the wrong producer does not count",
-    ok: settleBotStateFromResult(wrongProducerStatus, "coderabbitai") === "missing",
+    ok:
+      settleBotStateFromResult(wrongProducerStatus, "coderabbitai") ===
+      "missing",
   });
 
   const matchingProducerStatus = buildResult({
@@ -1822,16 +1827,19 @@ function selfTest() {
   });
   cases.push({
     name: "parseArgs rejects malformed --bot-checks",
-    ok: ["not json", "[]", '{"claude":""}', '{"claude":{"producer":"x"}}'].every(
-      (value) => {
+    ok: [
+      "not json",
+      "[]",
+      '{"claude":""}',
+      '{"claude":{"producer":"x"}}',
+    ].every((value) => {
       try {
         parseArgs(["1", "--bot-checks", value]);
         return false;
       } catch {
         return true;
       }
-    },
-    ),
+    }),
   });
 
   // argument + PR-resolution parsing
