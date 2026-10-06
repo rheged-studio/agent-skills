@@ -2,10 +2,10 @@
 title: Split triage-pr docs and de-duplicate review rules
 release_note: ""
 created_at: "2026-10-06T18:51:08Z"
-merged_at: ""
+merged_at: "2026-10-06T19:19:27Z"
 branch: a-2325-triage-pr-split-skillmd-and-de-duplicate-it-against-review
-pr:
-commit:
+pr: 190
+commit: 81aedca
 author: rob@rheged.studio
 co_authors: []
 category: docs
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2325
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 11
+  loc_added: 497
+  loc_removed: 505
   commits:
 version:
 ---
