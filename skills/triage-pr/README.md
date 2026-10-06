@@ -3,20 +3,22 @@
 Take a pull request from **draft + failing CI** to **merge-ready**: fix in-scope
 CI failures while the PR is a draft, then — by default — promote the cleanly-green
 draft to ready (`promoteOnGreen`), wait for AI reviewers, verify-then-propose
-dispositions, and **halt for a human envelope** before applying accepts, declines,
-or Linear follow-ups. The envelope uses Cursor’s `AskQuestion` or Claude Code’s
-`AskUserQuestion` when available (batch **Yes / No / Other**, **default yes**),
-preceded by an Option A disposition-detail summary with available thread or
+dispositions, and — by default (`humanEnvelope: false`) — apply the **unattended**
+path (plan comment + act; no Yes/No; no Linear-only prompt). Set
+`humanEnvelope: true` to **halt for a human envelope** before applying accepts,
+declines, or Linear follow-ups. The envelope uses Cursor’s `AskQuestion` or Claude
+Code’s `AskUserQuestion` when available (batch **Yes / No / Other**, **default
+yes**), preceded by an Option A disposition-detail summary with available thread or
 summary-comment permalinks so you can decide without leaving chat; otherwise
-prose `[Y/n]`. Opt out of the envelope
-with `--auto-apply` (or `humanEnvelope: false`) to restore legacy auto Phase B.
+prose `[Y/n]`. `--auto-apply` forces the unattended path for one run.
 Opt out of promotion with `--no-promote` (or `promoteOnGreen: false`) to stop at
 green for a human to flip; the final merge to the trunk always stays with a human.
 
-When `/send-it` chains into this skill (A-1151), the run ends on the **same**
-envelope. Step 12 re-envelopes after new bot findings use it too. Exploring the
+When `/send-it` chains into this skill (A-1151) and `humanEnvelope` is `true`, the
+run ends on the **same** envelope. Step 12 re-envelopes after new bot findings use
+it too. When `humanEnvelope` is `false` (or `--auto-apply`), the chain follows the
+unattended path. Exploring the
 same Questions pattern for other confirmation skills: [A-1655](https://linear.app/rheged-studio/issue/A-1655).
-Auto-apply Linear-only gate Questions: [A-1654](https://linear.app/rheged-studio/issue/A-1654).
 
 ## Install
 
@@ -38,13 +40,15 @@ the per-skill `config.json` is generated on install, not vendored. Run the
 
 | Key | Meaning | Default |
 | --- | --- | --- |
-| `reviewBots` | GitHub login names whose comments and threads are treated as first-class AI review feedback (matched on `author.login`; the `[bot]` suffix is normalised). Edit to match your install. `github-actions` is excluded by default. | `["claude", "cursor", "coderabbitai"]` |
+| `reviewBots` | GitHub login names whose comments and threads are treated as first-class AI review feedback (matched on `author.login`; the `[bot]` suffix is normalised). Edit to match your install. `github-actions` is excluded by default. | `["claude", "coderabbitai"]` |
+| `reviewBotChecks` | Map from a review bot to the status or check it posts per review (e.g. `{"coderabbitai": "CodeRabbit"}`). A mapped bot settles only when that check is terminal on the current head and post-dates the ready flip; unmapped bots fall back to post-ready activity on the head. | `{}` |
 | `maxCiRounds` | Maximum Phase-A re-watch iterations before stopping and reporting blockers. | `5` |
+| `maxReviewRounds` | Maximum Phase-B re-review rounds (re-plan or re-envelope after an apply push) before stopping and reporting blockers. | `2` |
 | `replyOnAccept` | Whether an **accepted** finding gets a factual thread reply referencing the fixing commit before resolve. | `true` |
 | `promoteOnGreen` | Draft→ready flip after proven-green Phase A. **Default-on.** | `true` |
-| `deferNonBlocking` | Propose accept only for high-impact in-scope findings; otherwise follow-up. | `true` |
-| `humanEnvelope` | Halt Phase B for a full disposition batch **Yes / No / Other** (**default yes**; structured Questions when available) before applying. **Default-on.** Escape with `--auto-apply`. | `true` |
-| `reviewIdleMinutes` | Hybrid review-settle idle window (minutes). | `5` |
+| `deferNonBlocking` | Propose accept only for high-impact in-scope findings (one impact rubric, in `references/review-discipline.md`); otherwise follow-up. Envelope path only — the unattended path always applies the rubric. | `true` |
+| `humanEnvelope` | Halt Phase B for a full disposition batch **Yes / No / Other** (**default yes**; structured Questions when available) before applying. **Default-off** (unattended). Set `true` for the envelope; `--auto-apply` forces unattended for one run. | `false` |
+| `reviewIdleMinutes` | Hybrid review-settle idle window (minutes). | `10` |
 | `reviewWaitMaxMinutes` | Hard cap on waiting for review bots; then slow-bot micro-gate. | `20` |
 
 ## Requirements
@@ -71,8 +75,9 @@ Two phases, chosen from the PR's draft state:
    `botsMissing`),
    verify-then-propose dispositions, then — by default — **human envelope**
    (Option A detail + structured Yes/No/Other) before applying. Re-envelope when
-   new bot findings appear after apply. With `--auto-apply`, fix high-impact
-   findings immediately and keep a Linear-only gate for follow-ups.
+   new bot findings appear after apply. With `--auto-apply` (or
+   `humanEnvelope: false`), post the plan as a PR comment and act — including
+   creating Linear follow-ups — with no Linear-only gate.
 
 **By default the skill promotes a cleanly-green draft to ready** and continues into
 Phase B. Promotion is gated on proven-green CI, no unresolved human review threads,

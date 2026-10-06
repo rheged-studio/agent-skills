@@ -8,7 +8,7 @@ the community `receiving-code-review` and `verification-before-completion` skill
 
 ## Human envelope (default)
 
-When `humanEnvelope` is `true` (the default), run READ → UNDERSTAND → VERIFY →
+When `humanEnvelope` is `true`, run READ → UNDERSTAND → VERIFY →
 EVALUATE for every finding and produce a disposition plan — then **halt** for one
 same-session batch **Yes / No / Other** approval (**default yes**) before IMPLEMENT /
 Linear create / resolving replies.
@@ -34,15 +34,46 @@ slow-bot micro-gate (Proceed / Wait / Abort), to Step 12 **re-envelopes**, and w
 `follow-up-pending` (non-resolving) when the plan is presented so a restart does
 not re-emit them while the human decides.
 
-`--auto-apply` / `humanEnvelope: false` skips the envelope and restores legacy auto
-Phase B (impact-gated fix-now; mark `follow-up-pending` as soon as a follow-up is
-classified; Linear-only gate for follow-ups — structured Questions for that gate
-are tracked separately under A-1654). Legacy CLI aliases `defer` / `defer-pending`
-still work. Fleet rollout of this Questions pattern to other skills: A-1655.
+`--auto-apply` / `humanEnvelope: false` uses the **unattended** Phase B path (A-2013).
+See [Unattended path](#unattended-path-humanenvelope-false) below. Legacy CLI aliases
+`defer` / `defer-pending` still work. Fleet rollout of the Questions pattern to other
+skills: A-1655.
+
+## Unattended path (`humanEnvelope: false`)
+
+When `humanEnvelope` is `false` (or `--auto-apply`), run READ → UNDERSTAND → VERIFY →
+EVALUATE for every finding, then **post the full disposition plan** as a single PR
+comment (upsert via `respond-threads.mjs plan` — marker `<!-- triage-pr:disposition-plan -->`)
+and **act** without a Yes/No gate or a second prompt before Linear creates.
+
+1. **Slow bots** — if max wait expires with bots still missing, **do not** run the
+   Proceed / Wait / Abort micro-gate. Continue with whoever has reported; name missing
+   bots in the Step 13 report.
+2. **Impact on this path** — `deferNonBlocking` does **not** apply. Use the impact
+   rubric in [When to fix now vs follow-up](#when-to-fix-now-vs-follow-up).
+3. **RESPOND / IMPLEMENT** — after the plan is posted, apply dispositions immediately:
+   accepts, declines, outdated resolves, and Linear follow-ups (no envelope approval).
+   Mark `follow-up-pending` on threads when classifying a follow-up, then create issues
+   and post final follow-up replies in Step 11.
+4. **Human threads** — if any unresolved **human** review threads exist after the plan
+   is posted, apply **nothing** (no commits, no Linear, no bot thread resolves); leave
+   human threads untouched; stop. Threads from bot accounts outside `reviewBots`
+   (`otherBotThreads`) are **not** human threads: they never trigger this stop.
+5. **Re-review** — after pushes, re-fetch and re-verify; **update the same plan comment**
+   and continue under the same rules until CI is terminal or `maxReviewRounds` exhausts.
+   No re-envelope.
+
+Follow-up issue bodies on this path must include: a falsifiable claim; what this agent
+verified; why it was deferred; a labelled leaning (not an instruction); permalinks and
+the SHA; a non-binding note of what was considered; an instruction to re-verify and to
+decline if the claim is wrong, already done, or out of scope. No prescribed patch.
 
 ## Receiving review feedback — the six steps
 
-Run every AI finding through these in order. The point is **technical rigour, not
+Run every AI finding through these in order — including threads from bot accounts
+outside `reviewBots` (`otherBotThreads`). Those are dispositioned the same way
+(accept, decline, follow-up, or outdated) so nothing is lost, but they are
+informational: they never block promotion or the run. The point is **technical rigour, not
 performative agreement**: a review bot is frequently wrong, partially right, or
 missing context, and applying its suggestion blind is how a green PR ships a
 regression.
@@ -59,28 +90,33 @@ regression.
    When it is valid and in-scope **and** `deferNonBlocking` is `true`, also
    classify **impact** (see **When to fix now vs follow-up** below) — propose accept
    only if high-impact; otherwise propose follow-up even though it is in scope. When
-   `deferNonBlocking` is `false`, every valid in-scope finding is proposed as
-   accept.
-5. **RESPOND** — only **after** the human envelope approves (or under
-   `--auto-apply`). Symmetrically, every actioned thread ends replied-to **and**
+   `deferNonBlocking` is `false` (envelope path only), every valid in-scope finding
+   is proposed as accept.
+5. **RESPOND** — only **after** the human envelope approves (`humanEnvelope: true`),
+   or immediately after the plan comment on the unattended path (`humanEnvelope: false`
+   / `--auto-apply`). Symmetrically, every actioned thread ends replied-to **and**
    resolved:
    - _Decline_ → reply with the technical reasoning, then resolve.
    - _Accept_ → reply referencing the fixing commit (`Addressed in <sha>.`), then
      resolve — but only once that fix is proven (and, on a ready PR, CI-green; see
      **Resolve timing** below). When `replyOnAccept` is `false`, resolve without
      the reply.
-   - _Outdated_ (cited code is gone) → resolve, no reply.
+   - _Outdated_ → first **verify** the cited code is really gone, not just moved or
+     renamed (search for it). If the concern still applies to the code as it is now,
+     treat it as a normal finding. Only when it is genuinely gone, reply with one line
+     saying so (`--decision outdated`, optional `--reason`), then resolve.
    - _Follow-up_ (valid but **out of scope** for this PR, **or** — when
      `deferNonBlocking` is on — **in-scope but not high-impact**) → mark
      `follow-up-pending` as soon as the finding is classified (envelope: when the
-     plan is presented; auto-apply: on classify). Linear create + final follow-up
-     reply happen only after envelope approval, or under auto-apply after the
-     Linear-only gate.
+     plan is presented; unattended: on classify). Linear create + final follow-up
+     reply happen after Step 10 approval on the envelope path, or in Step 11
+     with no Linear-only gate on the unattended path.
 
    The reply is the durable, per-finding audit trail reviewers and humans skimming
    the PR rely on; a silently-resolved accept loses it.
 6. **IMPLEMENT.** Apply accepted findings **one at a time**, verifying each before
-   the next — only after envelope approval (or under auto-apply). Batching changes
+   the next — only after envelope approval on the `humanEnvelope: true` path, or
+   immediately after the plan comment on the unattended path. Batching changes
    hides which one broke something.
 
 ## No sycophancy
@@ -105,24 +141,37 @@ resolved so it doesn't re-surface.
 
 ## When to fix now vs follow-up
 
-After a finding clears EVALUATE (correct, not YAGNI/architecture), choose
-**accept** vs **follow-up** for the disposition plan:
+This is the **one** impact rubric for both Phase B paths. After a finding clears
+EVALUATE (correct, not YAGNI/architecture), choose **accept** vs **follow-up** for
+the disposition plan. Classify impact yourself — do **not** trust bot severity labels
+such as CodeRabbit ⚠️/🧹 severity labels.
 
-- **Out of scope** → always follow-up (regardless of `deferNonBlocking`).
-- **In scope**, `deferNonBlocking` is `false` → accept and fix now (legacy
-  scope-only behaviour).
-- **In scope**, `deferNonBlocking` is `true` (the default) → accept and fix now
-  only when **high-impact**. Otherwise follow-up.
-
-A finding is **high-impact** when **any** of these hold (classify yourself — do
-**not** trust bot severity labels such as CodeRabbit ⚠️/🧹 or Bugbot grades):
+A finding is **high-impact** when **any** of these hold:
 
 - it **blocks later work** on this PR or stacked work;
-- it touches **Claude Code / agent-skill logic / CI or release infrastructure**; or
-- it is **critical/high severity** (correctness, security, data-loss).
+- it is **critical or high severity** (correctness, security, data loss); or
+- a **doc** would mislead the next agent or developer (contradicts the code, names a
+  removed command, or points at the wrong file).
 
-Low-impact nits that are still valid and in-scope become follow-up candidates so
-the PR can land high-impact work without accumulating churn.
+Impact follows **what the change does**, not where it lives: a finding in agent-skill,
+CI, or release files is not high-impact just because of its path. (Lint and format
+config files are a separate matter — they are **gated** by the protected-file rule
+below, whatever their impact.)
+
+Then decide:
+
+- **Out of scope** → follow-up.
+- **In scope and high-impact** → accept and fix now, **if it fits this PR** (the size
+  test: would it be its own pull request?). If it would be its own PR, or the size
+  test is unclear, it is a follow-up instead — marked **Urgent** (`priority: 1`) when
+  critical/blocking; on the unattended path that also triggers the SKILL.md Step 9
+  stop.
+- **In scope, not high-impact** → follow-up. Upgrades, refactors, nits, and merely
+  unclear docs wait, so the PR can land the high-impact work without churn.
+
+`deferNonBlocking: false` (envelope path only) restores the legacy scope-only
+behaviour: every valid in-scope finding is proposed as accept. The unattended path
+always applies the rubric above.
 
 ## Lint surfaces are a developer decision
 
@@ -174,6 +223,10 @@ Two reasons it stays with the human:
 - `shellcheck disable=`
 - per-linter file-level ignore lists (`ignores:` / `ignorePatterns` entries,
   `.eslintignore`, `.prettierignore`, `.markdownlintignore`)
+- ESLint bulk-suppression files — `eslint-suppressions.json`, or whatever file
+  `--suppressions-location` points at. Adding or widening a suppression there is an
+  ignore by another name; pruning entries the code no longer needs (ESLint's
+  `--prune-suppressions`) is part of fixing the code, not a gated change
 
 ### Preference order
 
@@ -197,6 +250,13 @@ re-deriving your analysis:
 
 Report at the natural stopping points only (Phase A's Step 6 early stop, the Step 10
 envelope as a `[gated]` plan item, or the Step 13 report) — never as a mid-loop prompt.
+
+For a gated **review finding** on the unattended path (`humanEnvelope: false` /
+`--auto-apply`) there is no envelope to sign it off: file the four points above as a
+Linear follow-up (Urgent when critical/blocking) and, once it is created, resolve the
+thread with the `follow-up` reply. When Linear capture is disabled or fails closed,
+leave the thread unresolved and report it as an outstanding gated item. It is still
+never applied.
 
 ### Carve-out — repairing what the developer already wrote
 
@@ -246,8 +306,8 @@ consolidated comment is **edited in place** rather than re-posted. Under
 `humanEnvelope`, new findings after apply trigger another full envelope (not
 silent auto-apply). A run converges when CI is green and every bot thread is
 handled (resolved-by-us, declined+resolved, human-and-left-alone, or filed as
-follow-up with a ticket) with no accepted fix still awaiting CI-green — all bounded by
-`maxCiRounds`.
+follow-up with a ticket) with no accepted fix still awaiting CI-green — Phase A
+bounded by `maxCiRounds`, Phase B by `maxReviewRounds`.
 
 ### Issue-level comments — respond vs noise
 
@@ -286,5 +346,5 @@ Proving commands by claim:
 | Tests pass | the test command's output showing zero failures |
 | Build succeeds | the build command exiting `0` |
 | Manifest valid | `npx --yes skills-ref@0.1.5 validate ./skills/<name>` exiting `0` |
-| CI green | `gh pr checks <pr>` showing every required check passed |
+| CI green | every required context from the base branch's rules present and successful on the head commit (`gh pr checks <pr> --required` is the quick view; a missing required check is pending; non-required checks are informational) |
 | Bug fixed | the original failing symptom now passing |

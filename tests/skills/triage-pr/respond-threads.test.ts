@@ -6,8 +6,11 @@
 // Legacy and new follow-up-pending markers are kept in sync with respond-threads.mjs.
 import {
   buildConsolidatedComment,
+  buildDispositionPlanComment,
   buildReplyBody,
+  DISPOSITION_PLAN_MARKER,
   findExistingAckComment,
+  findExistingDispositionPlanComment,
   FOLLOW_UP_PENDING_MARKER,
   hasMarker,
   isReviewBotAuthor,
@@ -40,12 +43,13 @@ describe("planThreadResponses — symmetric accept/decline", () => {
     expect(action.body).toContain("Breaks the public API.");
   });
 
-  it("outdated → resolve-only with no reply body", () => {
+  it("outdated → reply-resolve with a default one-line reply", () => {
     const [action] = planThreadResponses([
       { decision: "outdated", threadId: "T3" },
     ]);
-    expect(action.kind).toBe("resolve-only");
-    expect(action).not.toHaveProperty("body");
+    expect(action.kind).toBe("reply-resolve");
+    expect(action.body).toMatch(/^Outdated:/);
+    expect(action.body).toContain(THREAD_MARKER);
   });
 
   it("follow-ups → reply-resolve referencing the follow-up ticket + marker", () => {
@@ -276,6 +280,39 @@ describe("normalizeDecision", () => {
     expect(normalizeDecision("defer")).toBe("follow-up");
     expect(normalizeDecision("defer-pending")).toBe("follow-up-pending");
     expect(normalizeDecision("accept")).toBe("accept");
+  });
+});
+
+describe("buildDispositionPlanComment — unattended Phase B plan upsert", () => {
+  it("embeds the marker and plan body", () => {
+    const body = buildDispositionPlanComment("1. [accept] Fix guard.");
+    expect(body).toContain("### triage-pr — Phase B disposition plan");
+    expect(body).toContain("1. [accept] Fix guard.");
+    expect(hasMarker(body, DISPOSITION_PLAN_MARKER)).toBe(true);
+  });
+
+  it("rejects empty plan markdown", () => {
+    expect(() => buildDispositionPlanComment("   ")).toThrow(
+      /non-empty plan markdown/,
+    );
+  });
+});
+
+describe("findExistingDispositionPlanComment — upsert detection", () => {
+  it("returns the marker-bearing comment so it is edited in place", () => {
+    const found = findExistingDispositionPlanComment([
+      { body: "noise", id: 1, user: "human" },
+      { body: `plan\n${DISPOSITION_PLAN_MARKER}`, id: 3, user: "me" },
+    ]);
+    expect(found?.id).toBe(3);
+  });
+
+  it("returns null when no prior plan comment exists", () => {
+    expect(
+      findExistingDispositionPlanComment([
+        { body: "lgtm", id: 1, user: "human" },
+      ]),
+    ).toBeNull();
   });
 });
 

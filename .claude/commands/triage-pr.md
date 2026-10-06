@@ -1,6 +1,6 @@
 ---
 title: triage-pr
-description: Drive a pull request from draft with failing CI to merge-ready — fix in-scope CI failures, then human-envelope Phase B AI review dispositions.
+description: Drive a pull request from draft with failing CI to merge-ready — fix in-scope CI failures, then Phase B AI review dispositions (unattended by default).
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*)
 ---
 
@@ -8,8 +8,9 @@ Take the current branch's pull request from **draft + failing CI** to
 **merge-ready**. This is the standalone entry point for the [`triage-pr`
 skill](../../skills/triage-pr/SKILL.md) — follow that skill's two-phase process
 (Phase A fixes in-scope CI failures while the PR is a draft; Phase B
-verify-then-propose dispositions and, by default, halts for a **human envelope**
-once it is ready), with the constraints below.
+verify-then-propose dispositions and, by default, applies the **unattended** path
+once it is ready; set `humanEnvelope: true` for the human envelope), with the
+constraints below.
 
 **Relationship to `/send-it`:** since send-it 0.8.0, `/send-it` **opens or updates**
 the PR and then **invokes this skill as its Step 11** (A-1151). A default send-it

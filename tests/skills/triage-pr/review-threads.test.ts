@@ -208,16 +208,16 @@ describe("buildResult — deferred bucket (follow-up-pending)", () => {
 });
 
 describe("buildResult — review-submission summaries", () => {
-  it("surfaces a bot's BUGBOT_REVIEW review body as an AI summary", () => {
+  it("surfaces a bot's walkthrough review body as an AI summary", () => {
     const result = buildResult({
-      bots: ["cursor"],
+      bots: ["claude"],
       commentNodes: [],
       isDraft: false,
       number: 7,
       reviewNodes: [
         {
-          author: { login: "cursor" },
-          body: "<!-- BUGBOT_REVIEW -->\nCursor Bugbot has reviewed your changes and found 2 potential issues.",
+          author: { login: "claude" },
+          body: "## Walkthrough\nClaude found 2 potential issues.",
           id: "REV_summary",
           state: "COMMENTED",
         },
@@ -228,14 +228,14 @@ describe("buildResult — review-submission summaries", () => {
     expect(summaryIds(result.aiSummaryComments)).toEqual(["REV_summary"]);
   });
 
-  it("excludes Bugbot's 'not enabled' upsell issue comment", () => {
+  it("keeps the first non-marker bot comment until a sticky summary arrives", () => {
     const result = buildResult({
-      bots: ["cursor"],
+      bots: ["claude"],
       commentNodes: [
         {
-          author: { login: "cursor" },
-          body: "Bugbot is not enabled for your account, so this pull request was not reviewed.",
-          id: "IC_upsell",
+          author: { login: "claude" },
+          body: "Reviewing your changes now.",
+          id: "IC_ack",
         },
       ],
       isDraft: false,
@@ -244,25 +244,25 @@ describe("buildResult — review-submission summaries", () => {
       threadNodes: [],
     });
 
-    expect(result.aiSummaryComments).toHaveLength(0);
+    expect(summaryIds(result.aiSummaryComments)).toEqual(["IC_ack"]);
   });
 
-  it("prefers the review-body summary over the upsell when both are present", () => {
+  it("prefers the sticky review-body summary over an earlier non-marker issue comment", () => {
     const result = buildResult({
-      bots: ["cursor"],
+      bots: ["coderabbitai"],
       commentNodes: [
         {
-          author: { login: "cursor" },
-          body: "Bugbot is not enabled for your account, so this pull request was not reviewed.",
-          id: "IC_upsell",
+          author: { login: "coderabbitai" },
+          body: "Reviewing your changes now.",
+          id: "IC_ack",
         },
       ],
       isDraft: false,
       number: 7,
       reviewNodes: [
         {
-          author: { login: "cursor" },
-          body: "<!-- BUGBOT_REVIEW -->\nfound 1 potential issue.",
+          author: { login: "coderabbitai" },
+          body: "<!-- use_sticky_comment -->\nWalkthrough summary",
           id: "REV_summary",
           state: "COMMENTED",
         },
@@ -273,22 +273,22 @@ describe("buildResult — review-submission summaries", () => {
     expect(summaryIds(result.aiSummaryComments)).toEqual(["REV_summary"]);
   });
 
-  it("prefers a re-review's newer summary over an earlier one with the same marker", () => {
+  it("prefers a re-review's newer sticky summary over an earlier sticky one", () => {
     const result = buildResult({
-      bots: ["cursor"],
+      bots: ["coderabbitai"],
       commentNodes: [],
       isDraft: false,
       number: 7,
       reviewNodes: [
         {
-          author: { login: "cursor" },
-          body: "<!-- BUGBOT_REVIEW -->\nfound 3 potential issues.",
+          author: { login: "coderabbitai" },
+          body: "<!-- use_sticky_comment -->\nfound 3 potential issues.",
           id: "REV_old",
           state: "COMMENTED",
         },
         {
-          author: { login: "cursor" },
-          body: "<!-- BUGBOT_REVIEW -->\nfound 1 potential issue.",
+          author: { login: "coderabbitai" },
+          body: "<!-- use_sticky_comment -->\nfound 1 potential issue.",
           id: "REV_new",
           state: "COMMENTED",
         },
@@ -301,13 +301,13 @@ describe("buildResult — review-submission summaries", () => {
 
   it("never treats a blank review body as a summary", () => {
     const result = buildResult({
-      bots: ["cursor"],
+      bots: ["claude"],
       commentNodes: [],
       isDraft: false,
       number: 7,
       reviewNodes: [
-        { author: { login: "cursor" }, body: "", id: "REV_blank" },
-        { author: { login: "cursor" }, body: "   \n ", id: "REV_ws" },
+        { author: { login: "claude" }, body: "", id: "REV_blank" },
+        { author: { login: "claude" }, body: "   \n ", id: "REV_ws" },
       ],
       threadNodes: [],
     });
