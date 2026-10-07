@@ -2,10 +2,10 @@
 title: wire the changelog-enrich bot identity from repo-config
 release_note:
 created_at: "2026-10-07T09:05:16Z"
-merged_at:
+merged_at: "2026-10-07T10:35:05Z"
 branch: a-1953-wire-parameterised-changelog-enrich-agent-skills
-pr:
-commit:
+pr: 196
+commit: 335452c
 author: rob@rheged.studio
 co_authors: []
 category: chore
@@ -15,9 +15,9 @@ issues:
   - A-2344
   - A-1945
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 4
+  loc_added: 55
+  loc_removed: 5
   commits:
 ---
 
