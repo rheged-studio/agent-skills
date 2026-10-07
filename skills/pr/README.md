@@ -28,7 +28,7 @@ this one.
 ## Requirements
 
 - `git`, to read the branch's commits and diff.
-- `gh` (authenticated), to read the current body when updating a PR.
+- `gh` (authenticated), to read the current body and publish the new one.
 - **No npm dependencies, no build step, and no `config.json`** — this is a
   model-driven skill; [`SKILL.md`](SKILL.md) is the source of truth.
 - Optional: a root `GLOSSARY.md`, whose terms the body uses when present.
