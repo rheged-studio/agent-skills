@@ -45,7 +45,6 @@
 import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
 import {
   buildSkillsAddArgsForSource,
-  findMissingRhegedSourceSkills,
   mattSkillNames,
   parseCatalogue,
   resolveInstallSkills,
@@ -229,6 +228,29 @@ export function resolveFullInstallSkills(profile) {
  */
 export function findMissingSourceSkills(skills, sourceHasSkill) {
   return skills.filter((skill) => !sourceHasSkill(skill));
+}
+
+/**
+ * The skills the A-757 apply guard must probe in the source: the union of the
+ * catalogue's Rheged names and the profile's explicit `skills` that install from
+ * the Rheged source — i.e. the resolved Rheged install list. A profile-only name
+ * (a repo-local extra still listed in `profile.skills`, outside the catalogue) is
+ * passed to the Rheged `skills add` AND wiped, so it must be probed too, or the
+ * wipe would delete a bundle the install cannot restore (A-1961). Matt catalogue
+ * names are excluded: they re-vendor from their own source and are verified after
+ * install, not against this checkout. Pure — resolves names, touches no filesystem.
+ * @param {{ skills: string[] | undefined, repoType: string }} profile
+ * @returns {string[]}
+ */
+export function resolveSourceProbeSkills(profile) {
+  const rheged = resolveSkills(profile);
+  const matt = new Set(mattSkillNames(FLEET_CATALOGUE));
+  const catalogueRheged = rhegedSkillNames(FLEET_CATALOGUE).filter((skill) =>
+    rheged.includes(skill),
+  );
+  return [...new Set([...catalogueRheged, ...rheged])].filter(
+    (skill) => !matt.has(skill),
+  );
 }
 
 /**
@@ -756,12 +778,13 @@ function main(argv) {
   const rhegedSkills = resolveSkills(profile);
   const installSkills = resolveFullInstallSkills(profile);
 
-  // Fail-safe (A-757): every Rheged install-set skill must exist in the source before we
-  // touch the consumer. Matt packs are probed after install, not against this checkout.
-  const missingFromSource = findMissingRhegedSourceSkills(
-    FLEET_CATALOGUE,
+  // Fail-safe (A-757): every Rheged install-set skill — catalogue names plus any
+  // profile-only extras (A-1961) — must exist in the source before we touch the
+  // consumer. Matt packs are probed after install, not against this checkout.
+  const missingFromSource = findMissingSourceSkills(
+    resolveSourceProbeSkills(profile),
     (skill) => existsSync(join(source, "skills", skill, "SKILL.md")),
-  ).filter((skill) => rhegedSkills.includes(skill));
+  );
   if (missingFromSource.length > 0) {
     fail(
       `install set names skill(s) absent from --source (${source}): ${missingFromSource.join(", ")}. ` +
@@ -981,6 +1004,22 @@ function selfTest() {
         resolveWipeTargets([".claude/skills"], []).includes(
           ".claude/skills/initialise-skills",
         ),
+    });
+
+    // resolveSourceProbeSkills (A-1961) — profile-only Rheged extras are probed.
+    cases.push({
+      name: "resolveSourceProbeSkills includes a profile-only skill outside the catalogue",
+      ok: resolveSourceProbeSkills({
+        repoType: "single",
+        skills: ["send-it", "initialise-package-repo"],
+      }).includes("initialise-package-repo"),
+    });
+    cases.push({
+      name: "resolveSourceProbeSkills excludes Matt catalogue names",
+      ok: !resolveSourceProbeSkills({
+        repoType: "single",
+        skills: ["send-it", "tdd"],
+      }).includes("tdd"),
     });
 
     // findMissingSourceSkills (A-757) — the apply guard's pure core.
