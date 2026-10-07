@@ -13,6 +13,7 @@ breaking: false
 issues:
   - A-1953
   - A-2344
+  - A-1945
 stats:
   files_changed:
   loc_added:
