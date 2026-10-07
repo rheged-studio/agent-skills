@@ -1,12 +1,12 @@
 ---
 title: add a Rheged pr skill and follow it in send-it
-release_note: "New `pr` skill writes PR bodies with a Summary visual, a full Changes list, honest Evidence, Merge Danger with the release note, and Related Issues; send-it now follows it."
-version:
+release_note: New `pr` skill writes PR bodies with a Summary visual, a full Changes list, honest Evidence, Merge Danger with the release note, and Related Issues; send-it now follows it.
+version: 1.12.0
 created_at: "2026-10-07T13:59:18Z"
-merged_at:
+merged_at: "2026-10-07T15:28:14Z"
 branch: a-2429-rheged-pr-skill
-pr:
-commit:
+pr: 199
+commit: c6ca109
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -14,9 +14,10 @@ breaking: false
 issues:
   - A-2429
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 14
+  loc_added: 492
+  loc_removed: 67
+  commits: 11
 ---
 
 ## Added

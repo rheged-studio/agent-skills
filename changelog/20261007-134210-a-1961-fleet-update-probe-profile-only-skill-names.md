@@ -1,14 +1,11 @@
 ---
 title: probe profile-only skills in the fleet-update A-757 guard
-release_note: >-
-  fleet-update now refuses to wipe a consumer when its profile lists a skill
-  that is outside the catalogue and absent from agent-skills, instead of
-  deleting that bundle with no way to re-vendor it.
+release_note: fleet-update now refuses to wipe a consumer when its profile lists a skill that is outside the catalogue and absent from agent-skills, instead of deleting that bundle with no way to re-vendor it.
 created_at: "2026-10-07T13:42:10Z"
-merged_at:
+merged_at: "2026-10-07T15:28:09Z"
 branch: a-1961-fleet-update-probe-profile-only-skill-names
-pr:
-commit:
+pr: 198
+commit: 3470e8a
 author: rob@rheged.studio
 co_authors: []
 category: fix
@@ -17,10 +14,11 @@ issues:
   - A-1961
   - A-757
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
-  commits:
+  files_changed: 3
+  loc_added: 134
+  loc_removed: 6
+  commits: 2
+version: 1.12.0
 ---
 
 ## Fixed
