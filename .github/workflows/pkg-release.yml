@@ -42,14 +42,19 @@ jobs:
       attestations: write
 
   # Post-merge changelog enrich / finalise via changelog-core (A-797 / A-821).
-  # Pin at A-821 merge SHA (shared-workflows#65) until @v1 moves.
-  # secrets: inherit passes ROADRUNNER_PRIVATE_KEY for the App-token write-back.
-  # Runs independently of `release` — both read the bumped version from the
-  # committed package.json; no publish artifact is needed.
+  # The write-back bot/App identity comes from infrastructure/repo-config.yaml
+  # via the config job (A-1927 / A-1953); secrets: inherit passes
+  # ROADRUNNER_PRIVATE_KEY for the App-token mint. Runs independently of
+  # `release` — both read the bumped version from the committed package.json;
+  # no publish artifact is needed.
   changelog-enrich:
+    needs: config
     uses: rheged-studio/shared-workflows/.github/workflows/reusable-changelog-enrich.yml@v1
     with:
       mode: finalise
+      app-client-id: ${{ needs.config.outputs.app_client_id }}
+      bot-name: ${{ needs.config.outputs.bot_name }}
+      bot-email: ${{ needs.config.outputs.bot_email }}
     permissions:
       contents: read
       pull-requests: read

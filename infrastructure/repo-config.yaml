@@ -11,3 +11,11 @@ npmRegistryUrl: https://registry.npmjs.org
 # must equal the owning GitHub org so setup-node scopes .npmrc correctly.
 npmScope: "@rheged-studio"
 githubPackagesRegistryUrl: https://npm.pkg.github.com
+
+# Changelog write-back identity (A-1927 / A-1953). Feeds reusable-changelog-enrich
+# via the config job's outputs in pkg-release.yml. The bot must match the
+# protected-branch bypass actor on main; the private key stays an org secret
+# (ROADRUNNER_PRIVATE_KEY, passed through `secrets: inherit`).
+githubAppClientId: Iv23liUXn8E9JRFMcm3u
+botName: "road-runner-bot[bot]"
+botEmail: "240737333+road-runner-bot[bot]@users.noreply.github.com"
