@@ -86,4 +86,21 @@ describe("requiredNodeMajor", () => {
   it("is a no-op with neither file", () => {
     expect(requiredNodeMajor(repo({}))).toBeNull();
   });
+
+  it("reports invalid package.json JSON clearly rather than ignoring it", () => {
+    const directory = repo({ ".nvmrc": "24\n", "package.json": "{ not json" });
+    expect(() => requiredNodeMajor(directory)).toThrow(
+      `preflight: ${join(directory, "package.json")} contains invalid JSON`,
+    );
+  });
+
+  it.each([["null"], ["[]"], ["42"], ['"text"']])(
+    "rejects a non-object package.json (%s)",
+    (content) => {
+      const directory = repo({ "package.json": content });
+      expect(() => requiredNodeMajor(directory)).toThrow(
+        `preflight: ${join(directory, "package.json")} must contain a JSON object`,
+      );
+    },
+  );
 });

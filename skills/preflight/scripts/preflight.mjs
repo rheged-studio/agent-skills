@@ -353,17 +353,52 @@ export function requiredNodeMajor(root = ROOT) {
   const nvmrc = readIfPresent(join(root, ".nvmrc"));
   const nvmrcMajor = nvmrc === null ? null : parseMajor(nvmrc);
 
-  const pkgText = readIfPresent(join(root, "package.json"));
+  const pkgPath = join(root, "package.json");
+  const pkgText = readIfPresent(pkgPath);
   const enginesMajor =
     pkgText === null
       ? null
-      : enginesPinnedMajor(JSON.parse(pkgText).engines?.node);
+      : enginesPinnedMajor(parseManifest(pkgPath, pkgText).engines?.node);
 
   return enginesMajor ?? nvmrcMajor;
 }
 
+/**
+ * Parse a `package.json`, failing with a clear message (not a stack trace)
+ * when it is invalid JSON or not a JSON object. An unreadable manifest is an
+ * error, never "no pin" — silently skipping the Node gate would hide it.
+ * @param {string} path
+ * @param {string} text
+ * @returns {{ engines?: { node?: string } }}
+ */
+function parseManifest(path, text) {
+  let manifest;
+  try {
+    manifest = JSON.parse(text);
+  } catch {
+    throw new Error(`preflight: ${path} contains invalid JSON`);
+  }
+
+  if (
+    manifest === null ||
+    typeof manifest !== "object" ||
+    Array.isArray(manifest)
+  ) {
+    throw new Error(`preflight: ${path} must contain a JSON object`);
+  }
+
+  return manifest;
+}
+
 function assertNodeMajor() {
-  const required = requiredNodeMajor();
+  let required;
+  try {
+    required = requiredNodeMajor();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+
   if (required === null) {
     return;
   }
