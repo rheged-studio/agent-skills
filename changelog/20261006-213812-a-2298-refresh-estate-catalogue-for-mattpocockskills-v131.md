@@ -2,11 +2,11 @@
 title: refresh the estate catalogue for mattpocock/skills 1.3.1 and ask for the Claude token at org or repo level
 release_note: The estate catalogue tracks mattpocock/skills 1.3.1 (adds implement-spec, pr and retro; drops resolving-merge-conflicts), send-it writes PR bodies in the pr skill's shape when it is installed, and rheged-skills-setup asks for CLAUDE_CODE_OAUTH_TOKEN at org or repo level in its confirmation gate.
 created_at: "2026-10-06T21:38:12Z"
-merged_at:
+merged_at: "2026-10-07T07:42:29Z"
 branch: a-2298-refresh-estate-catalogue-for-mattpocockskills-v131
-pr:
-commit:
-author: "rob@rheged.studio"
+pr: 194
+commit: 6be0cb4
+author: rob@rheged.studio
 co_authors: []
 category: feature
 breaking: false
@@ -14,9 +14,9 @@ issues:
   - A-2298
   - A-1621
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 11
+  loc_added: 252
+  loc_removed: 58
 version:
 ---
 
