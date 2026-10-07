@@ -45,6 +45,7 @@ const CANONICAL_SKILLS = [
   "initialise-skills",
   "triage-pr",
   "release-status",
+  "pr",
 ];
 
 // Where bespoke command shims live (removed on --apply).

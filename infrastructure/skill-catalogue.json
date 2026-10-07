@@ -14,7 +14,8 @@
         "cleanup-repo",
         "rheged-skills-setup",
         "triage-pr",
-        "release-status"
+        "release-status",
+        "pr"
       ]
     },
     {
@@ -30,7 +31,6 @@
         "implement",
         "implement-spec",
         "improve-codebase-architecture",
-        "pr",
         "prototype",
         "research",
         "retro",

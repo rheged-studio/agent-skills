@@ -9,19 +9,20 @@ description: >-
   its human envelope, or a documented stop), or `--skip-triage` /
   `triage: false` was used with a stated reason. Use when asked to ship, send it, finish a branch,
   open or update a PR, or wrap up and push. Thin orchestrator over `commit`,
-  `preflight`, `changelog`, `linear-sync`, and `triage-pr`; owns branch guard,
+  `preflight`, `changelog`, `linear-sync`, `pr`, and `triage-pr`; owns branch guard,
   release-type decision, PR title, push, and PR. Serves monorepos and
   single-package repos alike.
 license: MIT
 compatibility: >-
   Requires `git` and `gh` (`gh` authenticated). Node.js ≥22 for bundled
   `derive-bump.mjs` / `check-skill-bumps.mjs` (Node built-ins only). Install
-  sibling skills `commit`, `preflight`, `changelog`, `linear-sync`, and
-  `triage-pr` alongside this one. Missing `linear-sync` skips In Review
+  sibling skills `commit`, `preflight`, `changelog`, `linear-sync`, `pr`, and
+  `triage-pr` alongside this one. Missing `pr` falls back to a minimal PR body;
+  missing `linear-sync` skips In Review
   silently; missing `triage-pr` warns and stops at the open PR (not a successful
   default run — install it).
 metadata:
-  version: 0.10.0
+  version: 0.11.0
   author: Rob Easthope
 allowed-tools: Write, Read, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(pnpm:*), Bash(node:*), Bash(npx:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects
 ---
@@ -49,6 +50,8 @@ composition, push, and the PR — and delegates the rest:
   lint-relevant changed).
 - **Changelog** → the `changelog` skill (author/update + validate; an entry for
   **every** PR, skipped entirely only when `config.json` sets `changelog: false`).
+- **PR body** → the `pr` skill (Summary visual, Changes, Evidence, Merge Danger
+  with the release note, Related Issues, and the hand-edited keep region).
 - **Linear In Review** → the `linear-sync` skill (resolve state by team name,
   idempotent transition).
 - **Post-PR triage** → the `triage-pr` skill (Phase A CI fix loop and the
@@ -62,14 +65,15 @@ single-package repo. send-it configures nothing about them.
 
 > **Install the delegated skills alongside `send-it`.** This bundle invokes and
 > links its siblings by relative path (`../commit/SKILL.md`, `../preflight/SKILL.md`,
-> `../changelog/SKILL.md`, `../linear-sync/SKILL.md`, `../triage-pr/SKILL.md`), so a
-> `--skill send-it`-only install leaves the commit, lint, changelog, Linear, and
-> triage steps unavailable and those links dangling. Install them together:
+> `../changelog/SKILL.md`, `../pr/SKILL.md`, `../linear-sync/SKILL.md`,
+> `../triage-pr/SKILL.md`), so a `--skill send-it`-only install leaves the commit,
+> lint, changelog, PR-body, Linear, and triage steps unavailable and those links
+> dangling. Install them together:
 >
 > ```bash
 > npx skills add https://github.com/rheged-studio/agent-skills \
 >   --skill send-it --skill commit --skill preflight --skill changelog --skill linear-sync \
->   --skill triage-pr \
+>   --skill pr --skill triage-pr \
 >   --agent claude-code --agent cursor --copy
 > ```
 
@@ -115,7 +119,8 @@ read by the delegated steps.
 ## Prerequisites
 
 - `gh` CLI installed and authenticated (`gh auth status`).
-- The sibling skills (`commit`, `preflight`, `changelog`) installed.
+- The sibling skills (`commit`, `preflight`, `changelog`, `pr`) installed.
+  Without `pr`, Step 9 writes the minimal fallback body instead.
 - `linear-sync` — optional; without it (or the Linear MCP server) the In Review
   writeback is skipped **silently** (Step 10).
 - `triage-pr` — **required for the default pipeline.** Without it the Step 11 chain
@@ -325,8 +330,8 @@ as `feat:`/`fix:` and cut a spurious release.)
    the published surface — they **do not** decide release-type any more. Optionally
    sanity-check the category against them: if `releaseTriggering` is `true` but the diff
    (`git diff --name-only origin/<base>...HEAD`) touches **no** `shippablePaths` prefix
-   (nor a `shippableManifestKeys` key in `package.json`), note it in the PR body so a
-   reviewer can confirm the release was intended — and likewise if a change touching a
+   (nor a `shippableManifestKeys` key in `package.json`), add it to the release note
+   (below) so a reviewer can confirm the release was intended — and likewise if a change touching a
    published path is `releaseTriggering: false`. This is a soft note only; never let it
    override the category decision or block.
 
@@ -389,8 +394,11 @@ as `feat:`/`fix:` and cut a spurious release.)
    > title from the change's semantic category (the commit types) so they stay
    > aligned.
 
-   When `releaseTriggering` is `false`, note `no release (<type>-only)` in the PR body
-   so reviewers can confirm the non-release type was intentional.
+5. **Compose the release note** that Step 9 hands to the PR body's `**Release:**`
+   line: `no release (<type>-only)` when `releaseTriggering` is `false` (so reviewers
+   can confirm the non-release type was intentional), or `<type> → <bump>` when it is
+   `true` — followed in either case by any publish-surface cross-check note from
+   item 2.
 
 ### Step 7: Author or update the dated changelog entry — delegate to the `changelog` skill
 
@@ -466,11 +474,16 @@ commits). Feature PRs are intended to merge via **merge commit**; release and
 fan-out automation keep using squash outside this skill.
 
 1. Check for an existing PR: `gh pr view --json number,url 2>/dev/null`.
-2. **If creating:** `gh pr create --base <base> --draft --title "<title>" --body
-   "<body>"`. Use `--ready` (the flag) instead of `--draft` if the user passed
-   `--ready`.
-3. **If updating:** `gh pr edit <number> --title "<title>" --body "<body>"`.
-4. Return the PR URL and number via `gh pr view --json url,number`.
+2. Keep both values literal. Write the complete body (below) to a temporary file,
+   `<body-file>`, and pass it with `--body-file` — a carried keep region can hold
+   backticks or `$(...)`. Assign the title in single quotes (each embedded `'`
+   written as `'\''`), e.g. `title='feat: add $(x) support'`, and pass `"$title"`,
+   so command substitution never runs on a commit subject or `--title` value.
+3. **If creating:** `gh pr create --base <base> --draft --title "$title"
+   --body-file <body-file>`. Use `--ready` (the flag) instead of `--draft` if the
+   user passed `--ready`.
+4. **If updating:** `gh pr edit <number> --title "$title" --body-file <body-file>`.
+5. Return the PR URL and number via `gh pr view --json url,number`.
 
 > **send-it never arms auto-merge.** It opens and updates the PR; landing it stays a
 > human action (A-1151). The old `--merge-when-ready` flag — which armed
@@ -479,42 +492,48 @@ fan-out automation keep using squash outside this skill.
 > could land the branch while that plan is still awaiting approval. Merge by hand, or
 > arm auto-merge yourself once you're happy with the PR.
 
-**PR body — defer to the `pr` skill when it is installed (A-2298).** Matt
-Pocock's model-invoked [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr)
-skill (vendored by the estate catalogue) is the estate's PR-body shape. Look for
-it beside this bundle (`../pr/SKILL.md`) or in the consumer's skill mirrors
-(`.claude/skills/pr/SKILL.md`, `.agents/skills/pr/SKILL.md`). If present, write
-the body by following that skill's template and section guidance (its `Summary`
-visual, `Evidence` before/after, and `Merge Danger` door + blast radius) in place
-of the fallback template below. send-it still owns two additions whichever shape
-is used:
+**PR body — follow the [`pr`](../pr/SKILL.md) skill (A-2429).** It owns the body's
+shape: Summary visual, Changes, Evidence, Merge Danger, Related Issues, and the
+`<!-- pr:keep -->` region. Look for it beside this bundle (`../pr/SKILL.md`) or in
+the consumer's skill mirrors (`.claude/skills/pr/SKILL.md`,
+`.agents/skills/pr/SKILL.md`), and write the body by following it. Hand it:
 
-- a `## Related Issues` section listing the Linear identifiers from the branch and
-  commits (dropped when there are none), so `linear-sync` and reviewers can trace
-  the work; and
-- the Step 6 notes — `no release (<type>-only)` and any publish-surface
-  cross-check — placed under `## Merge Danger` when following `pr`, or at the end
-  of `## Summary` otherwise.
+- **Base** — the resolved `<base>` (honouring `--base`), so the body describes
+  the right range on a stacked PR.
 
-**Fallback PR body template** (when `pr` is not installed):
+- **Release note** — the Step 6 note (`no release (<type>-only)` or
+  `<type> → <bump>`, plus any publish-surface cross-check), for its `**Release:**`
+  line.
+- **Related issues** — the issue identifiers from the branch name and commits, for
+  `## Related Issues` (dropped when there are none).
+- **Evidence** — only what this run actually executed (the Step 5 preflight
+  result, any tests run in the session). CI has not run yet, so the body claims no
+  CI result.
+
+**On update, carry the keep region across.** Before `gh pr edit`, read the
+current body (`gh pr view <number> --json body -q .body`) and copy every
+`<!-- pr:keep -->` … `<!-- /pr:keep -->` region verbatim into the regenerated
+body, exactly as the `pr` skill describes. Hand-added screenshots and notes
+survive every re-run this way. This applies to the fallback body too.
+
+**Fallback PR body** — only when `pr` is not installed:
 
 ```markdown
 ## Summary
 
-- Comprehensive summary of all changes on this branch
-- What changed and why
+<what changed and why, one bullet per commit>
+
+**Release:** <Step 6 release note>
+
+<!-- pr:keep -->
+<!-- /pr:keep -->
 
 ## Related Issues
 
-<!-- Linear identifiers extracted from the branch and commits -->
 - <ISSUE-ID>
-
-## Test Plan
-
-- [ ] <test>
 ```
 
-Drop the `## Related Issues` section if no issues were found.
+Drop `## Related Issues` when no issues were found.
 
 ### Step 10: Transition linked Linear issues to In Review — delegate to the `linear-sync` skill
 
