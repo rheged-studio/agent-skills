@@ -2,20 +2,20 @@
 title: fail closed when the Node major mismatches the repo pin
 release_note: preflight now exits 1 with an nvm/fnm/mise switch hint when the active Node major does not match the repo's .nvmrc or exact engines.node pin, instead of reporting ESLint as a failed linter.
 created_at: "2026-10-06T21:33:28Z"
-merged_at:
+merged_at: "2026-10-07T07:39:52Z"
 branch: a-1702-preflight-fail-closed-on-node-major-mismatch
-pr:
-commit:
-author: "rob@rheged.studio"
+pr: 193
+commit: 55599e8
+author: rob@rheged.studio
 co_authors: []
 category: feature
 breaking: false
 issues:
   - A-1702
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 6
+  loc_added: 235
+  loc_removed: 6
 version:
 ---
 
