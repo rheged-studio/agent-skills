@@ -125,10 +125,11 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
       [".claude/skills", ".agents/skills"],
       ["send-it", "commit"],
     );
-    expect(targets).toHaveLength(6);
+    expect(targets).toHaveLength(8);
     expect(targets).toContain(".claude/skills/send-it");
     expect(targets).toContain(".agents/skills/commit");
     expect(targets).toContain(".claude/skills/initialise-skills");
+    expect(targets).toContain(".agents/skills/resolving-merge-conflicts");
   });
 
   it("resolveWipeTargets targets only the install set — never a consumer-extra bundle", () => {
@@ -145,6 +146,7 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
   it("resolveWipeTargets still wipes legacy bundles when install set is empty", () => {
     expect(resolveWipeTargets([".claude/skills"], [])).toEqual([
       ".claude/skills/initialise-skills",
+      ".claude/skills/resolving-merge-conflicts",
     ]);
   });
 
