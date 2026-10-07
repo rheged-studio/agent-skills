@@ -28,8 +28,12 @@ const REVIEW_WAIT_MAX_MINUTES = 20;
 // The estate Claude review reusable workflow (rheged-studio/shared-workflows).
 // A repo calling it gets a `<caller job id> / claude-review` check run on every
 // reviewed head, posted by GitHub Actions (A-2453).
+// Only the estate's own shared-workflows repo counts — a same-named reusable
+// workflow elsewhere need not post a `claude-review` check. The pre-rename
+// `acme-skunkworks` owner still resolves via GitHub's redirect, and some callers
+// have not been re-pointed yet.
 const CLAUDE_REVIEW_REUSABLE =
-  /^\s*(?:-\s+)?uses:\s*["']?[^\s"'#]*\/reusable-claude-code-review\.ya?ml@/;
+  /^\s*uses:\s*["']?(?:rheged-studio|acme-skunkworks)\/shared-workflows\/\.github\/workflows\/reusable-claude-code-review\.ya?ml@/;
 const CLAUDE_REVIEW_PRODUCER = "github-actions";
 
 /**
@@ -127,6 +131,10 @@ export function detectClaudeReviewCallerJob(repoRoot) {
     let inJobs = false;
     let jobIndent = null;
     let jobId = null;
+    // Indentation of the current job's direct fields (`uses:`, `secrets:` …).
+    // A `uses:` line any deeper — inside a `run: |` block, say — is not the
+    // job's own call, so it never matches.
+    let fieldIndent = null;
     for (const line of text.split(/\r?\n/)) {
       if (/^\s*(#|$)/.test(line)) {
         continue;
@@ -137,6 +145,7 @@ export function detectClaudeReviewCallerJob(repoRoot) {
         inJobs = /^jobs:\s*(#.*)?$/.test(line);
         jobIndent = null;
         jobId = null;
+        fieldIndent = null;
         continue;
       }
 
@@ -148,10 +157,16 @@ export function detectClaudeReviewCallerJob(repoRoot) {
       const key = /^\s*["']?([\w-]+)["']?:\s*(#.*)?$/.exec(line);
       if (indent === jobIndent && key) {
         jobId = key[1];
+        fieldIndent = null;
         continue;
       }
 
-      if (jobId && indent > jobIndent && CLAUDE_REVIEW_REUSABLE.test(line)) {
+      if (!jobId || indent <= jobIndent) {
+        continue;
+      }
+
+      fieldIndent ??= indent;
+      if (indent === fieldIndent && CLAUDE_REVIEW_REUSABLE.test(line)) {
         return jobId;
       }
     }

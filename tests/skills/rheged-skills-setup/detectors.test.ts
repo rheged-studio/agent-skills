@@ -236,6 +236,30 @@ describe("createDetectors — reviewBotChecks", () => {
     expect(detect("reviewBotChecks")).toEqual({ value: {} });
   });
 
+  it("accepts a caller still pointed at the pre-rename acme-skunkworks owner", () => {
+    writeWorkflow(
+      "claude-code-review.yml",
+      caller("claude-review").replace("rheged-studio/", "acme-skunkworks/"),
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBe("claude-review");
+  });
+
+  it("ignores a same-named reusable workflow from another repository", () => {
+    writeWorkflow(
+      "claude-code-review.yml",
+      caller("claude-review").replace("rheged-studio/", "someone-else/"),
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBeNull();
+  });
+
+  it("ignores a uses: line inside a run block (not a direct job field)", () => {
+    writeWorkflow(
+      "notes.yml",
+      "jobs:\n  notes:\n    runs-on: ubuntu-latest\n    steps:\n      - run: |\n          echo uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n          uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n",
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBeNull();
+  });
+
   it("ignores a commented-out caller", () => {
     writeWorkflow(
       "claude-code-review.yml",
