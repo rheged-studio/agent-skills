@@ -11,9 +11,10 @@ pushes the branch, opens or updates a pull request, transitions the linked
 Linear issues to **In Review**, and then drives that PR to merge-ready.
 
 It is a thin orchestrator: the commit step, the lint gate, the changelog authoring,
-the Linear transition, and the post-PR triage are delegated to the standalone
-[`commit`](../commit), [`preflight`](../preflight), [`changelog`](../changelog),
-[`linear-sync`](../linear-sync), and [`triage-pr`](../triage-pr) skills. send-it
+the PR body, the Linear transition, and the post-PR triage are delegated to the
+standalone [`commit`](../commit), [`preflight`](../preflight),
+[`changelog`](../changelog), [`pr`](../pr), [`linear-sync`](../linear-sync), and
+[`triage-pr`](../triage-pr) skills. send-it
 owns only the glue no sibling does — the branch guard, worktree resolution, the
 release-type decision (by category), the PR-title composition, push, and the PR.
 
@@ -34,12 +35,12 @@ npx skills add https://github.com/rheged-studio/agent-skills --skill send-it --a
 — the install should live in the consumer repo.
 
 **Install the sibling skills too.** send-it delegates to `commit`, `preflight`,
-`changelog`, `linear-sync`, and `triage-pr`; install them alongside it (the
-changelog, Linear, and triage steps no-op gracefully if a sibling is absent, but the
-flow assumes they are present):
+`changelog`, `pr`, `linear-sync`, and `triage-pr`; install them alongside it (the
+changelog, PR-body, Linear, and triage steps degrade gracefully if a sibling is
+absent, but the flow assumes they are present):
 
 ```bash
-npx skills add https://github.com/rheged-studio/agent-skills --skill commit --skill preflight --skill changelog --skill linear-sync --skill triage-pr --agent claude-code --agent cursor --copy
+npx skills add https://github.com/rheged-studio/agent-skills --skill commit --skill preflight --skill changelog --skill pr --skill linear-sync --skill triage-pr --agent claude-code --agent cursor --copy
 ```
 
 ## Configure
@@ -88,10 +89,10 @@ which send-it's delegated steps read.
 - `triage-pr` for the final chain — **required for the default pipeline**. A missing
   install only warns and the run finishes at the open PR; that soft-skip is a
   degraded outcome, not a successful finish.
-- Matt Pocock's `pr` skill — optional. When it is installed, send-it writes the PR
-  body in its shape (Summary visual, Evidence, Merge Danger) and adds its own
-  `## Related Issues` section; otherwise it uses its built-in Summary / Related
-  Issues / Test Plan template.
+- The [`pr`](../pr) skill for the PR body (Step 9). send-it hands it the release
+  note and the Related Issues, and carries any `<!-- pr:keep -->` region across
+  when it rewrites the body on a re-run. Without `pr`, send-it writes a minimal
+  fallback body (Summary, release note, keep region, Related Issues).
 
 ## What it does not do
 
