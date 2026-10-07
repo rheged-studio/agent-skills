@@ -69,11 +69,13 @@ Read the branch first: `git log --no-merges origin/<base>..HEAD` and
 `git diff origin/<base>...HEAD`, where `<base>` is the PR's base branch (default
 `main`). The body describes every commit on the branch, not only the latest.
 
-A caller such as `send-it` may supply two values; use them verbatim when given:
+A caller such as `send-it` may supply three values; use them verbatim when given:
 
 - **Release note** — the `**Release:**` line (e.g. `no release (docs-only)`, or
   `feat → minor` plus a publish-surface cross-check).
 - **Related issues** — the issue identifiers for `## Related Issues`.
+- **Evidence** — what the caller actually ran (tests, the lint preflight), for
+  `## Evidence`.
 
 Standalone, derive them yourself. The Release line follows the highest-bumping
 Conventional Commit type on the branch: `feat` → minor, `fix`/`perf`/`revert` →
@@ -227,6 +229,8 @@ On **update**:
 2. Copy each keep region — markers included — byte for byte.
 3. Write the new body, and put the copied regions where the empty region sits in
    the template, in their original order.
+4. Save the body to a file and publish it with `--body-file`, so the shell never
+   interpolates a carried region's backticks or `$(...)`.
 
 An opening marker with no closing one keeps everything from it to the end of the
 body, then gains a closing marker. A body without markers has nothing to carry;
