@@ -46,10 +46,15 @@ The Matt Pocock source lists every skill in upstream's **Engineering** and
   `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`) and
   `in-progress` buckets. They are personal or experimental and are not
   distributed as the core packs.
-- **`pr` is adopted, and `send-it` defers to it.** When `pr` is installed,
-  `send-it` Step 9 writes the PR body in its shape (Summary visual, Evidence,
-  Merge Danger). It still adds its own `## Related Issues` section and the
-  no-release note. Without `pr`, send-it falls back to its built-in template.
+- **`pr` is a Rheged skill, not Matt's (A-2429).** A-2298 first adopted
+  Matt's `pr`; it is now dropped from the Matt list and replaced by the Rheged
+  [`pr`](../skills/pr/SKILL.md) bundle, which blends Matt's Summary visual,
+  Evidence, and Merge Danger with `send-it`'s full Changes list, release note,
+  and Related Issues, plus a `<!-- pr:keep -->` region for hand-added material.
+  Both are named `pr`, so only one may sit in `.claude/skills/pr/`; the
+  catalogue's duplicate-name check keeps it that way, and `--install` wipes the
+  old Matt copy before installing the Rheged one. `send-it` Step 9 follows it,
+  falling back to a minimal built-in template when it is absent.
 - **`implement-spec` and `retro`** were added in 1.3.0 and are listed.
 - **`resolving-merge-conflicts` was removed upstream** in 1.3.0, with no
   replacement. It is out of the catalogue, and `LEGACY_BUNDLE_NAMES` in
@@ -93,6 +98,7 @@ Published Rheged bundles live under `skills/<name>/` in agent-skills:
 | `rheged-skills-setup` | Install catalogue + reconcile every skill's `config.json` | Renamed from `initialise-skills` (0.12.0). |
 | `triage-pr` | Drive a PR from draft-with-failing-CI to merge-ready | — |
 | `release-status` | Read-only release-please pipeline diagnosis | Sibling of `send-it`. |
+| `pr` | PR-body template (Summary visual, Changes, Evidence, Merge Danger, Related Issues) | Model-invoked; `send-it` Step 9 follows it. |
 
 **Set per repo type:**
 
@@ -160,7 +166,7 @@ Prefer the [estate catalogue](#estate-skill-catalogue-a-1904) (`--install`) for 
 npx skills add https://github.com/rheged-studio/agent-skills \
   --skill send-it --skill commit --skill preflight --skill changelog \
   --skill linear-sync --skill cleanup-repo --skill rheged-skills-setup \
-  --skill triage-pr --skill release-status \
+  --skill triage-pr --skill release-status --skill pr \
   --agent claude-code --agent cursor --copy
 ```
 
