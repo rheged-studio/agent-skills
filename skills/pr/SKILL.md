@@ -3,9 +3,9 @@ name: pr
 description: Use when writing or updating a PR body.
 license: MIT
 compatibility: >-
-  Reads the branch with `git`; reads the current PR body with `gh` (authenticated)
-  when updating. Contract-only skill — no bundled script, no npm dependency, no
-  config.
+  Reads the branch with `git`; reads and publishes the PR body with `gh`
+  (authenticated), via a temporary body file. No bundled script, no npm
+  dependency, no config.
 metadata:
   version: 0.1.0
   author: Rob Easthope
@@ -18,7 +18,7 @@ metadata:
       author: Dex Horthy
       organisation: Humanlayer
       url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
-allowed-tools: Read, Bash(git:*), Bash(gh:*)
+allowed-tools: Read, Write, Bash(git:*), Bash(gh:*)
 ---
 
 # pr

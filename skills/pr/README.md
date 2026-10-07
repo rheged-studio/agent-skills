@@ -30,7 +30,7 @@ this one.
 - `git`, to read the branch's commits and diff.
 - `gh` (authenticated), to read the current body when updating a PR.
 - **No npm dependencies, no build step, and no `config.json`** — this is a
-  contract-only skill; [`SKILL.md`](SKILL.md) is the source of truth.
+  model-driven skill; [`SKILL.md`](SKILL.md) is the source of truth.
 - Optional: a root `GLOSSARY.md`, whose terms the body uses when present.
 
 ## Credits
