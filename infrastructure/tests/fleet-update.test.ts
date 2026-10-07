@@ -11,9 +11,11 @@ import {
   buildInitialiseFacts,
   buildSkillsAddArgs,
   detectClobberedConfigs,
+  findMissingSourceSkills,
   interpretCheckUpdates,
   parseProfile,
   resolveSkills,
+  resolveSourceProbeSkills,
   resolveWipeTargets,
   skillsAddEnvironment,
   SOURCE_URL,
@@ -175,6 +177,55 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
       "claude-code",
       "--copy",
     ]);
+  });
+});
+
+describe("resolveSourceProbeSkills (A-757 / A-1961 apply guard)", () => {
+  it("probes the canonical Rheged set when the profile omits skills", () => {
+    const probe = resolveSourceProbeSkills({
+      repoType: "single",
+      skills: undefined,
+    });
+    expect(probe).toEqual(
+      resolveSkills({ repoType: "single", skills: undefined }),
+    );
+  });
+
+  it("probes a profile-only skill outside the catalogue (it is wiped and installed from the Rheged source)", () => {
+    const probe = resolveSourceProbeSkills({
+      repoType: "single",
+      skills: ["send-it", "initialise-package-repo"],
+    });
+    expect(probe).toEqual(["send-it", "initialise-package-repo"]);
+  });
+
+  it("does not probe Matt catalogue names (verified after install, not against this checkout)", () => {
+    const probe = resolveSourceProbeSkills({
+      repoType: "single",
+      skills: ["send-it", "tdd"],
+    });
+    expect(probe).toEqual(["send-it"]);
+  });
+
+  it("only probes catalogue Rheged names that are in the install set", () => {
+    const probe = resolveSourceProbeSkills({
+      repoType: "single",
+      skills: ["commit"],
+    });
+    expect(probe).toEqual(["commit"]);
+  });
+
+  it("feeds the guard so a profile-only name absent upstream is refused", () => {
+    const present = new Set(["send-it"]);
+    expect(
+      findMissingSourceSkills(
+        resolveSourceProbeSkills({
+          repoType: "single",
+          skills: ["send-it", "initialise-package-repo"],
+        }),
+        (skill) => present.has(skill),
+      ),
+    ).toEqual(["initialise-package-repo"]);
   });
 });
 
