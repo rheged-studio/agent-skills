@@ -109,8 +109,14 @@ describe("matt-pocock source (mattpocock/skills 1.3.1)", () => {
 
   it("lists the skills added in 1.3.0", () => {
     expect(matt?.skills).toEqual(
-      expect.arrayContaining(["implement-spec", "pr", "retro"]),
+      expect.arrayContaining(["implement-spec", "retro"]),
     );
+  });
+
+  it("leaves pr to the Rheged source (A-2429)", () => {
+    const rheged = catalogue.sources.find((source) => source.id === "rheged");
+    expect(matt?.skills).not.toContain("pr");
+    expect(rheged?.skills).toContain("pr");
   });
 
   it("drops resolving-merge-conflicts", () => {
