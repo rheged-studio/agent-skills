@@ -377,8 +377,8 @@ counts either.
     thread, or created **or edited in place** a finished summary — a sticky-marker
     summary, or claude-code-action's tracking comment once it reads
     "**Claude finished @…'s task**" (a clean Claude review leaves nothing else).
-    A bare ack ("Claude Code is working…", or anything without a sticky marker)
-    does **not** count.
+    A bare ack — a comment with neither a sticky marker nor that finished header,
+    such as "Claude Code is working…" — does **not** count.
 - `botsReported` / `botsSkipped` / `botsMissing` — `botStatus` grouped by state;
   `botsMissing` covers both `pending` and `missing`.
 - `activityFingerprint` — changes whenever the head, the open bot threads, or a
