@@ -359,3 +359,118 @@ describe("buildResult — review-submission summaries", () => {
     expect(summaryIds(result.aiSummaryComments)).toEqual(["IC_sticky"]);
   });
 });
+
+function claudeState(result: ReturnType<typeof buildResult>) {
+  return result.botStatus.find(
+    (status: { bot: string }) => status.bot === "claude",
+  );
+}
+
+// A-2453: claude-code-action posts its tracking comment early as an in-progress
+// ack and edits it in place to "**Claude finished @…'s task …**". On a clean
+// review that edit is Claude's only activity, so an unmapped `claude` must settle
+// on it — but only on the finished form, after ready, on the current head.
+describe("buildResult — claude-code-action finished summary (unmapped claude)", () => {
+  const READY = "2026-10-07T14:00:00Z";
+  const COMMITTED = "2026-10-07T13:50:00Z";
+  const FINISHED =
+    "**Claude finished @RobEasthope's task in 5m 9s** —— [View job](https://github.com/acme/repo/actions/runs/1)\n\n---\n### Claude is working on this\n\n- [x] Gather context\n\nNo issues found.";
+  const WORKING =
+    'Claude Code is working… <img src="https://github.com/user-attachments/assets/spinner" width="14px" height="14px" />\n\nI\'ll analyze this and get back to you.';
+
+  function settle(
+    body: string,
+    createdAt: string,
+    updatedAt: string,
+    headCommittedAt = COMMITTED,
+  ) {
+    return buildResult({
+      bots: ["claude", "coderabbitai"],
+      commentNodes: [
+        {
+          author: { __typename: "Bot", login: "claude" },
+          body,
+          createdAt,
+          id: "IC_claude_tracking",
+          updatedAt,
+        },
+      ],
+      headCommittedAt,
+      headRefOid: "head",
+      isDraft: false,
+      number: 1,
+      readyAt: READY,
+      reviewNodes: [],
+      threadNodes: [],
+    });
+  }
+
+  it("settles as reported on a finished 'No issues found' summary after ready", () => {
+    const result = settle(
+      FINISHED,
+      "2026-10-07T14:01:19Z",
+      "2026-10-07T14:06:28Z",
+    );
+    expect(claudeState(result)).toMatchObject({
+      state: "reported",
+      via: "activity",
+    });
+    expect(result.botsReported).toEqual(["claude"]);
+  });
+
+  it("counts the in-place edit (updatedAt) even when the ack was created before ready", () => {
+    const result = settle(
+      FINISHED,
+      "2026-10-07T13:59:00Z",
+      "2026-10-07T14:06:28Z",
+    );
+    expect(claudeState(result)?.state).toBe("reported");
+  });
+
+  it("stays missing on an in-progress 'Claude Code is working…' comment", () => {
+    const result = settle(
+      WORKING,
+      "2026-10-07T14:01:19Z",
+      "2026-10-07T14:01:19Z",
+    );
+    expect(claudeState(result)?.state).toBe("missing");
+    expect(result.botsMissing).toContain("claude");
+  });
+
+  it("does not count a finished summary from before the ready flip", () => {
+    const result = settle(
+      FINISHED,
+      "2026-10-07T13:40:00Z",
+      "2026-10-07T13:45:00Z",
+    );
+    expect(claudeState(result)?.state).toBe("missing");
+  });
+
+  it("does not count a finished summary on a superseded head", () => {
+    const result = settle(
+      FINISHED,
+      "2026-10-07T14:01:19Z",
+      "2026-10-07T14:06:28Z",
+      "2026-10-07T14:10:00Z",
+    );
+    expect(claudeState(result)?.state).toBe("missing");
+  });
+
+  it("does not count an errored run's tracking comment", () => {
+    const result = settle(
+      "**Claude encountered an error after 1m 2s** —— [View job](https://github.com/acme/repo/actions/runs/1)",
+      "2026-10-07T14:01:19Z",
+      "2026-10-07T14:02:21Z",
+    );
+    expect(claudeState(result)?.state).toBe("missing");
+  });
+
+  it("does not count a 'Claude finished' phrase that is not the comment header", () => {
+    const result = settle(
+      "Quoting the bot: **Claude finished @RobEasthope's task in 1m** — done",
+      "2026-10-07T14:01:19Z",
+      "2026-10-07T14:06:28Z",
+    );
+    expect(claudeState(result)?.state).toBe("missing");
+  });
+});
