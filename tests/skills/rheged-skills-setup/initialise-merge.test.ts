@@ -516,6 +516,39 @@ describe("mergeConfig", () => {
       expect(data.reviewBots).toEqual(["claude", "coderabbitai"]);
     });
 
+    // A-2453: an existing `{}` equals the example placeholder, so a consumer that
+    // never mapped a check heals to the detected Claude mapping on reconcile, while
+    // a deliberate mapping is drift and is kept.
+    it("fills an empty reviewBotChecks placeholder with the detected claude mapping", () => {
+      const claude = { name: "claude-review", producer: "github-actions" };
+      const { data, results } = mergeConfig({
+        config: { reviewBotChecks: {} },
+        detect: (key) =>
+          key === "reviewBotChecks" ? { value: { claude } } : null,
+        example: { reviewBotChecks: {} },
+      });
+      expect(results.reviewBotChecks.status).toBe("inferred");
+      expect(data.reviewBotChecks).toEqual({ claude });
+    });
+
+    it("keeps a deliberate reviewBotChecks mapping as drift", () => {
+      const custom = { coderabbitai: "CodeRabbit" };
+      const { data, results } = mergeConfig({
+        config: { reviewBotChecks: custom },
+        detect: (key) =>
+          key === "reviewBotChecks"
+            ? {
+                value: {
+                  claude: { name: "claude-review", producer: "github-actions" },
+                },
+              }
+            : null,
+        example: { reviewBotChecks: {} },
+      });
+      expect(results.reviewBotChecks.status).toBe("drift");
+      expect(data.reviewBotChecks).toEqual(custom);
+    });
+
     it("--set affectedPackages=false silences packageRoots needs-manual-input", () => {
       const { results } = mergeConfig({
         config: {

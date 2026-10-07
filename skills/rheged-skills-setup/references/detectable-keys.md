@@ -24,7 +24,7 @@ detector serves every skill that uses a key. A key found in a skill's
 | `reviewBots` | triage-pr | Fixed | `["claude", "coderabbitai"]` |
 | `maxCiRounds` | triage-pr | Fixed | `5` |
 | `maxReviewRounds` | triage-pr | Fixed (Phase B re-review rounds after apply pushes) | `2` |
-| `reviewBotChecks` | triage-pr | Fixed (per-bot check mapping for head-commit settle) | `{}` |
+| `reviewBotChecks` | triage-pr | `{ "claude": { "name": "<job id>", "producer": "github-actions" } }` when a `.github/workflows/*.yml` job calls the estate `reusable-claude-code-review.yml` (the caller job id is the check's leading `<job id> / claude-review` segment), so a clean Claude review settles on its terminal check (A-2453); `{}` otherwise. An existing `{}` equals the example placeholder, so it is filled on reconcile; any other mapping is a deliberate edit (drift) and is kept | `{}` |
 | `deferNonBlocking` | triage-pr | Fixed (impact gate: defer valid in-scope but non-blocking findings) | `true` |
 | `humanEnvelope` | triage-pr | Fixed (unattended Phase B; set `true` to halt for disposition approval) | `false` |
 | `reviewIdleMinutes` | triage-pr | Fixed (hybrid review-settle idle window) | `10` |
