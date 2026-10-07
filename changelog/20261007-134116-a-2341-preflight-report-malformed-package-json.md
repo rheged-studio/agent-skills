@@ -2,10 +2,10 @@
 title: report a malformed package.json clearly in preflight
 release_note: preflight now reports an invalid or non-object package.json with a clear message instead of crashing with a stack trace.
 created_at: "2026-10-07T13:41:16Z"
-merged_at:
+merged_at: "2026-10-07T15:28:04Z"
 branch: a-2341-preflight-report-malformed-package-json
-pr:
-commit:
+pr: 197
+commit: "7097926"
 author: rob@rheged.studio
 co_authors: []
 category: fix
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2341
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 5
+  loc_added: 85
+  loc_removed: 5
 ---
 
 ## Fixed
