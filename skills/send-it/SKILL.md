@@ -498,6 +498,9 @@ shape: Summary visual, Changes, Evidence, Merge Danger, Related Issues, and the
 the consumer's skill mirrors (`.claude/skills/pr/SKILL.md`,
 `.agents/skills/pr/SKILL.md`), and write the body by following it. Hand it:
 
+- **Base** — the resolved `<base>` (honouring `--base`), so the body describes
+  the right range on a stacked PR.
+
 - **Release note** — the Step 6 note (`no release (<type>-only)` or
   `<type> → <bump>`, plus any publish-surface cross-check), for its `**Release:**`
   line.

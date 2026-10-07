@@ -66,10 +66,14 @@ root, use its terms for the domain; carry on without one when it is absent.
 ## Inputs
 
 Read the branch first: `git log --no-merges origin/<base>..HEAD` and
-`git diff origin/<base>...HEAD`, where `<base>` is the PR's base branch (default
-`main`). The body describes every commit on the branch, not only the latest.
+`git diff origin/<base>...HEAD`, where `<base>` is the PR's base branch: the value
+the caller passes, else `gh pr view --json baseRefName -q .baseRefName` for an
+existing PR, else `main`. The body describes every commit on the branch, not only
+the latest.
 
-A caller such as `send-it` may supply three values; use them verbatim when given:
+A caller such as `send-it` may supply these values; use them verbatim when given:
+
+- **Base** — the branch the PR targets (stacked PRs use a non-`main` base).
 
 - **Release note** — the `**Release:**` line (e.g. `no release (docs-only)`, or
   `feat → minor` plus a publish-surface cross-check).
