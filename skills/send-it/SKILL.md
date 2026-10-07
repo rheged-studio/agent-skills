@@ -474,11 +474,14 @@ commits). Feature PRs are intended to merge via **merge commit**; release and
 fan-out automation keep using squash outside this skill.
 
 1. Check for an existing PR: `gh pr view --json number,url 2>/dev/null`.
-2. **If creating:** `gh pr create --base <base> --draft --title "<title>" --body
-   "<body>"`. Use `--ready` (the flag) instead of `--draft` if the user passed
-   `--ready`.
-3. **If updating:** `gh pr edit <number> --title "<title>" --body "<body>"`.
-4. Return the PR URL and number via `gh pr view --json url,number`.
+2. Write the complete body (below) to a temporary file, `<body-file>`. Pass it
+   with `--body-file` so the shell never interpolates it — a carried keep region
+   can hold backticks or `$(...)`.
+3. **If creating:** `gh pr create --base <base> --draft --title "<title>"
+   --body-file <body-file>`. Use `--ready` (the flag) instead of `--draft` if the
+   user passed `--ready`.
+4. **If updating:** `gh pr edit <number> --title "<title>" --body-file <body-file>`.
+5. Return the PR URL and number via `gh pr view --json url,number`.
 
 > **send-it never arms auto-merge.** It opens and updates the PR; landing it stays a
 > human action (A-1151). The old `--merge-when-ready` flag — which armed
