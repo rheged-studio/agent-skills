@@ -185,6 +185,25 @@ describe("configKeyParityErrors", () => {
     );
   });
 
+  // A-2453: reviewBotChecks is a data map (bot login → check spec), so its entries
+  // are values, not structure — but the key itself must still be in both.
+  it("does not recurse into the reviewBotChecks data map", () => {
+    const config = JSON.stringify({
+      reviewBotChecks: {
+        claude: { name: "claude-review", producer: "github-actions" },
+      },
+    });
+    const example = JSON.stringify({ reviewBotChecks: {} });
+    expect(configKeyParityErrors("s", config, example)).toEqual([]);
+  });
+
+  it("still flags a reviewBotChecks key missing from the example", () => {
+    const config = JSON.stringify({ reviewBotChecks: {} });
+    expect(
+      configKeyParityErrors("s", config, JSON.stringify({})).join("\n"),
+    ).toContain("reviewBotChecks");
+  });
+
   it("reports invalid JSON instead of throwing", () => {
     const errors = configKeyParityErrors("s", "{not json", JSON.stringify({}));
     expect(errors.some((error) => error.includes("not valid JSON"))).toBe(true);

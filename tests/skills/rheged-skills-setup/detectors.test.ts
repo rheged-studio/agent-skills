@@ -3,8 +3,11 @@
 // they never touch the filesystem. Regression cover for A-459: before this,
 // triage-pr's `promoteOnGreen` / `replyOnAccept` had no detector and were
 // reported `needs-manual-input` on every `initialise-skills` run.
-import { createDetectors } from "../../../skills/rheged-skills-setup/scripts/lib/detectors.mjs";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  createDetectors,
+  detectClaudeReviewCallerJob,
+} from "../../../skills/rheged-skills-setup/scripts/lib/detectors.mjs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -168,5 +171,100 @@ describe("createDetectors — affectedPackages", () => {
     );
     const { detect } = createDetectors({ repoRoot: directory });
     expect(detect("affectedPackages")).toEqual({ value: true });
+  });
+});
+
+function caller(job: string, ref = "@v1") {
+  return `name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+jobs:
+  ${job}:
+    uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml${ref}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: \${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+`;
+}
+
+// A-2453: map `claude` to the estate Claude review check when the repo calls the
+// shared reusable workflow, so a clean review settles on the terminal check.
+describe("createDetectors — reviewBotChecks", () => {
+  let directory: string;
+
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), "detectors-review-checks-"));
+  });
+
+  afterEach(() => {
+    rmSync(directory, { force: true, recursive: true });
+  });
+
+  function writeWorkflow(name: string, text: string) {
+    mkdirSync(join(directory, ".github", "workflows"), { recursive: true });
+    writeFileSync(join(directory, ".github", "workflows", name), text);
+  }
+
+  it("maps claude to the caller job's check, pinned to github-actions", () => {
+    writeWorkflow("claude-code-review.yml", caller("claude-review"));
+    const { detect } = createDetectors({ repoRoot: directory });
+    expect(detect("reviewBotChecks")).toEqual({
+      value: {
+        claude: { name: "claude-review", producer: "github-actions" },
+      },
+    });
+  });
+
+  it("uses the caller's own job id (the check's leading segment)", () => {
+    writeWorkflow("review.yaml", caller("ai-review", "@0123abcd # v1.0.0"));
+    expect(detectClaudeReviewCallerJob(directory)).toBe("ai-review");
+  });
+
+  it("emits {} when no workflow calls the reusable Claude review", () => {
+    writeWorkflow(
+      "validate.yml",
+      "jobs:\n  lint:\n    uses: rheged-studio/shared-workflows/.github/workflows/reusable-lint.yml@v1\n",
+    );
+    const { detect } = createDetectors({ repoRoot: directory });
+    expect(detect("reviewBotChecks")).toEqual({ value: {} });
+  });
+
+  it("emits {} when there is no .github/workflows directory", () => {
+    const { detect } = createDetectors({ repoRoot: directory });
+    expect(detect("reviewBotChecks")).toEqual({ value: {} });
+  });
+
+  it("accepts a caller still pointed at the pre-rename acme-skunkworks owner", () => {
+    writeWorkflow(
+      "claude-code-review.yml",
+      caller("claude-review").replace("rheged-studio/", "acme-skunkworks/"),
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBe("claude-review");
+  });
+
+  it("ignores a same-named reusable workflow from another repository", () => {
+    writeWorkflow(
+      "claude-code-review.yml",
+      caller("claude-review").replace("rheged-studio/", "someone-else/"),
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBeNull();
+  });
+
+  it("ignores a uses: line inside a run block (not a direct job field)", () => {
+    writeWorkflow(
+      "notes.yml",
+      "jobs:\n  notes:\n    runs-on: ubuntu-latest\n    steps:\n      - run: |\n          echo uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n          uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n",
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBeNull();
+  });
+
+  it("ignores a commented-out caller", () => {
+    writeWorkflow(
+      "claude-code-review.yml",
+      "jobs:\n  claude-review:\n    # uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n    runs-on: ubuntu-latest\n",
+    );
+    expect(detectClaudeReviewCallerJob(directory)).toBeNull();
   });
 });

@@ -25,6 +25,16 @@ const MAX_CI_ROUNDS = 5;
 const REVIEW_IDLE_MINUTES = 10;
 const MAX_REVIEW_ROUNDS = 2;
 const REVIEW_WAIT_MAX_MINUTES = 20;
+// The estate Claude review reusable workflow (rheged-studio/shared-workflows).
+// A repo calling it gets a `<caller job id> / claude-review` check run on every
+// reviewed head, posted by GitHub Actions (A-2453).
+// Only the estate's own shared-workflows repo counts — a same-named reusable
+// workflow elsewhere need not post a `claude-review` check. The pre-rename
+// `acme-skunkworks` owner still resolves via GitHub's redirect, and some callers
+// have not been re-pointed yet.
+const CLAUDE_REVIEW_REUSABLE =
+  /^\s*uses:\s*["']?(?:rheged-studio|acme-skunkworks)\/shared-workflows\/\.github\/workflows\/reusable-claude-code-review\.ya?ml@/;
+const CLAUDE_REVIEW_PRODUCER = "github-actions";
 
 /**
  * Detect the published surface from the root package.json `files` field (the
@@ -81,6 +91,84 @@ function detectBundleRoot(repoRoot) {
     );
     if (hasBundle) {
       return candidate;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Find the job id of the estate Claude review caller — the job in
+ * `.github/workflows/*.yml|yaml` whose `uses:` is shared-workflows'
+ * `reusable-claude-code-review.yml`. The caller job id is the leading segment of
+ * the check-run name GitHub posts (`<job id> / claude-review`), so it is what
+ * triage-pr's `reviewBotChecks` must name. A line scan rather than a YAML parse:
+ * the bundle is zero-dependency, and a caller is a plain two-level `jobs:` entry.
+ * @param {string} repoRoot
+ * @returns {string | null} the caller job id, or null when no caller exists
+ */
+export function detectClaudeReviewCallerJob(repoRoot) {
+  const directory = join(repoRoot, ".github", "workflows");
+  let entries;
+  try {
+    entries = readdirSync(directory).toSorted();
+  } catch {
+    return null;
+  }
+
+  for (const entry of entries) {
+    if (!/\.ya?ml$/.test(entry)) {
+      continue;
+    }
+
+    let text;
+    try {
+      text = readFileSync(join(directory, entry), "utf8");
+    } catch {
+      continue;
+    }
+
+    let inJobs = false;
+    let jobIndent = null;
+    let jobId = null;
+    // Indentation of the current job's direct fields (`uses:`, `secrets:` …).
+    // A `uses:` line any deeper — inside a `run: |` block, say — is not the
+    // job's own call, so it never matches.
+    let fieldIndent = null;
+    for (const line of text.split(/\r?\n/)) {
+      if (/^\s*(#|$)/.test(line)) {
+        continue;
+      }
+
+      const indent = line.length - line.trimStart().length;
+      if (indent === 0) {
+        inJobs = /^jobs:\s*(#.*)?$/.test(line);
+        jobIndent = null;
+        jobId = null;
+        fieldIndent = null;
+        continue;
+      }
+
+      if (!inJobs) {
+        continue;
+      }
+
+      jobIndent ??= indent;
+      const key = /^\s*["']?([\w-]+)["']?:\s*(#.*)?$/.exec(line);
+      if (indent === jobIndent && key) {
+        jobId = key[1];
+        fieldIndent = null;
+        continue;
+      }
+
+      if (!jobId || indent <= jobIndent) {
+        continue;
+      }
+
+      fieldIndent ??= indent;
+      if (indent === fieldIndent && CLAUDE_REVIEW_REUSABLE.test(line)) {
+        return jobId;
+      }
     }
   }
 
@@ -192,7 +280,19 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
     protectedBranches: () => ({ value: [detect("baseBranch").value] }),
     // No repo signal; emit triage-pr's own default (never null) so it isn't flagged needs-manual-input — a later edit reads as drift and is kept.
     replyOnAccept: () => ({ value: true }),
-    reviewBotChecks: () => ({ value: {} }),
+    // Map `claude` to the estate Claude review check when the repo calls the
+    // shared reusable workflow, so a clean review (no PR review, no threads)
+    // still settles on the terminal check rather than waiting out the review cap
+    // (A-2453). Pinned to the GitHub Actions producer (A-2328). No caller → `{}`
+    // (never null), and a later edit reads as drift and is kept.
+    reviewBotChecks: () => {
+      const job = detectClaudeReviewCallerJob(repoRoot);
+      return {
+        value: job
+          ? { claude: { name: job, producer: CLAUDE_REVIEW_PRODUCER } }
+          : {},
+      };
+    },
     reviewBots: () => ({ value: [...REVIEW_BOTS] }),
     // Hybrid review-settle knobs (A-1179) — structural defaults, never null.
     reviewIdleMinutes: () => ({ value: REVIEW_IDLE_MINUTES }),

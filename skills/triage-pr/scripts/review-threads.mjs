@@ -37,8 +37,10 @@
 //                         `missing`. A bot mapped in `--bot-checks` settles on its
 //                         status/check for the head commit; an unmapped bot falls
 //                         back to review/comment activity after the ready flip on
-//                         the current head (sticky comments edited in place count
-//                         via `updatedAt`). A draft-time walkthrough or a
+//                         the current head (sticky comments, and the finished
+//                         "**Claude finished @…'s task**" claude-code-action
+//                         tracking comment, count when edited in place via
+//                         `updatedAt`). A draft-time walkthrough or a
 //                         "Review skipped: draft pull request" status never counts.
 //   - botsReported / botsSkipped / botsMissing : botStatus grouped by state
 //                         (`botsMissing` covers both `pending` and `missing`).
@@ -153,6 +155,16 @@ const STICKY_MARKERS = [
   /\bsummary by\b/i,
 ];
 
+// claude-code-action's tracking comment once the run has **finished**. The action
+// posts the comment early ("Claude Code is working…") and edits it in place; only
+// the final edit opens with this header, e.g.
+//   **Claude finished @octocat's task in 5m 9s** —— [View job](…)
+// It carries none of the STICKY_MARKERS, so without this a clean Claude review (no
+// PR review, no threads) never settles an unmapped `claude` (A-2453). Anchored to
+// the start of the body so a finished body that quotes "Claude is working" further
+// down still counts, while an in-progress or errored comment never does.
+const CLAUDE_FINISHED_SUMMARY = /^\s*\*\*Claude finished @[^\s*]+?['’]s task\b/;
+
 /**
  * Whether a body is worth considering as a headline summary. Rejects blank bodies
  * (e.g. an approval review with no text).
@@ -173,11 +185,26 @@ export function hasStickyMarker(body) {
 }
 
 /**
+ * Whether a comment body is a finished review summary: a sticky-marker summary,
+ * or claude-code-action's tracking comment in its finished form. An in-progress
+ * acknowledgement ("Claude Code is working…") is neither.
+ * @param {string} body
+ * @returns {boolean}
+ */
+export function isFinishedSummary(body) {
+  return (
+    hasStickyMarker(body) || CLAUDE_FINISHED_SUMMARY.test(String(body ?? ""))
+  );
+}
+
+/**
  * Pick at most one summary comment per review bot. Filtering candidates by `isBot`
  * alone surfaces *every* bot comment — walkthrough chatter, command
  * acknowledgements — as "the headline review", inflating Phase B context. Instead,
  * keep each bot's **latest marker-bearing** candidate, falling back to its **first**
- * candidate when none carries a sticky marker. Input order is GitHub's chronological
+ * candidate when none carries a sticky marker. A finished claude-code-action
+ * tracking comment counts as marker-bearing here (`isFinishedSummary`), so the
+ * latest finished run's summary wins over an earlier run's. Input order is GitHub's chronological
  * order, so "latest marker-bearing" means a fresh summary always supersedes an older
  * one: an initial "reviewing…" ack (no marker) is upgraded to the real summary, and a
  * re-review's new summary replaces the previous one. That re-review case matters for
@@ -212,7 +239,7 @@ export function selectSummaryComments(commentNodes, isBot) {
       url: node.url ?? null,
     };
     const existing = byAuthor.get(shaped.author);
-    if (!existing || hasStickyMarker(shaped.body)) {
+    if (!existing || isFinishedSummary(shaped.body)) {
       // First candidate for this bot, or a later marker-bearing one — the latter is
       // the freshest real summary, so it supersedes whatever was stored (an earlier
       // ack, or an earlier marker-bearing summary from a prior review round). A later
@@ -494,8 +521,9 @@ function settleFromCheck(checkSpec, checkContexts, threshold) {
 /**
  * Settle state of an unmapped bot from its own activity after the threshold:
  * a review submitted on the head commit, a review-thread comment, or a
- * sticky-marker summary comment created **or edited in place** (`updatedAt`).
- * A bare ack without a sticky marker never counts.
+ * finished summary comment — a sticky-marker summary or claude-code-action's
+ * "**Claude finished @…'s task**" tracking comment — created **or edited in
+ * place** (`updatedAt`). A bare ack ("Claude Code is working…") never counts.
  * @returns {{state: string, evidence: string}}
  */
 function settleFromActivity({
@@ -513,7 +541,7 @@ function settleFromActivity({
   for (const node of commentNodes ?? []) {
     if (
       byBot(node.author) &&
-      hasStickyMarker(node.body) &&
+      isFinishedSummary(node.body) &&
       isAfter(node.updatedAt ?? node.createdAt, threshold)
     ) {
       return { evidence: `summary comment ${node.id}`, state: "reported" };
@@ -1101,6 +1129,19 @@ function settleBotStateFromResult(settleOut, bot) {
   return settleOut.botStatus.find((status) => status.bot === bot)?.state;
 }
 
+/**
+ * Self-test fixture: a claude-code-action tracking comment by `claude`.
+ */
+function claudeComment(body, createdAt, updatedAt, id = "IC_claude_tracking") {
+  return {
+    author: { __typename: "Bot", login: "claude" },
+    body,
+    createdAt,
+    id,
+    updatedAt,
+  };
+}
+
 function selfTest() {
   // GraphQL returns bot logins WITHOUT the `[bot]` suffix (e.g. `claude`,
   // `coderabbitai`), so the fixtures use the bare form.
@@ -1508,6 +1549,114 @@ function selfTest() {
   cases.push({
     name: "settle: a sticky summary edited in place after ready counts (updatedAt)",
     ok: settleBotStateFromResult(editedInPlace, "coderabbitai") === "reported",
+  });
+
+  // ---- claude-code-action finished summary on an unmapped claude (A-2453) ----
+  // The tracking comment is created as an in-progress ack, then edited in place
+  // to the finished summary. On a clean review it is Claude's only activity.
+  const CLAUDE_WORKING =
+    'Claude Code is working… <img src="https://github.com/user-attachments/assets/spinner" width="14px" height="14px" />\n\nI\'ll analyze this and get back to you.';
+  const CLAUDE_FINISHED =
+    "**Claude finished @octocat's task in 5m 9s** —— [View job](https://github.com/acme/repo/actions/runs/1)\n\n---\n### Claude is working on this\n\n- [x] Gather context\n\nNo issues found.";
+
+  const claudeFinished = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        CLAUDE_FINISHED,
+        "2026-10-06T11:27:10Z",
+        "2026-10-06T11:32:19Z",
+      ),
+    ],
+  });
+  cases.push({
+    name: "settle: an unmapped claude with only a finished 'No issues found' summary after ready is reported",
+    ok:
+      settleBotStateFromResult(claudeFinished, "claude") === "reported" &&
+      claudeFinished.botsReported.includes("claude"),
+  });
+
+  const claudeWorking = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        CLAUDE_WORKING,
+        "2026-10-06T11:27:10Z",
+        "2026-10-06T11:27:10Z",
+      ),
+    ],
+  });
+  cases.push({
+    name: "settle: an in-progress 'Claude Code is working…' comment alone stays missing",
+    ok: settleBotStateFromResult(claudeWorking, "claude") === "missing",
+  });
+
+  const claudeStaleHead = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        CLAUDE_FINISHED,
+        "2026-10-06T11:27:10Z",
+        "2026-10-06T11:32:19Z",
+      ),
+    ],
+    headCommittedAt: "2026-10-06T11:40:00Z",
+  });
+  const claudeBeforeReady = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        CLAUDE_FINISHED,
+        "2026-10-06T11:10:00Z",
+        "2026-10-06T11:15:00Z",
+      ),
+    ],
+  });
+  cases.push({
+    name: "settle: a finished claude summary before the ready flip or on a superseded head does not count",
+    ok:
+      settleBotStateFromResult(claudeStaleHead, "claude") === "missing" &&
+      settleBotStateFromResult(claudeBeforeReady, "claude") === "missing",
+  });
+
+  const claudeErrored = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        "**Claude encountered an error after 1m 2s** —— [View job](https://github.com/acme/repo/actions/runs/1)",
+        "2026-10-06T11:27:10Z",
+        "2026-10-06T11:28:12Z",
+      ),
+    ],
+  });
+  cases.push({
+    name: "settle: an errored claude tracking comment does not count as reported",
+    ok: settleBotStateFromResult(claudeErrored, "claude") === "missing",
+  });
+
+  const claudeTwoRuns = buildResult({
+    ...settleBase,
+    commentNodes: [
+      claudeComment(
+        CLAUDE_FINISHED,
+        "2026-10-06T11:00:00Z",
+        "2026-10-06T11:05:00Z",
+        "IC_claude_old",
+      ),
+      claudeComment(
+        CLAUDE_FINISHED,
+        "2026-10-06T11:27:10Z",
+        "2026-10-06T11:32:19Z",
+        "IC_claude_new",
+      ),
+    ],
+  });
+  cases.push({
+    name: "summary: the latest finished claude tracking comment is the surfaced summary",
+    ok:
+      claudeTwoRuns.aiSummaryComments.find(
+        (comment) => comment.author === "claude",
+      )?.commentId === "IC_claude_new",
   });
 
   const reviewed = buildResult({

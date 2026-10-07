@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.17.1
+  version: 0.17.2
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
 ---
@@ -76,7 +76,7 @@ The first ten govern the **CI + review** loop:
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `reviewBots` | GitHub login names whose comments and threads are treated as first-class AI review feedback. Matched against `author.login`; the `[bot]` suffix is normalised, so `claude` and `claude[bot]` both match (the GraphQL API returns the bare form). Edit to match your install — review-bot logins vary per repo. `github-actions` is deliberately excluded by default: it posts CI status and release-PR comments, not code review, so Phase B would otherwise action them as findings; add it only if your install genuinely posts review-type comments via the Actions bot. | `["claude", "coderabbitai"]` |
-| `reviewBotChecks` | Map from a `reviewBots` login to the commit status or check run that bot posts for each review — a string check name (e.g. `{"coderabbitai": "CodeRabbit"}`) or `{ "name": "…", "producer": "…" }` to pin the poster. `name` keys match a status `context`, a check-run name, a check-run name's leading `<key> / …` segment, or `<workflow> / <check>`. When `producer` is set, the status `creator.login` or check suite `app.slug` must match too (case-insensitive; `[bot]` suffix normalised). A mapped bot settles (Step 7) only when that status or check is **terminal on the current head commit and post-dates the ready flip** — a draft-time "Review skipped" success never counts, and a cancelled or skipped run means "won't report" rather than "missing". Unmapped bots fall back to review or comment activity after the ready flip on the current head. | `{}` |
+| `reviewBotChecks` | Map from a `reviewBots` login to the commit status or check run that bot posts for each review — a string check name (e.g. `{"coderabbitai": "CodeRabbit"}`) or `{ "name": "…", "producer": "…" }` to pin the poster. `name` keys match a status `context`, a check-run name, a check-run name's leading `<key> / …` segment, or `<workflow> / <check>`. When `producer` is set, the status `creator.login` or check suite `app.slug` must match too (case-insensitive; `[bot]` suffix normalised). A mapped bot settles (Step 7) only when that status or check is **terminal on the current head commit and post-dates the ready flip** — a draft-time "Review skipped" success never counts, and a cancelled or skipped run means "won't report" rather than "missing". Unmapped bots fall back to review or comment activity after the ready flip on the current head. `rheged-skills-setup` maps `claude` to `{ "name": "claude-review", "producer": "github-actions" }` (the caller job id) when the repo calls the estate `reusable-claude-code-review.yml`. | `{}` |
 | `maxCiRounds` | Maximum **Phase A** re-watch iterations before stopping and reporting blockers. Bounds the draft-time fix-and-watch loop so it can't spin forever. Phase B does not spend it. | `5` |
 | `maxReviewRounds` | Maximum **Phase B** re-review rounds: each return from Step 12 to Step 7 after an apply push (a re-plan when unattended, a re-envelope when `humanEnvelope` is `true`), including the CI re-watch for that push. When exhausted, stop and report the outstanding findings as blockers. | `2` |
 | `replyOnAccept` | Whether an **accepted** finding gets a factual thread reply referencing the fixing commit before the thread is resolved (the audit trail). `false` resolves accepted threads silently for maintainers who dislike bot-reply noise — declines always reply with reasoning regardless. | `true` |
@@ -374,8 +374,11 @@ counts either.
     run exists yet.
   - An unmapped bot (`via: activity`) is `reported` when, after the ready flip and
     the head commit, it submitted a review on the head, commented on a review
-    thread, or created **or edited in place** a sticky-marker summary. A bare ack
-    without a sticky marker does **not** count.
+    thread, or created **or edited in place** a finished summary — a sticky-marker
+    summary, or claude-code-action's tracking comment once it reads
+    "**Claude finished @…'s task**" (a clean Claude review leaves nothing else).
+    A bare ack — a comment with neither a sticky marker nor that finished header,
+    such as "Claude Code is working…" — does **not** count.
 - `botsReported` / `botsSkipped` / `botsMissing` — `botStatus` grouped by state;
   `botsMissing` covers both `pending` and `missing`.
 - `activityFingerprint` — changes whenever the head, the open bot threads, or a
