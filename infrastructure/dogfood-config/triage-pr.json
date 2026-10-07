@@ -1,6 +1,8 @@
 {
   "reviewBots": ["claude", "coderabbitai"],
-  "reviewBotChecks": {},
+  "reviewBotChecks": {
+    "claude": { "name": "claude-review", "producer": "github-actions" }
+  },
   "maxCiRounds": 5,
   "maxReviewRounds": 2,
   "replyOnAccept": true,

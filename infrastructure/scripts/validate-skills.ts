@@ -122,9 +122,19 @@ export function validateSkill(
 }
 
 /**
+ * Top-level config keys whose value is a **data map** keyed by user data, not a
+ * fixed structure — triage-pr's `reviewBotChecks` maps review-bot logins to check
+ * specs. Its entries are values, so parity compares the key itself but never
+ * recurses into it: the example ships the neutral `{}` (so a consumer's untouched
+ * `{}` still equals the placeholder and is filled on reconcile) while this repo's
+ * dogfood config carries the detected `claude` mapping (A-2453).
+ */
+const MAP_VALUED_TOPLEVEL = new Set(["reviewBotChecks"]);
+
+/**
  * Every dotted key path in a JSON object (recursing into nested objects, but not
- * arrays — array contents are values, not structure). `{a: 1, b: {c: 2}}` →
- * `["a", "b", "b.c"]`.
+ * arrays — array contents are values, not structure — nor the top-level data maps
+ * in `MAP_VALUED_TOPLEVEL`). `{a: 1, b: {c: 2}}` → `["a", "b", "b.c"]`.
  */
 function keyPaths(value: unknown, prefix = ""): string[] {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -136,7 +146,10 @@ function keyPaths(value: unknown, prefix = ""): string[] {
     value as Record<string, unknown>,
   )) {
     const path = prefix ? `${prefix}.${key}` : key;
-    out.push(path, ...keyPaths(nested, path));
+    out.push(path);
+    if (!(prefix === "" && MAP_VALUED_TOPLEVEL.has(key))) {
+      out.push(...keyPaths(nested, path));
+    }
   }
 
   return out;
