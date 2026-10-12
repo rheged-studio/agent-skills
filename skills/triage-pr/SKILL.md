@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.18.0
+  version: 0.18.1
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_issue_labels
 ---
@@ -238,7 +238,7 @@ git diff --name-only origin/<base>...HEAD   # files this PR actually touches
   change in the shared config package) — then carry on with the rest of the round and
   report it at the next natural stopping point (Step 6 / Step 13). The full surface
   list is in
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision).
+  [`references/lint-surfaces.md`](references/lint-surfaces.md).
 - A failure that can only be "fixed" by weakening a gate is never in-scope — that is
   the hard ban in **Important rules**; the gated bucket above is its human-decided
   grey zone.
@@ -495,7 +495,7 @@ For each finding record:
 - for `outdated`: per [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps) (verify gone, not moved)
 - for `gated`: surface touched + preferred alternative — classify **before** impact;
   full lint-surface rules in
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision)
+  [`references/lint-surfaces.md`](references/lint-surfaces.md)
 
 Classify impact with the rubric in
 [`references/review-discipline.md`](references/review-discipline.md#when-to-fix-now-vs-follow-up)
@@ -608,7 +608,7 @@ Summarise:
   the code, or report the failure as a blocker.
 - **Lint surfaces are a developer decision.** Classify as **gated** (Step 3 / Step 9);
   never apply without explicit envelope sign-off. Full policy and surface list:
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision).
+  [`references/lint-surfaces.md`](references/lint-surfaces.md).
 - **In-scope only.** Fix what this PR's diff is responsible for; don't fix
   unrelated repo problems.
 - **Validate before implementing.** Never apply a review suggestion without first
