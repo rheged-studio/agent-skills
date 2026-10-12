@@ -30,9 +30,9 @@
 //
 // Preview by default (matches fleet-wipe.mjs / vendor-sync.mjs); --apply mutates.
 // A preview skips the install + restore (skills.sh has no dry-run) and runs
-// initialise/check-updates read-only. `run-self-tests.mjs` only scans
-// skills/<name>/scripts, so --self-test here is a dev affordance; CI gates the
-// pure core via the vitest companion (infrastructure/tests/fleet-update.test.ts).
+// initialise/check-updates read-only. CI runs --self-test here through
+// `run-self-tests.mjs` (A-2454), alongside the vitest companion
+// (infrastructure/tests/fleet-update.test.ts) that gates the pure core.
 //
 //   node infrastructure/scripts/fleet-update.mjs --profile ./acme.json           # preview (default)
 //   node infrastructure/scripts/fleet-update.mjs --profile ./acme.json --apply    # run the pipeline
