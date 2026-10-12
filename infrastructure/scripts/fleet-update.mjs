@@ -232,24 +232,21 @@ export function findMissingSourceSkills(skills, sourceHasSkill) {
 }
 
 /**
- * The skills the A-757 apply guard must probe in the source: the union of the
- * catalogue's Rheged names and the profile's explicit `skills` that install from
- * the Rheged source — i.e. the resolved Rheged install list. A profile-only name
- * (a repo-local extra still listed in `profile.skills`, outside the catalogue) is
- * passed to the Rheged `skills add` AND wiped, so it must be probed too, or the
- * wipe would delete a bundle the install cannot restore (A-1961). Matt catalogue
- * names are excluded: they re-vendor from their own source and are verified after
- * install, not against this checkout. Pure — resolves names, touches no filesystem.
+ * The skills the A-757 apply guard must probe in the source: the resolved
+ * install list minus the Matt catalogue names — i.e. everything that installs
+ * from the Rheged source. That covers the catalogue's Rheged names in the
+ * install set AND any profile-only name (a repo-local extra still listed in
+ * `profile.skills`, outside the catalogue): it is passed to the Rheged
+ * `skills add` and wiped, so it must be probed too, or the wipe would delete a
+ * bundle the install cannot restore (A-1961). Matt catalogue names are excluded:
+ * they re-vendor from their own source and are verified after install, not
+ * against this checkout. Pure — resolves names, touches no filesystem.
  * @param {{ skills: string[] | undefined, repoType: string }} profile
  * @returns {string[]}
  */
 export function resolveSourceProbeSkills(profile) {
-  const rheged = resolveSkills(profile);
   const matt = new Set(mattSkillNames(FLEET_CATALOGUE));
-  const catalogueRheged = rhegedSkillNames(FLEET_CATALOGUE).filter((skill) =>
-    rheged.includes(skill),
-  );
-  return [...new Set([...catalogueRheged, ...rheged])].filter(
+  return [...new Set(resolveSkills(profile))].filter(
     (skill) => !matt.has(skill),
   );
 }
