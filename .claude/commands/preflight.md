@@ -20,14 +20,18 @@ user to review and commit themselves.
    base is auto-detected; default `main`).
 2. Run `node skills/preflight/scripts/preflight.mjs`.
 3. Read `.preflight-summary.json` and report the categories run and the violation
-   counts.
+   counts. When `lintSurface.count > 0`, list its `configFiles` and `directives`
+   as **developer decisions** to confirm — informational, never blocking (see the
+   skill's "Lint surfaces are a developer decision").
 4. Act on the exit code (per the preflight skill):
    - **Exit 0** — report "preflight passed", with the categories run and counts.
      Done.
    - **Exit 1 (introduced violations, or a linter that failed to run)** — run
      `node skills/preflight/scripts/lint-fix.mjs`, re-run
      `node skills/preflight/scripts/preflight.mjs`, and repeat until introduced
-     violations clear or the user stops. Leave the fixes **unstaged** in the
+     violations clear or the user stops. Fix the code — never clear a violation
+     with a lint-config edit or an ignore / disable directive; if that is the only
+     fix, stop and report it instead. Leave the fixes **unstaged** in the
      working tree; tell the user what was fixed and that they should review and
      commit. If a linter failed to run rather than reporting violations, surface
      its stderr instead of looping.
