@@ -119,10 +119,10 @@ jobs:
       - name: 🧪 Unit tests (changelog + send-it helpers)
         run: pnpm test
 
-      - name: 🧪 Skill bundle self-tests
-        # Runs each skills/*/scripts/*.mjs shipping a `--self-test` so their
-        # offline smoke tests are CI-gated — pnpm test only exercises the
-        # exported helpers, not the self-test path.
+      - name: 🧪 Skill bundle + infrastructure self-tests
+        # Runs each skills/*/scripts/*.mjs and infrastructure/scripts/*.mjs
+        # shipping a `--self-test` so their offline smoke tests are CI-gated —
+        # pnpm test only exercises the exported helpers, not the self-test path.
         run: pnpm test:self
 
       - name: 📒 Validate changelog entries
