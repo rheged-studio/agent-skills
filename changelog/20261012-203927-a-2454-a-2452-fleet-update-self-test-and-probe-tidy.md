@@ -2,10 +2,10 @@
 title: run infrastructure self-tests in CI and fix fleet-update test drift
 release_note:
 created_at: "2026-10-12T20:39:27Z"
-merged_at:
+merged_at: "2026-10-12T20:59:36Z"
 branch: a-2454-a-2452-fleet-update-self-test-and-probe-tidy
-pr:
-commit:
+pr: 203
+commit: 407b747
 author: rob@rheged.studio
 co_authors: []
 category: chore
@@ -15,9 +15,9 @@ issues:
   - A-2452
   - A-2298
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 8
+  loc_added: 102
+  loc_removed: 57
   commits:
 version:
 ---
