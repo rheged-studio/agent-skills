@@ -45,6 +45,7 @@
 import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
 import {
   buildSkillsAddArgsForSource,
+  LEGACY_BUNDLE_NAMES,
   mattSkillNames,
   parseCatalogue,
   resolveInstallSkills,
@@ -977,7 +978,9 @@ function selfTest() {
         subsetArgs[subsetArgs.indexOf("--skill") + 1] === "send-it",
     });
 
-    // resolveWipeTargets.
+    // resolveWipeTargets — every mirror × (install set + retired bundles). The
+    // expected counts derive from LEGACY_BUNDLE_NAMES, so retiring another
+    // bundle doesn't silently break these cases again (A-2454).
     const wipeTargets = resolveWipeTargets(
       [".claude/skills", ".agents/skills"],
       ["send-it", "commit"],
@@ -985,10 +988,12 @@ function selfTest() {
     cases.push({
       name: "resolveWipeTargets covers every mirror × install skill",
       ok:
-        wipeTargets.length === 6 &&
+        wipeTargets.length === 2 * (2 + LEGACY_BUNDLE_NAMES.length) &&
         wipeTargets.includes(".claude/skills/send-it") &&
         wipeTargets.includes(".agents/skills/commit") &&
-        wipeTargets.includes(".claude/skills/initialise-skills"),
+        LEGACY_BUNDLE_NAMES.every((name) =>
+          wipeTargets.includes(`.agents/skills/${name}`),
+        ),
     });
     cases.push({
       name: "resolveWipeTargets targets only the install set (no consumer-extra bundles)",
@@ -1000,10 +1005,11 @@ function selfTest() {
       name: "resolveWipeTargets still wipes legacy bundles when install set is empty",
       ok:
         resolveWipeTargets([".claude/skills", ".agents/skills"], []).length ===
-          2 &&
-        resolveWipeTargets([".claude/skills"], []).includes(
-          ".claude/skills/initialise-skills",
-        ),
+          2 * LEGACY_BUNDLE_NAMES.length &&
+        resolveWipeTargets([".claude/skills"], []).join("\n") ===
+          LEGACY_BUNDLE_NAMES.map((name) => `.claude/skills/${name}`).join(
+            "\n",
+          ),
     });
 
     // resolveSourceProbeSkills (A-1961) — profile-only Rheged extras are probed.
