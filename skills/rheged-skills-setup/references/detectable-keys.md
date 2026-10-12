@@ -30,7 +30,7 @@ detector serves every skill that uses a key. A key found in a skill's
 | `reviewIdleMinutes` | triage-pr | Fixed (hybrid review-settle idle window) | `10` |
 | `reviewWaitMaxMinutes` | triage-pr | Fixed (hybrid review-settle hard cap) | `20` |
 | `followUpLabel` | triage-pr | Fixed (opt-in follow-up capture) | `"follow-up"` |
-| `followUpProject` | triage-pr | Supplied via stdin `facts.followUpProject`; **fallback catch-all** when a follow-up cannot inherit a live project from the PR's Linear issue (A-1541). Required when capture is on (`linearTeamName` set) | `needs-manual-input` when team is set and no fact; `""` when capture is off |
+| `followUpProject` | triage-pr | Supplied via stdin `facts.followUpProject`; **fallback catch-all** for a follow-up whose PR has no linked Linear issue to file it under as a sub-issue (A-1541 / A-2756). Required when capture is on (`linearTeamName` set) | `needs-manual-input` when team is set and no fact; `""` when capture is off |
 | `followUpState` | triage-pr | Fixed (opt-in follow-up capture; initial state for created issues) | `"Backlog"` |
 | `workspaces` | preflight | n/a — preflight self-detects | never written |
 
