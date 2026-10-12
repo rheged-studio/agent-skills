@@ -22,7 +22,9 @@ belong to another branch or worktree are flagged and never staged.
    `config.json`, default `main`) — per the commit skill's Process.
 3. Show the staging plan: in-scope files grouped by proposed commit, plus any
    out-of-scope files flagged as "uncertain — possibly from another
-   branch/worktree." Ask before staging.
+   branch/worktree," plus any **lint-surface changes** (lint config files, or
+   added ignore / disable directives) listed as developer decisions per the
+   skill's `references/lint-surfaces.md`. Ask before staging.
 4. On confirmation, create one **logical atomic** commit per coherent unit with a
    Conventional Commits subject (`git add <specific files>`, **never** `git add
    -A`; `git commit -m …`). Out-of-scope files stay untouched in the working tree.
