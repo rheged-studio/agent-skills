@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.17.2
+  version: 0.17.3
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
 ---
@@ -378,7 +378,9 @@ counts either.
     summary, or claude-code-action's tracking comment once it reads
     "**Claude finished @…'s task**" (a clean Claude review leaves nothing else).
     A bare ack — a comment with neither a sticky marker nor that finished header,
-    such as "Claude Code is working…" — does **not** count.
+    such as "Claude Code is working…" — does **not** count, and neither does
+    CodeRabbit's "Currently processing new changes" placeholder, even though it
+    carries sticky markers (A-2755).
 - `botsReported` / `botsSkipped` / `botsMissing` — `botStatus` grouped by state;
   `botsMissing` covers both `pending` and `missing`.
 - `activityFingerprint` — changes whenever the head, the open bot threads, or a
