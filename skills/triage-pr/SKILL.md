@@ -21,9 +21,9 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.17.3
+  version: 0.18.0
   author: Rob Easthope
-allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
+allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_issue_labels
 ---
 
 # triage-pr
@@ -490,7 +490,8 @@ For each finding record:
 - for `accept`: concrete fix sketch
 - for `decline`: technical reasoning
 - for `follow-up`: draft Linear title + rationale, **and** the destination line
-  (`→ file under …`) from the routing step below
+  (`→ file as sub-issue of A-NNNN …`, or `→ file under <catch-all> …` when the PR
+  has no linked issue) from the routing step below
 - for `outdated`: per [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps) (verify gone, not moved)
 - for `gated`: surface touched + preferred alternative — classify **before** impact;
   full lint-surface rules in
@@ -574,9 +575,9 @@ Summarise:
   preferred alternative (fix the code, or raise it in the shared config package).
   Nothing on this list was applied.
 - Follow-up issues created (each with its Linear id/URL, the `follow-up`
-  label, and its destination — inherited project and milestone, inherited
-  project only, or catch-all project plus repo milestone), or follow-up
-  candidates that were not tracked.
+  label, and its destination — a sub-issue of the PR's linked issue, or the
+  catch-all project when the PR has none), or follow-up candidates that were not
+  tracked.
 - Issue-level findings acknowledged in the consolidated comment.
 - Base merges/rebases performed.
 - Remaining blockers (if `maxCiRounds` or `maxReviewRounds` was exhausted).
