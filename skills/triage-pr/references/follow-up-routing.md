@@ -33,9 +33,12 @@ unattended path. Use only `get_issue`, `list_projects`, and `list_issue_labels`;
 
 Reuse that destination on mint in Step 11; do not re-decide it then.
 
-If routing fail-closes (no parent and an empty or unresolved catch-all, or an empty
-or unresolved `followUpLabel`), keep the item as a follow-up candidate but say on the
-plan line that capture will decline / `Follow-up not tracked`. Skip this resolve when
+If routing fail-closes under Step 11's rules — an empty or unresolved
+`followUpLabel`, or an empty or unresolved catch-all when the destination needs it
+(no parent, **or** a parent with no project) — keep the item as a follow-up
+candidate but say on the plan line that capture will decline / `Follow-up not
+tracked`. Never show a destination on the plan line that Step 11 would refuse to
+mint. Skip this resolve when
 capture is disabled (`linearTeamName` empty). Under `--dry-run`, this resolve stays
 read-only too (no Linear writes).
 
