@@ -2,10 +2,10 @@
 title: settle CodeRabbit on its review, not its in-progress placeholder
 release_note: triage-pr no longer treats CodeRabbit's "Currently processing" placeholder as a finished review, and rheged-skills-setup maps CodeRabbit to its status check so the review wait ends when CodeRabbit's review does.
 created_at: "2026-10-12T21:28:59Z"
-merged_at:
+merged_at: "2026-10-13T08:06:42Z"
 branch: a-2755-triage-pr-settles-coderabbit-on-its-in-progress-summary
-pr:
-commit:
+pr: 204
+commit: "9562143"
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2755
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 11
+  loc_added: 294
+  loc_removed: 20
   commits:
 version:
 ---
