@@ -25,7 +25,7 @@ compatibility: >-
   token check is optional. It uses `gh` when authenticated; otherwise it asks the
   operator to confirm the secret.
 metadata:
-  version: 0.14.0
+  version: 0.15.1
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), Bash(npx:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
 ---
@@ -165,7 +165,8 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    `mcp__linear-server__list_teams` for the team name,
    `mcp__linear-server__list_projects` for the **fallback catch-all** project
    (Rheged estate: `Follow-up issues` — not a per-repo home project; triage-pr
-   inherits the PR's live Linear project when it can, A-1541), and the
+   files a follow-up as a sub-issue of the PR's linked issue, and uses the
+   catch-all only when the PR has none, A-2756), and the
    workspace slug from the team/organisation — otherwise ask the user. Collect
    these into a `facts` object. Also add the **lock provenance** here:
    `lockSource` (the source repo the skills were installed from — the

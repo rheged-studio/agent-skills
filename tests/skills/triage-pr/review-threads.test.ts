@@ -474,3 +474,72 @@ describe("buildResult — claude-code-action finished summary (unmapped claude)"
     expect(claudeState(result)?.state).toBe("missing");
   });
 });
+
+function coderabbitState(result: ReturnType<typeof buildResult>) {
+  return result.botStatus.find(
+    (status: { bot: string }) => status.bot === "coderabbitai",
+  );
+}
+
+// A-2755: CodeRabbit edits its sticky summary in place into a "Currently
+// processing" placeholder minutes before the review exists. That body carries
+// `auto-generated comment` (every state of the comment does) and, on a re-review,
+// can still carry the previous walkthrough, so an unmapped `coderabbitai` must not
+// settle on it — only on the finished edit.
+describe("buildResult — CodeRabbit in-progress placeholder (unmapped coderabbitai)", () => {
+  const READY = "2026-10-12T20:42:22Z";
+  const COMMITTED = "2026-10-12T20:39:00Z";
+  const PROCESSING =
+    "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n<!-- review_stack_entry_start -->\n\n<!-- review_stack_entry_end -->\n<!-- This is an auto-generated comment: review in progress by coderabbit.ai -->\n\n> [!NOTE]\n> Currently processing new changes in this PR. This may take a few minutes, please wait...\n\n<!-- end of auto-generated comment: review in progress by coderabbit.ai -->";
+  const FINISHED =
+    "<!-- This is an auto-generated comment: summarize by coderabbit.ai -->\n\nNo actionable comments were generated in the recent review. 🎉\n\n<!-- walkthrough_start -->\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n* Tests\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->\n## Walkthrough\n\nFixes self-test drift.\n\n<!-- walkthrough_end -->";
+  const OLD_WALKTHROUGH =
+    "\n\n<!-- walkthrough_start -->\n\n## Walkthrough\n\nEarlier review round.\n\n<!-- walkthrough_end -->";
+
+  function settle(body: string, updatedAt: string) {
+    return buildResult({
+      bots: ["claude", "coderabbitai"],
+      commentNodes: [
+        {
+          author: { __typename: "Bot", login: "coderabbitai" },
+          body,
+          createdAt: "2026-10-12T20:41:04Z",
+          id: "IC_coderabbit_sticky",
+          updatedAt,
+        },
+      ],
+      headCommittedAt: COMMITTED,
+      headRefOid: "head",
+      isDraft: false,
+      number: 203,
+      readyAt: READY,
+      reviewNodes: [],
+      threadNodes: [],
+    });
+  }
+
+  it("stays missing while the sticky comment reads 'Currently processing'", () => {
+    const result = settle(PROCESSING, "2026-10-12T20:42:51Z");
+    expect(coderabbitState(result)).toMatchObject({
+      state: "missing",
+      via: "activity",
+    });
+    expect(result.botsMissing).toContain("coderabbitai");
+  });
+
+  it("settles as reported once the comment is edited to the finished summary", () => {
+    const result = settle(FINISHED, "2026-10-12T20:47:45Z");
+    expect(coderabbitState(result)).toMatchObject({
+      state: "reported",
+      via: "activity",
+    });
+  });
+
+  it("stays missing on a re-review placeholder that still carries the old walkthrough", () => {
+    const result = settle(
+      `${PROCESSING}${OLD_WALKTHROUGH}`,
+      "2026-10-12T20:42:51Z",
+    );
+    expect(coderabbitState(result)?.state).toBe("missing");
+  });
+});

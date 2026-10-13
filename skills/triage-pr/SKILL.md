@@ -21,9 +21,9 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.17.2
+  version: 0.18.1
   author: Rob Easthope
-allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_milestones, mcp__linear-server__list_issue_labels, mcp__linear-server__save_milestone
+allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_issue_labels
 ---
 
 # triage-pr
@@ -76,7 +76,7 @@ The first ten govern the **CI + review** loop:
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `reviewBots` | GitHub login names whose comments and threads are treated as first-class AI review feedback. Matched against `author.login`; the `[bot]` suffix is normalised, so `claude` and `claude[bot]` both match (the GraphQL API returns the bare form). Edit to match your install — review-bot logins vary per repo. `github-actions` is deliberately excluded by default: it posts CI status and release-PR comments, not code review, so Phase B would otherwise action them as findings; add it only if your install genuinely posts review-type comments via the Actions bot. | `["claude", "coderabbitai"]` |
-| `reviewBotChecks` | Map from a `reviewBots` login to the commit status or check run that bot posts for each review — a string check name (e.g. `{"coderabbitai": "CodeRabbit"}`) or `{ "name": "…", "producer": "…" }` to pin the poster. `name` keys match a status `context`, a check-run name, a check-run name's leading `<key> / …` segment, or `<workflow> / <check>`. When `producer` is set, the status `creator.login` or check suite `app.slug` must match too (case-insensitive; `[bot]` suffix normalised). A mapped bot settles (Step 7) only when that status or check is **terminal on the current head commit and post-dates the ready flip** — a draft-time "Review skipped" success never counts, and a cancelled or skipped run means "won't report" rather than "missing". Unmapped bots fall back to review or comment activity after the ready flip on the current head. `rheged-skills-setup` maps `claude` to `{ "name": "claude-review", "producer": "github-actions" }` (the caller job id) when the repo calls the estate `reusable-claude-code-review.yml`. | `{}` |
+| `reviewBotChecks` | Map from a `reviewBots` login to the commit status or check run that bot posts for each review — a string check name (e.g. `{"coderabbitai": "CodeRabbit"}`) or `{ "name": "…", "producer": "…" }` to pin the poster. `name` keys match a status `context`, a check-run name, a check-run name's leading `<key> / …` segment, or `<workflow> / <check>`. When `producer` is set, the status `creator.login` or check suite `app.slug` must match too (case-insensitive; `[bot]` suffix normalised). A mapped bot settles (Step 7) only when that status or check is **terminal on the current head commit and post-dates the ready flip** — a draft-time "Review skipped" success never counts, and a cancelled or skipped run means "won't report" rather than "missing". Unmapped bots fall back to review or comment activity after the ready flip on the current head. `rheged-skills-setup` maps `claude` to `{ "name": "claude-review", "producer": "github-actions" }` (the caller job id) when the repo calls the estate `reusable-claude-code-review.yml`, and `coderabbitai` to `{ "name": "CodeRabbit", "producer": "coderabbitai" }` when the repo has a `.coderabbit.yaml` that doesn't set `commit_status: false`. | `{}` |
 | `maxCiRounds` | Maximum **Phase A** re-watch iterations before stopping and reporting blockers. Bounds the draft-time fix-and-watch loop so it can't spin forever. Phase B does not spend it. | `5` |
 | `maxReviewRounds` | Maximum **Phase B** re-review rounds: each return from Step 12 to Step 7 after an apply push (a re-plan when unattended, a re-envelope when `humanEnvelope` is `true`), including the CI re-watch for that push. When exhausted, stop and report the outstanding findings as blockers. | `2` |
 | `replyOnAccept` | Whether an **accepted** finding gets a factual thread reply referencing the fixing commit before the thread is resolved (the audit trail). `false` resolves accepted threads silently for maintainers who dislike bot-reply noise — declines always reply with reasoning regardless. | `true` |
@@ -238,7 +238,7 @@ git diff --name-only origin/<base>...HEAD   # files this PR actually touches
   change in the shared config package) — then carry on with the rest of the round and
   report it at the next natural stopping point (Step 6 / Step 13). The full surface
   list is in
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision).
+  [`references/lint-surfaces.md`](references/lint-surfaces.md).
 - A failure that can only be "fixed" by weakening a gate is never in-scope — that is
   the hard ban in **Important rules**; the gated bucket above is its human-decided
   grey zone.
@@ -378,7 +378,9 @@ counts either.
     summary, or claude-code-action's tracking comment once it reads
     "**Claude finished @…'s task**" (a clean Claude review leaves nothing else).
     A bare ack — a comment with neither a sticky marker nor that finished header,
-    such as "Claude Code is working…" — does **not** count.
+    such as "Claude Code is working…" — does **not** count, and neither does
+    CodeRabbit's "Currently processing new changes" placeholder, even though it
+    carries sticky markers (A-2755).
 - `botsReported` / `botsSkipped` / `botsMissing` — `botStatus` grouped by state;
   `botsMissing` covers both `pending` and `missing`.
 - `activityFingerprint` — changes whenever the head, the open bot threads, or a
@@ -488,11 +490,12 @@ For each finding record:
 - for `accept`: concrete fix sketch
 - for `decline`: technical reasoning
 - for `follow-up`: draft Linear title + rationale, **and** the destination line
-  (`→ file under …`) from the routing step below
+  (`→ file as sub-issue of A-NNNN …`, or `→ file under <catch-all> …` when the PR
+  has no linked issue) from the routing step below
 - for `outdated`: per [`references/review-discipline.md`](references/review-discipline.md#receiving-review-feedback--the-six-steps) (verify gone, not moved)
 - for `gated`: surface touched + preferred alternative — classify **before** impact;
   full lint-surface rules in
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision)
+  [`references/lint-surfaces.md`](references/lint-surfaces.md)
 
 Classify impact with the rubric in
 [`references/review-discipline.md`](references/review-discipline.md#when-to-fix-now-vs-follow-up)
@@ -572,9 +575,9 @@ Summarise:
   preferred alternative (fix the code, or raise it in the shared config package).
   Nothing on this list was applied.
 - Follow-up issues created (each with its Linear id/URL, the `follow-up`
-  label, and its destination — inherited project and milestone, inherited
-  project only, or catch-all project plus repo milestone), or follow-up
-  candidates that were not tracked.
+  label, and its destination — a sub-issue of the PR's linked issue, or the
+  catch-all project when the PR has none), or follow-up candidates that were not
+  tracked.
 - Issue-level findings acknowledged in the consolidated comment.
 - Base merges/rebases performed.
 - Remaining blockers (if `maxCiRounds` or `maxReviewRounds` was exhausted).
@@ -605,7 +608,7 @@ Summarise:
   the code, or report the failure as a blocker.
 - **Lint surfaces are a developer decision.** Classify as **gated** (Step 3 / Step 9);
   never apply without explicit envelope sign-off. Full policy and surface list:
-  [`references/review-discipline.md`](references/review-discipline.md#lint-surfaces-are-a-developer-decision).
+  [`references/lint-surfaces.md`](references/lint-surfaces.md).
 - **In-scope only.** Fix what this PR's diff is responsible for; don't fix
   unrelated repo problems.
 - **Validate before implementing.** Never apply a review suggestion without first

@@ -340,7 +340,7 @@ is the only required field:
 | `facts.linearTeamName` | string | | — | Forwarded to `rheged-skills-setup` (it can't derive this). |
 | `facts.linearWorkspaceSlug` | string | | — | Forwarded to `rheged-skills-setup`. |
 | `facts.issueKeys` | string[] | | detected | Overrides branch-prefix detection (e.g. `["A"]`) — see the renamed-team note above. |
-| `facts.followUpProject` | string | | — | Fallback catch-all for triage-pr follow-ups that cannot inherit a live project from the PR's Linear issue (required when `linearTeamName` is set — A-1204 / A-1541). Rheged estate value: `Follow-up issues`. |
+| `facts.followUpProject` | string | | — | Fallback catch-all for triage-pr follow-ups whose PR has no linked Linear issue (otherwise a follow-up is filed as a sub-issue of that issue — A-2756); required when `linearTeamName` is set — A-1204 / A-1541. Rheged estate value: `Follow-up issues`. |
 
 The lock provenance (`lockSource`, `lockRef`) is supplied by the script, not the
 profile. Worked example:

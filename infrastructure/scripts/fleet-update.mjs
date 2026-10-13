@@ -30,9 +30,9 @@
 //
 // Preview by default (matches fleet-wipe.mjs / vendor-sync.mjs); --apply mutates.
 // A preview skips the install + restore (skills.sh has no dry-run) and runs
-// initialise/check-updates read-only. `run-self-tests.mjs` only scans
-// skills/<name>/scripts, so --self-test here is a dev affordance; CI gates the
-// pure core via the vitest companion (infrastructure/tests/fleet-update.test.ts).
+// initialise/check-updates read-only. CI runs --self-test here through
+// `run-self-tests.mjs` (A-2454), alongside the vitest companion
+// (infrastructure/tests/fleet-update.test.ts) that gates the pure core.
 //
 //   node infrastructure/scripts/fleet-update.mjs --profile ./acme.json           # preview (default)
 //   node infrastructure/scripts/fleet-update.mjs --profile ./acme.json --apply    # run the pipeline
@@ -45,6 +45,7 @@
 import { findMissingMattBundles } from "../../skills/rheged-skills-setup/scripts/install-from-catalogue.mjs";
 import {
   buildSkillsAddArgsForSource,
+  LEGACY_BUNDLE_NAMES,
   mattSkillNames,
   parseCatalogue,
   resolveInstallSkills,
@@ -231,24 +232,21 @@ export function findMissingSourceSkills(skills, sourceHasSkill) {
 }
 
 /**
- * The skills the A-757 apply guard must probe in the source: the union of the
- * catalogue's Rheged names and the profile's explicit `skills` that install from
- * the Rheged source — i.e. the resolved Rheged install list. A profile-only name
- * (a repo-local extra still listed in `profile.skills`, outside the catalogue) is
- * passed to the Rheged `skills add` AND wiped, so it must be probed too, or the
- * wipe would delete a bundle the install cannot restore (A-1961). Matt catalogue
- * names are excluded: they re-vendor from their own source and are verified after
- * install, not against this checkout. Pure — resolves names, touches no filesystem.
+ * The skills the A-757 apply guard must probe in the source: the resolved
+ * install list minus the Matt catalogue names — i.e. everything that installs
+ * from the Rheged source. That covers the catalogue's Rheged names in the
+ * install set AND any profile-only name (a repo-local extra still listed in
+ * `profile.skills`, outside the catalogue): it is passed to the Rheged
+ * `skills add` and wiped, so it must be probed too, or the wipe would delete a
+ * bundle the install cannot restore (A-1961). Matt catalogue names are excluded:
+ * they re-vendor from their own source and are verified after install, not
+ * against this checkout. Pure — resolves names, touches no filesystem.
  * @param {{ skills: string[] | undefined, repoType: string }} profile
  * @returns {string[]}
  */
 export function resolveSourceProbeSkills(profile) {
-  const rheged = resolveSkills(profile);
   const matt = new Set(mattSkillNames(FLEET_CATALOGUE));
-  const catalogueRheged = rhegedSkillNames(FLEET_CATALOGUE).filter((skill) =>
-    rheged.includes(skill),
-  );
-  return [...new Set([...catalogueRheged, ...rheged])].filter(
+  return [...new Set(resolveSkills(profile))].filter(
     (skill) => !matt.has(skill),
   );
 }
@@ -977,7 +975,9 @@ function selfTest() {
         subsetArgs[subsetArgs.indexOf("--skill") + 1] === "send-it",
     });
 
-    // resolveWipeTargets.
+    // resolveWipeTargets — every mirror × (install set + retired bundles). The
+    // expected counts derive from LEGACY_BUNDLE_NAMES, so retiring another
+    // bundle doesn't silently break these cases again (A-2454).
     const wipeTargets = resolveWipeTargets(
       [".claude/skills", ".agents/skills"],
       ["send-it", "commit"],
@@ -985,10 +985,12 @@ function selfTest() {
     cases.push({
       name: "resolveWipeTargets covers every mirror × install skill",
       ok:
-        wipeTargets.length === 6 &&
+        wipeTargets.length === 2 * (2 + LEGACY_BUNDLE_NAMES.length) &&
         wipeTargets.includes(".claude/skills/send-it") &&
         wipeTargets.includes(".agents/skills/commit") &&
-        wipeTargets.includes(".claude/skills/initialise-skills"),
+        LEGACY_BUNDLE_NAMES.every((name) =>
+          wipeTargets.includes(`.agents/skills/${name}`),
+        ),
     });
     cases.push({
       name: "resolveWipeTargets targets only the install set (no consumer-extra bundles)",
@@ -1000,10 +1002,11 @@ function selfTest() {
       name: "resolveWipeTargets still wipes legacy bundles when install set is empty",
       ok:
         resolveWipeTargets([".claude/skills", ".agents/skills"], []).length ===
-          2 &&
-        resolveWipeTargets([".claude/skills"], []).includes(
-          ".claude/skills/initialise-skills",
-        ),
+          2 * LEGACY_BUNDLE_NAMES.length &&
+        resolveWipeTargets([".claude/skills"], []).join("\n") ===
+          LEGACY_BUNDLE_NAMES.map((name) => `.claude/skills/${name}`).join(
+            "\n",
+          ),
     });
 
     // resolveSourceProbeSkills (A-1961) — profile-only Rheged extras are probed.

@@ -7,10 +7,11 @@
 // covers the *exported* helpers, but the `--self-test` dispatch path itself
 // (and any assertion only wired into it) is never exercised by `pnpm test`.
 //
-// This runner discovers every skill script under `skills/<name>/scripts/` that
+// This runner discovers every skill script under `skills/<name>/scripts/` — and
+// every repo tooling script under `infrastructure/scripts/` (A-2454) — that
 // declares the literal `--self-test`, runs each with `node <script>
-// --self-test`, and exits non-zero if any fail — so the bundles' self-tests are
-// CI-gated alongside the unit tests. Zero-dependency: Node built-ins only.
+// --self-test`, and exits non-zero if any fail — so the self-tests are CI-gated
+// alongside the unit tests. Zero-dependency: Node built-ins only.
 
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -18,6 +19,11 @@ import { join, relative, resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "..", "..");
 const skillsDirectory = join(repoRoot, "skills");
+const infrastructureScriptsDirectory = join(
+  repoRoot,
+  "infrastructure",
+  "scripts",
+);
 
 /**
  * Recursively collect `*.mjs` files under a directory.
@@ -47,19 +53,24 @@ function collectMjs(directory) {
 }
 
 /**
- * Every skill script under `skills/<name>/scripts/` declaring `--self-test`.
+ * Every script declaring `--self-test`: the skill scripts under
+ * `skills/<name>/scripts/` plus the tooling under `infrastructure/scripts/`.
+ * This runner is excluded — it carries the literal too, so it would recurse.
  * @returns {string[]}
  */
 function discoverSelfTestScripts() {
-  let skills;
+  const candidates = collectMjs(infrastructureScriptsDirectory).filter(
+    (file) => file !== import.meta.filename,
+  );
+
+  /** @type {import("node:fs").Dirent[]} */
+  let skills = [];
   try {
     skills = readdirSync(skillsDirectory, { withFileTypes: true });
   } catch {
-    return [];
+    // No skills/ directory — only the infrastructure scripts are candidates.
   }
 
-  /** @type {string[]} */
-  const scripts = [];
   for (const skill of skills) {
     if (!skill.isDirectory()) {
       continue;
@@ -72,20 +83,18 @@ function discoverSelfTestScripts() {
       continue;
     }
 
-    for (const file of collectMjs(scriptsDirectory)) {
-      if (readFileSync(file, "utf8").includes("--self-test")) {
-        scripts.push(file);
-      }
-    }
+    candidates.push(...collectMjs(scriptsDirectory));
   }
 
-  return scripts.toSorted();
+  return candidates
+    .filter((file) => readFileSync(file, "utf8").includes("--self-test"))
+    .toSorted();
 }
 
 function main() {
   const scripts = discoverSelfTestScripts();
   if (scripts.length === 0) {
-    console.error("No skill scripts declaring --self-test were found.");
+    console.error("No scripts declaring --self-test were found.");
     process.exit(1);
   }
 
