@@ -2,10 +2,10 @@
 title: sync the two-team estate identity block
 release_note: ""
 created_at: "2026-10-13T14:00:00Z"
-merged_at: ""
+merged_at: "2026-10-13T16:21:12Z"
 branch: r-2690-sync-the-two-team-agents-md
-pr:
-commit: ""
+pr: 210
+commit: fd28eea
 author: rob@rheged.studio
 co_authors: []
 category: docs
@@ -13,6 +13,9 @@ breaking: false
 issues:
   - R-2690
 stats:
+  loc_added: 46
+  loc_removed: 15
+  files_changed: 2
 version: ""
 ---
 
