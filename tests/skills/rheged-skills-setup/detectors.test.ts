@@ -6,6 +6,7 @@
 import {
   createDetectors,
   detectClaudeReviewCallerJob,
+  detectCodeRabbitStatusCheck,
 } from "../../../skills/rheged-skills-setup/scripts/lib/detectors.mjs";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -266,5 +267,53 @@ describe("createDetectors — reviewBotChecks", () => {
       "jobs:\n  claude-review:\n    # uses: rheged-studio/shared-workflows/.github/workflows/reusable-claude-code-review.yml@v1\n    runs-on: ubuntu-latest\n",
     );
     expect(detectClaudeReviewCallerJob(directory)).toBeNull();
+  });
+
+  // A-2755: map `coderabbitai` to its `CodeRabbit` commit status when the repo
+  // configures CodeRabbit, so the settle waits for the review, not its
+  // "Currently processing" placeholder.
+  it("maps coderabbitai to its CodeRabbit status when .coderabbit.yaml exists", () => {
+    writeFileSync(join(directory, ".coderabbit.yaml"), 'language: "en-GB"\n');
+    const { detect } = createDetectors({ repoRoot: directory });
+    expect(detect("reviewBotChecks")).toEqual({
+      value: {
+        coderabbitai: { name: "CodeRabbit", producer: "coderabbitai" },
+      },
+    });
+  });
+
+  it("maps both bots when the repo has a Claude caller and a CodeRabbit config", () => {
+    writeWorkflow("claude-code-review.yml", caller("claude-review"));
+    writeFileSync(
+      join(directory, ".coderabbit.yml"),
+      "reviews:\n  profile: chill\n",
+    );
+    const { detect } = createDetectors({ repoRoot: directory });
+    expect(detect("reviewBotChecks")).toEqual({
+      value: {
+        claude: { name: "claude-review", producer: "github-actions" },
+        coderabbitai: { name: "CodeRabbit", producer: "coderabbitai" },
+      },
+    });
+  });
+
+  it("does not map coderabbitai when the config turns the commit status off", () => {
+    writeFileSync(
+      join(directory, ".coderabbit.yaml"),
+      "reviews:\n  commit_status: false # no status check\n",
+    );
+    expect(detectCodeRabbitStatusCheck(directory)).toBe(false);
+  });
+
+  it("keeps the mapping when commit_status is explicitly true", () => {
+    writeFileSync(
+      join(directory, ".coderabbit.yaml"),
+      "reviews:\n  commit_status: true\n",
+    );
+    expect(detectCodeRabbitStatusCheck(directory)).toBe(true);
+  });
+
+  it("does not map coderabbitai without a CodeRabbit config", () => {
+    expect(detectCodeRabbitStatusCheck(directory)).toBe(false);
   });
 });
