@@ -2,10 +2,10 @@
 title: propagate the lint-surface gate to preflight and commit
 release_note: preflight now reports a branch's lint-config edits and added ignore directives as developer decisions, and commit and send-it surface them too, under one shared lint-surface rule.
 created_at: "2026-10-12T21:41:17Z"
-merged_at:
+merged_at: "2026-10-13T08:28:34Z"
 branch: a-1203-lint-surface-gate-in-preflight-and-commit
-pr:
-commit:
+pr: 206
+commit: e88ff7b
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-1203
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 24
+  loc_added: 1196
+  loc_removed: 120
   commits:
 version:
 ---
