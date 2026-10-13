@@ -70,6 +70,25 @@ describe("currentIssueKeys", () => {
     ).toEqual(["A"]);
   });
 
+  it("yields the R key once branches move to it (A-2683)", () => {
+    expect(currentIssueKeys(["r-2682-multi-team", "a-2651-legacy"])).toEqual([
+      "R",
+    ]);
+  });
+
+  // A-2683: a repo genuinely carrying several teams' branches (c-, r-, legacy
+  // a-) still detects only the newest branch's key — detection never unions
+  // keys, so multi-key repos must pass `--set <skill>.issueKeys=…` or facts.
+  it("detects only one key even when c-, r- and a- branches coexist", () => {
+    expect(
+      currentIssueKeys([
+        "c-12-cadogan-work",
+        "r-40-estate-work",
+        "a-99-legacy",
+      ]),
+    ).toEqual(["C"]);
+  });
+
   it("returns [] when no branch carries a key", () => {
     expect(currentIssueKeys(["main", "release", "v1-foo"])).toEqual([]);
     expect(currentIssueKeys([])).toEqual([]);
