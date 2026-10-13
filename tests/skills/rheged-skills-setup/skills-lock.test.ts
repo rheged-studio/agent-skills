@@ -1,5 +1,5 @@
 // Imports the BUNDLE lib directly (the distributed `.mjs`). Covers the skills.lock
-// build/serialise/write (A-616): facts-only provenance resolution, deterministic
+// build/serialise/write (R-616): facts-only provenance resolution, deterministic
 // sorted output, byte-stable idempotent writes. Uses a tmp repo root so writes
 // don't touch the host repo.
 import {

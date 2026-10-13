@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One-off backfill of `stats.commits` across the dated changelog backlog (A-560).
+// One-off backfill of `stats.commits` across the dated changelog backlog (R-560).
 //
 // The `commits` stat joins the existing post-merge stats rail (files_changed /
 // loc_added / loc_removed), but those were only ever filled going forward by the
@@ -122,7 +122,7 @@ function setStatsCommits(raw, commits) {
   }
 
   if (statsIndex === -1) {
-    // The contract lets an entry omit `stats` entirely (A-613). Rather than
+    // The contract lets an entry omit `stats` entirely (R-613). Rather than
     // throwing, synthesise a minimal block carrying just the commits count,
     // appended as the last frontmatter field (its canonical position) so no
     // existing line shifts. The other stats children stay absent — this script
@@ -135,7 +135,7 @@ function setStatsCommits(raw, commits) {
   // closing-fence) line ends it. Track the last child to append after, any
   // existing commits line to replace in place, and the child indent so an
   // inserted line nests under stats: at the same depth (don't hard-code two
-  // spaces — a 4-space block would otherwise be mis-nested; A-581).
+  // spaces — a 4-space block would otherwise be mis-nested; R-581).
   let lastChild = statsIndex;
   let commitsIndex = -1;
   let childIndent = null;

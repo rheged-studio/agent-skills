@@ -11,7 +11,7 @@
 //                         version that would cut. Merge commits are excluded so
 //                         a merge subject's body (often the PR title) is not
 //                         double-counted with the branch commits release-please
-//                         also walks (A-824).
+//                         also walks (R-824).
 //   2. Release PR        — the open `release-please--branches--main` PR (if any)
 //                         and its required-check (`GO/NO GO`) status.
 //   3. Stale autorelease — the recurring stall: the last MERGED release PR still
@@ -55,7 +55,7 @@ const PATCH_SUBJECT = /^(fix|perf|revert)(\([^)]+\))?:/;
 
 // release-please ranks bumps: a single breaking subject wins, else any feat,
 // else any fix/perf/revert. docs/chore/ci/refactor/test/build/style cut no
-// release. Matches release-please 17.9.0 under multi-commit history (A-824):
+// release. Matches release-please 17.9.0 under multi-commit history (R-824):
 // strongest type across commits; reverts do NOT cancel an earlier feat.
 const BUMP_RANK = { major: 3, minor: 2, none: 0, patch: 1 };
 
@@ -91,7 +91,7 @@ export function classifyTitle(subject, body = "") {
  * Reduce a list of commits (each `{ subject, body }`) to the strongest bump
  * they imply. Empty / all-none → "none" (no release would cut).
  *
- * Policy (A-824): match release-please — strongest Conventional type wins;
+ * Policy (R-824): match release-please — strongest Conventional type wins;
  * a `feat:` later `revert:`ed in the same window still implies **minor**
  * (no cancel/netting). Merge-commit subjects should already be excluded by
  * the git fetch (`--no-merges`).
@@ -365,7 +365,7 @@ function readTags() {
  * newest first, as `{ hash, subject, body }`. Merge commits are excluded
  * (`--no-merges`) so the preview matches release-please's per-commit bump under
  * multi-commit history without double-counting a merge subject's body (often the
- * PR title) against the branch commits that also landed (A-824).
+ * PR title) against the branch commits that also landed (R-824).
  *
  * Evaluating against `origin/<mainBranch>` (not `HEAD`) keeps the preview aligned
  * with what release-please would compute on the trunk even when the helper is run
@@ -595,7 +595,7 @@ function selfTest() {
     cases.push({ name, ok });
   }
 
-  // classifyTitle / previewBump (A-824: per-commit strongest type)
+  // classifyTitle / previewBump (R-824: per-commit strongest type)
   check("feat → minor", classifyTitle("feat(x): add") === "minor");
   check("fix → patch", classifyTitle("fix: bug") === "patch");
   check("perf → patch", classifyTitle("perf: faster") === "patch");
@@ -622,7 +622,7 @@ function selfTest() {
     previewBump([{ subject: "chore: a" }, { subject: "docs: b" }]) === "none",
   );
   check(
-    "previewBump feat+revert still minor (no cancel/netting, A-824)",
+    "previewBump feat+revert still minor (no cancel/netting, R-824)",
     previewBump([
       { subject: "feat: add x" },
       { subject: "revert: feat: add x" },

@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-391
+  - R-391
 affected_packages:
   - changelog
   - infrastructure
@@ -45,8 +45,8 @@ version: 1.2.0
   `""`, leaving normal blocks untouched.
 - **Reference-style Markdown links — and their definition lines — are masked in
   `add-links.mjs`.** The already-linked guard only matched inline links
-  (`[text](url)`), so reference-style labels like `[ASW-123][1]` and `[ASW-123][]`,
-  and the companion definition line `[ASW-123]: <url>` (including the CommonMark
+  (`[text](url)`), so reference-style labels like `[R-123][1]` and `[R-123][]`,
+  and the companion definition line `[R-123]: <url>` (including the CommonMark
   form indented up to three spaces), were rewritten inside, corrupting on every
   re-run. All are now masked alongside inline links, keeping the linkifier
   idempotent.

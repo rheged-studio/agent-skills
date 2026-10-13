@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-12
-- **Tracking:** [A-1203](https://linear.app/rheged-studio/issue/A-1203)
+- **Tracking:** [R-1203](https://linear.app/rheged-studio/issue/R-1203)
 - **Supersedes:** —
 - **Superseded by:** —
 - **Extends:** [ADR-0004](0004-shared-lib-vendor-convention.md)
@@ -13,9 +13,9 @@ ADR-0004 settled how **code** is shared between independently installable skill
 bundles: one canonical `lib/<file>.mjs`, copied into each consumer by
 `pnpm vendor:sync`, with a CI drift-check. It said nothing about **prose**.
 
-A-1203 needs the same rule text in three bundles. The lint-surface gate ("config
+R-1203 needs the same rule text in three bundles. The lint-surface gate ("config
 edits and ignore directives are a developer decision") was written for `triage-pr`
-(A-1182) and has to apply in `preflight` and `commit` as well. The options were the
+(R-1182) and has to apply in `preflight` and `commit` as well. The options were the
 same ones ADR-0004 weighed for code, with the same outcomes:
 
 - **Restate it in each skill.** Three hand-maintained copies that drift. This is the
@@ -50,7 +50,7 @@ banner and a `references/` destination.**
 
 ## Consequences
 
-- **First use (A-1203):** `lib/lint-surfaces.md` is vendored into `triage-pr`,
+- **First use (R-1203):** `lib/lint-surfaces.md` is vendored into `triage-pr`,
   `preflight` and `commit`. `triage-pr`'s `review-discipline.md` keeps its section
   heading, so existing anchors resolve, but now points at the vendored copy and keeps
   only its own stopping-point and unattended-path rules.

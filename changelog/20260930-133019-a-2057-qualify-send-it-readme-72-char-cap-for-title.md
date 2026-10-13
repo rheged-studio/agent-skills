@@ -11,7 +11,7 @@ co_authors: []
 category: docs
 breaking: false
 issues:
-  - A-2057
+  - R-2057
 stats:
   files_changed: 4
   loc_added: 32
@@ -24,4 +24,4 @@ version: 1.9.0
 
 - **send-it (0.9.0 → 0.9.1).** The README now qualifies the 72-character PR-title
   cap: it applies to derived titles. A supplied `--title` stays verbatim and
-  warns if overlong, matching `SKILL.md` ([A-2057](https://linear.app/rheged-studio/issue/A-2057)).
+  warns if overlong, matching `SKILL.md` ([R-2057](https://linear.app/rheged-studio/issue/R-2057)).

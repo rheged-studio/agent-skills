@@ -12,7 +12,7 @@ co_authors: []
 category: docs
 breaking: false
 issues:
-  - A-706
+  - R-706
 stats:
   files_changed: 2
   loc_added: 88
@@ -25,7 +25,7 @@ version: 1.2.0
 
 **`docs/fleet-deployment.md`:** corrected the re-vendor guidance, which told
 operators the opposite of what happens. Because agent-skills gitignores its
-per-skill `config.json` and ships only `config.example.json` ([A-615](https://linear.app/rheged-studio/issue/A-615)), the source
+per-skill `config.json` and ships only `config.example.json` ([R-615](https://linear.app/rheged-studio/issue/R-615)), the source
 bundle carries no `config.json` — so a `npx skills add … --copy` re-vendor is a
 clean bundle-directory replacement that **deletes** every existing `config.json` in
 the consumer (both the `.claude/skills/` and `.agents/skills/` mirrors). The runbook
@@ -33,7 +33,7 @@ previously claimed an upgrade "never touches your own `config.json`" and that th
 was "no config reset needed", so an operator following it literally lost every
 operator-supplied, no-detector config value (`linearTeamName`,
 `linearWorkspaceSlug`, `changelog.packageRoots`, `triage-pr.promoteOnGreen`, …) on
-every upgrade — reconcile then silently recreated the configs from scratch ([A-706](https://linear.app/rheged-studio/issue/A-706)).
+every upgrade — reconcile then silently recreated the configs from scratch ([R-706](https://linear.app/rheged-studio/issue/R-706)).
 
 The "Re-install / upgrade behaviour" section now documents the deletion and a
 restore-from-trunk step to run **before** reconciling:

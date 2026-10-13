@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-388
+  - R-388
 affected_packages:
   - infrastructure
 stats:

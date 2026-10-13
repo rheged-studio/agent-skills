@@ -11,9 +11,9 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-2454
-  - A-2452
-  - A-2298
+  - R-2454
+  - R-2452
+  - R-2298
 stats:
   files_changed: 8
   loc_added: 102
@@ -24,21 +24,21 @@ version: 1.13.0
 
 ## Fixed
 
-- **Fleet-update self-test ([A-2454](https://linear.app/rheged-studio/issue/A-2454)).** Two `resolveWipeTargets` cases in
+- **Fleet-update self-test ([R-2454](https://linear.app/rheged-studio/issue/R-2454)).** Two `resolveWipeTargets` cases in
   `infrastructure/scripts/fleet-update.mjs --self-test` had failed on `main`
-  since [A-2298](https://linear.app/rheged-studio/issue/A-2298) added `resolving-merge-conflicts` to `LEGACY_BUNDLE_NAMES`. They
+  since [R-2298](https://linear.app/rheged-studio/issue/R-2298) added `resolving-merge-conflicts` to `LEGACY_BUNDLE_NAMES`. They
   expected 6 and 2 wipe targets where there are now 8 and 4. The wipe logic was
   right. The cases now work out their expected counts from
   `LEGACY_BUNDLE_NAMES`, so retiring another bundle won't break them again.
 
 ## Changed
 
-- **Self-test runner ([A-2454](https://linear.app/rheged-studio/issue/A-2454)).** `pnpm test:self` now also runs the
+- **Self-test runner ([R-2454](https://linear.app/rheged-studio/issue/R-2454)).** `pnpm test:self` now also runs the
   `--self-test` mode of the scripts in `infrastructure/scripts/`
   (`bootstrap-config`, `fleet-update`, `fleet-wipe` and `vendor-sync`), not
   just the skill scripts, so CI catches the next drift. The runner skips
   itself.
-- **Fleet-update source probe ([A-2452](https://linear.app/rheged-studio/issue/A-2452)).** `resolveSourceProbeSkills` now
+- **Fleet-update source probe ([R-2452](https://linear.app/rheged-studio/issue/R-2452)).** `resolveSourceProbeSkills` now
   probes the install list minus the Matt Pocock names, and drops a union that
   never added anything. Its result is unchanged. The unused
   `findMissingRhegedSourceSkills` export is removed from `rheged-skills-setup`,

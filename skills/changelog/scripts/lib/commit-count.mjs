@@ -1,6 +1,6 @@
 // Resolve a merged PR's commit count EXCLUDING merge commits, via the GitHub
 // REST commits endpoint. Shared by finalise-changelog (release-time enrichment)
-// and backfill-commits (the one-off backlog backfill) — A-560.
+// and backfill-commits (the one-off backlog backfill) — R-560.
 //
 // Trunk merge strategy does not change the API or count semantics — only where
 // the landing commit lives:

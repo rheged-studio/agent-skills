@@ -20,9 +20,9 @@ const ISSUE_RE = buildIssueRe(TEAM_KEYS);
 const FENCE_RE = /```[\s\S]*?```/g;
 const INLINE_CODE_RE = /`[^`]*`/g;
 const ALREADY_LINKED_RE = /\[[^\]]*\]\([^)]*\)/g;
-// Reference-link definition lines — `[A-123]: <url>`, plus any indented
+// Reference-link definition lines — `[R-123]: <url>`, plus any indented
 // continuation lines. The label here is the definition's key, not prose, so
-// masking it stops `ISSUE_RE` rewriting it into `[[A-123](url)]: <url>` and
+// masking it stops `ISSUE_RE` rewriting it into `[[R-123](url)]: <url>` and
 // breaking the reference. CommonMark allows up to three leading spaces before
 // the label (four or more would be an indented code block), so allow `{0,3}`.
 // Must run before `REFERENCE_LINKED_RE` so a definition is never partially
@@ -30,7 +30,7 @@ const ALREADY_LINKED_RE = /\[[^\]]*\]\([^)]*\)/g;
 const REFERENCE_DEFINITION_RE = /^ {0,3}\[[^\]]+\]:[^\n]*(?:\n[ \t][^\n]*)*/gm;
 // Reference-style links — `[text][ref]` and the collapsed `[text][]` — also
 // already point at a definition, so mask them too. Without this, `ISSUE_RE`
-// rewrites inside the label (`[A-1][1]` -> `[[A-1](url)][1]`) and re-runs
+// rewrites inside the label (`[R-1][1]` -> `[[R-1](url)][1]`) and re-runs
 // compound the corruption.
 const REFERENCE_LINKED_RE = /\[[^\]]*\]\[[^\]]*\]/g;
 
@@ -138,7 +138,7 @@ Usage:
 
 By default the write pass is scoped to the entry(ies) whose \`branch:\` frontmatter
 matches the current git branch, so authoring a new entry never rewrites unrelated,
-already-merged entries (A-603). Use --all for the historical full-directory sweep.
+already-merged entries (R-603). Use --all for the historical full-directory sweep.
 When git is unavailable the default falls back to the full sweep.
 
 --check always scans every entry (it's a completeness gate) and exits 1 when a
@@ -156,19 +156,19 @@ function selfTest() {
 
   // Masking invariants hold whatever the config: an already-linked ID and an
   // inline-code ID must survive a rewrite untouched.
-  const alreadyLinked = "See [A-1](https://example.test/A-1) for context.";
+  const alreadyLinked = "See [R-1](https://example.test/R-1) for context.";
   cases.push({
     name: "an already-linked issue ID is left untouched",
     ok: rewriteBody(alreadyLinked) === alreadyLinked,
   });
 
-  const inlineCode = "The token `A-1` is code, not a link.";
+  const inlineCode = "The token `R-1` is code, not a link.";
   cases.push({
     name: "an issue ID inside inline code is not linkified",
     ok: rewriteBody(inlineCode) === inlineCode,
   });
 
-  const fenced = "```\nA-1 in a fence\n```";
+  const fenced = "```\nR-1 in a fence\n```";
   cases.push({
     name: "an issue ID inside a code fence is not linkified",
     ok: rewriteBody(fenced) === fenced,
@@ -176,7 +176,7 @@ function selfTest() {
 
   // Inline code nested inside a Markdown link masks twice (inner span, then the
   // whole link). The reentrant unmask must restore both so no NUL token survives.
-  const codeInLink = "See [`A-1`](https://example.test/A-1) for the helper.";
+  const codeInLink = "See [`R-1`](https://example.test/R-1) for the helper.";
   const codeInLinkOut = rewriteBody(codeInLink);
   cases.push({
     name: "inline code nested inside a link round-trips with no NUL bytes",
@@ -196,7 +196,7 @@ function selfTest() {
   } else {
     cases.push({
       name: "no issue keys configured — rewriteBody is a no-op",
-      ok: rewriteBody("Closes A-1.") === "Closes A-1.",
+      ok: rewriteBody("Closes R-1.") === "Closes R-1.",
     });
   }
 
@@ -253,7 +253,7 @@ function main() {
 
   // Default write pass: scope to the entry(ies) authored on the current branch
   // (matched by `branch:` frontmatter), so linkifying a new entry never churns
-  // unrelated, already-merged entries (A-603). `--all` and `--check` keep the
+  // unrelated, already-merged entries (R-603). `--all` and `--check` keep the
   // full-directory scan; a non-git context (no branch) also falls back to it.
   if (!all && !check) {
     const branch = currentGitBranch();

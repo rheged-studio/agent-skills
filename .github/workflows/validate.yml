@@ -4,28 +4,28 @@ on:
   pull_request:
     # `edited` is included so the changelog-completeness gate re-runs when a
     # title is corrected — the PR title is the release-please bump signal
-    # (SK-380), so a stale pass on an old title would be unsafe. (The
+    # (R-380), so a stale pass on an old title would be unsafe. (The
     # Conventional-Commit title lint lives in its own validate-pr-title.yml.)
     # The default set is opened/synchronize/reopened.
     types: [opened, edited, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # A-1100 / A-1195: never cancel a RUNNING run. A superseded run's `needs` all
+  # R-1100 / R-1195: never cancel a RUNNING run. A superseded run's `needs` all
   # report `cancelled`, the always() aggregator still executes, and its verdict
   # mints a FALSE RED `GO/NO GO`. With `false`, concurrency can only cancel a
-  # *pending* run (no check-runs minted). Subsumes the A-961 release-please
+  # *pending* run (no check-runs minted). Subsumes the R-961 release-please
   # carve-out — covers every branch, not just the release one.
   cancel-in-progress: false
 
-# Defence-in-depth (ASW-313): the repo default is already read-only, but
+# Defence-in-depth (R-313): the repo default is already read-only, but
 # pin it here so a future org-policy change can't silently widen CI's token.
 permissions:
   contents: read
 
-# Wave 3 consumer (A-589 / A-594): the static lint/build/test checks run through
+# Wave 3 consumer (R-589 / R-594): the static lint/build/test checks run through
 # the estate's shared reusable workflows, pinned to the floating `@v1` major tag
-# (A-672 / A-662) — `move-floating-major.yml` in shared-workflows keeps `v1` on
+# (R-672 / R-662) — `move-floating-major.yml` in shared-workflows keeps `v1` on
 # each release commit, so we ride the latest v1.x fixes without a Dependabot SHA
 # bump. The `lint` caller runs ESLint + Markdown + YAML/actionlint; the
 # `build-test` caller runs the tsc typecheck + ShellCheck + bats (`build: false`
@@ -33,10 +33,10 @@ permissions:
 #
 # The repo-specific EXECUTION checks stay local in the `skills` job: they need
 # `pnpm bootstrap:config` to materialise the gitignored per-skill config.json
-# (A-615) first, so they cannot run inside the reusable callers (which have no
+# (R-615) first, so they cannot run inside the reusable callers (which have no
 # pre-step hook). Vitest is local for the same reason — the composite runs
 # `pnpm exec vitest run`, which skips the `pretest` bootstrap hook. The
-# `GO/NO GO` aggregator (A-418) is the required status check.
+# `GO/NO GO` aggregator (R-418) is the required status check.
 jobs:
   config:
     uses: rheged-studio/shared-workflows/.github/workflows/reusable-load-repo-config.yml@v1
@@ -109,7 +109,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🥾 Bootstrap dogfood config
-        # skills/*/config.json is gitignored (A-615) so `skills add --copy` never
+        # skills/*/config.json is gitignored (R-615) so `skills add --copy` never
         # vendors this repo's own config into consumers. This repo's real values
         # live in infrastructure/dogfood-config/ and are materialised into
         # skills/<name>/config.json here, so the scripts and tests below (which
@@ -129,17 +129,17 @@ jobs:
         run: pnpm validate:changelog
 
       - name: 🧩 Validate skill bundle metadata
-        # Hard gate (ASW-364): every skills/*/ must have a package.json named
+        # Hard gate (R-364): every skills/*/ must have a package.json named
         # @rheged-studio/skill-<dir>, private: true, a semver version, and a
         # SKILL.md whose metadata.version matches.
         run: pnpm validate:skills
 
       - name: 🧬 Vendor drift-check
-        # Drift gate (ADR-0004 / A-534): each bundle's scripts/lib/vendor/ copy
+        # Drift gate (ADR-0004 / R-534): each bundle's scripts/lib/vendor/ copy
         # must be byte-identical to its canonical lib/*.mjs source.
         run: pnpm vendor:check
 
-      # Changelog-completeness gate (SK-380): a release-triggering PR title
+      # Changelog-completeness gate (R-380): a release-triggering PR title
       # (feat/fix/breaking) must carry a dated changelog/ entry. Non-release
       # titles — including the release-please PR's own `chore: release …` — pass.
       - name: 📓 Changelog completeness
@@ -168,7 +168,7 @@ jobs:
           node-version-file: .nvmrc
 
       - name: 🥾 Bootstrap dogfood config
-        # skills/*/config.json is gitignored (A-615); the self-tests below run
+        # skills/*/config.json is gitignored (R-615); the self-tests below run
         # scripts that load a real config at import (e.g. changelog/add-links.mjs),
         # so materialise this repo's own configs from infrastructure/dogfood-config/
         # first. Zero-dependency Node — no install needed.
@@ -217,12 +217,12 @@ jobs:
       contents: read
     steps:
       - name: ⚖️ Verdict
-        # Pass/fail by inspecting the `needs` results (A-1103 / A-1195). `skipped`
+        # Pass/fail by inspecting the `needs` results (R-1103 / R-1195). `skipped`
         # is allowlisted only on `release-please--*` branches (path-skipped jobs);
         # everywhere else every needed job must report `success`. `failure`,
         # `cancelled` and a null/empty result fail the gate.
         #
-        # `cancelled` is deliberately NOT allowlisted (A-1100). NEVER reach for
+        # `cancelled` is deliberately NOT allowlisted (R-1100). NEVER reach for
         # `if: !cancelled()` on this job — a skipped check-run counts as SUCCESS
         # for required status checks and would forge the gate.
         env:
@@ -234,7 +234,7 @@ jobs:
         run: |
           set -euo pipefail
           # Allow `skipped` only on release-please path-skips; otherwise every
-          # needed job must have succeeded (A-1103).
+          # needed job must have succeeded (R-1103).
           if [[ "$HEAD_REF" == release-please--* ]]; then
             ALLOWED='["success","skipped"]'
           else

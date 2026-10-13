@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-2429
+  - R-2429
 stats:
   files_changed: 14
   loc_added: 492
@@ -22,7 +22,7 @@ stats:
 
 ## Added
 
-- **`pr` skill ([A-2429](https://linear.app/rheged-studio/issue/A-2429)).** A new `skills/pr/` bundle (0.1.0) that writes or
+- **`pr` skill ([R-2429](https://linear.app/rheged-studio/issue/R-2429)).** A new `skills/pr/` bundle (0.1.0) that writes or
   updates a PR body as Summary (the smallest visual that makes the point), Changes
   (every commit, grouped by intent), Evidence (only what was actually run), Merge
   Danger (door, blast radius, and a `**Release:**` line), and Related Issues. A

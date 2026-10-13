@@ -1,4 +1,4 @@
-// Catalogue install path (A-1904): vendor estate skills via skills.sh, restore configs, optional reconcile.
+// Catalogue install path (R-1904): vendor estate skills via skills.sh, restore configs, optional reconcile.
 
 import {
   buildSkillsAddArgsForSource,
@@ -144,7 +144,7 @@ function wipeBeforeInstall(repoRoot, installSkills) {
   }
 
   // Consumers lose the old vendored bundle shim; agent-skills dogfood keeps the
-  // tracked redirect at .claude/commands/initialise-skills.md (A-1904).
+  // tracked redirect at .claude/commands/initialise-skills.md (R-1904).
   if (!isAgentSkillsSourceRepo(repoRoot)) {
     for (const shim of LEGACY_COMMAND_SHIM_NAMES) {
       const commandPath = join(repoRoot, ".claude", "commands", `${shim}.md`);
@@ -240,7 +240,7 @@ export async function runCatalogueInstall(options) {
 
   const restored = restoreAllClobberedConfigs(repoRoot);
   console.log(
-    `rheged-skills-setup: restored ${restored.length} config.json from HEAD (A-706).`,
+    `rheged-skills-setup: restored ${restored.length} config.json from HEAD (R-706).`,
   );
 
   const missingMatt = findMissingMattBundles(

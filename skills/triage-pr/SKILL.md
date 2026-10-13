@@ -41,12 +41,12 @@ phases, choosing the phase from the PR's draft state:
   `humanEnvelope` / `--auto-apply`. Bounded by `maxReviewRounds`.
 
 Since send-it 0.8.0, `/send-it` **opens or updates** the pull request and then
-**invokes this skill as its final step** (Step 11, A-1151): it waits for at least
+**invokes this skill as its final step** (Step 11, R-1151): it waits for at least
 one check to register, then hands off here — forwarding `--dry-run`, `--ci-only`,
 `--no-promote`, and `--auto-apply` verbatim. A default `/send-it` run is incomplete
-until that hand-off (A-1645). A send-it chain that reaches Phase B halts on **this**
+until that hand-off (R-1645). A send-it chain that reaches Phase B halts on **this**
 skill's human envelope only when `humanEnvelope` is `true`; when `false`, it ends on
-Step 13's report (A-2014). Running `/triage-pr`
+Step 13's report (R-2014). Running `/triage-pr`
 directly stays fully supported for mid-flight re-entry when send-it already opened
 the PR, or when send-it was deliberately skipped — it is not the normal end of a
 send-it run.
@@ -310,7 +310,7 @@ foreground command limit.
   documented Phase-A early stop in this step (promotion disabled / promotion gate
   failed / gated lint-surface items outstanding / `--ci-only` / `--dry-run`), the
   slow-bot micro-gate (Step 7), or a hard blocker / `maxCiRounds` or `maxReviewRounds` exhaustion that
-  needs a decision. The envelope _is_ actionable — do not treat A-1178's "don't
+  needs a decision. The envelope _is_ actionable — do not treat R-1178's "don't
   pull attention" rule as a reason to skip it.
 - **Gated lint-surface items end the loop.** When every remaining red check is a
   Step 3 **gated** item, stop **immediately** — do not spend `maxCiRounds` re-watching
@@ -380,7 +380,7 @@ counts either.
     A bare ack — a comment with neither a sticky marker nor that finished header,
     such as "Claude Code is working…" — does **not** count, and neither does
     CodeRabbit's "Currently processing new changes" placeholder, even though it
-    carries sticky markers (A-2755).
+    carries sticky markers (R-2755).
 - `botsReported` / `botsSkipped` / `botsMissing` — `botStatus` grouped by state;
   `botsMissing` covers both `pending` and `missing`.
 - `activityFingerprint` — changes whenever the head, the open bot threads, or a

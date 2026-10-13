@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-409
+  - R-409
 affected_packages:
   - infrastructure
   - initialise-skills

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Detect which installed skills are behind a target ref of the source repo (A-616).
+// Detect which installed skills are behind a target ref of the source repo (R-616).
 //
 // Compares a consumer's `.claude/skills.lock` (written by rheged-skills-setup) against
 // the bundle versions in a checkout of the source agent-skills repo, and prints the
 // per-skill bump list. Used two ways:
 //   - locally ("is my repo behind?"): point --source at an up-to-date clone;
-//   - by WS3's push fleet-update orchestrator (A-617): to populate update-PR bodies
+//   - by WS3's push fleet-update orchestrator (R-617): to populate update-PR bodies
 //     and skip repos that are already current.
 //
 //   node scripts/check-updates.mjs --source <agent-skills-checkout> [--ref <ref>]
@@ -19,9 +19,9 @@
 // --skills scopes the diff to a consumer's canonical install set (both sides). A
 // consumer installs a FIXED profile via explicit `skills add --skill` flags, so an
 // upstream bundle it never vendors — most notably the repo-internal
-// `scaffold-new-skill` (A-729), which is present in every source checkout but in no
+// `scaffold-new-skill` (R-729), which is present in every source checkout but in no
 // consumer — must NOT count as an `added` update, or `updatesAvailable` is stuck
-// true forever and the fan-out verify can never pass (A-741). Passing the resolved
+// true forever and the fan-out verify can never pass (R-741). Passing the resolved
 // skill set restricts the comparison to those bundles; omit it (local "am I behind?"
 // use) to diff every installed bundle against every upstream one, unchanged.
 //
@@ -443,7 +443,7 @@ function main() {
   const targetVersions = readTargetVersions(options.source, options.ref);
   // Scope both sides to the consumer's canonical set when given, so upstream
   // bundles it never installs (the repo-internal scaffold-new-skill) can't show up
-  // as a perpetual `added` update and wedge the fan-out verify (A-741).
+  // as a perpetual `added` update and wedge the fan-out verify (R-741).
   const diff = diffLock(
     restrictToAllowlist(lockSkills, options.skills),
     restrictToAllowlist(targetVersions, options.skills),
@@ -598,7 +598,7 @@ function selfTest() {
     {
       name: "restricting both sides drops an upstream-only internal skill from `added`",
       ok: (() => {
-        // The A-741 regression: an upstream bundle the consumer never vendors
+        // The R-741 regression: an upstream bundle the consumer never vendors
         // (scaffold-new-skill) is `added` unscoped, but must vanish once the diff
         // is scoped to the canonical set.
         const lockSkills = { send: "1.0.0" };

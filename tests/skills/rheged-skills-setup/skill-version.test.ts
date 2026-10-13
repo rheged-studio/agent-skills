@@ -1,5 +1,5 @@
 // Imports the BUNDLE lib directly (the distributed `.mjs`). Covers the installed-
-// version inventory the skills.lock is built from (A-616): the scoped SKILL.md
+// version inventory the skills.lock is built from (R-616): the scoped SKILL.md
 // frontmatter scan and the package.json fallback. Uses a tmp skills dir so the
 // walk doesn't depend on the host repo's own bundles.
 import {

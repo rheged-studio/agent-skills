@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-353
+  - R-353
 affected_packages:
   - cleanup-repo
   - infrastructure

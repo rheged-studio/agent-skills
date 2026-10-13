@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { getBranchScope } from "./lib/scope.mjs";
 /**
- * Scoped auto-fix for branch-changed lintable paths (originally A-282).
+ * Scoped auto-fix for branch-changed lintable paths (originally R-282).
  */
 import { spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";

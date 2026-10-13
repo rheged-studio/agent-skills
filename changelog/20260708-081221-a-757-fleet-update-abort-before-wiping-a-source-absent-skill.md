@@ -6,7 +6,7 @@ branch: a-757-fleet-update-fail-safe-source-existence
 category: fix
 breaking: false
 issues:
-  - A-757
+  - R-757
 merged_at: '2026-07-08T08:18:42Z'
 commit: 1c92974
 merge_strategy: squash
@@ -21,7 +21,7 @@ version: 1.2.4
 
 ## Fixed
 
-The skills-update fan-out ([A-713](https://linear.app/rheged-studio/issue/A-713))
+The skills-update fan-out ([R-713](https://linear.app/rheged-studio/issue/R-713))
 could **permanently delete a consumer's own skill**. `fleet-update.mjs` wipes
 `<mirror>/<skill>` for every skill in the resolved install set **before**
 re-vendoring, and re-vendors from `SOURCE_URL@ref`. A profile that named a skill

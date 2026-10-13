@@ -1,4 +1,4 @@
-// Unit tests for the `--set` override parser/validator (A-704). Pure functions,
+// Unit tests for the `--set` override parser/validator (R-704). Pure functions,
 // no filesystem — resolveOverrides is fed plain skill stubs shaped like the
 // InstalledSkill objects discoverSkills() produces (only `name` + `example` are
 // read).

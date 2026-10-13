@@ -11,8 +11,8 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-2781
-  - A-2684
+  - R-2781
+  - R-2684
 stats:
   loc_added: 31
   loc_removed: 6
@@ -22,7 +22,7 @@ version: ""
 
 ## Changed
 
-- **`@rheged-studio/changelog-core` 1.2.0 ([A-2781](https://linear.app/rheged-studio/issue/A-2781)).** The devDependency and lockfile move from `^1.1.1` to `^1.2.0`, so
+- **`@rheged-studio/changelog-core` 1.2.0 ([R-2781](https://linear.app/rheged-studio/issue/R-2781)).** The devDependency and lockfile move from `^1.1.1` to `^1.2.0`, so
   `validate:changelog`, the completeness gate and the post-merge finalise
   extract a branch's leading issue ID, as the skills do. Part of
-  [A-2684](https://linear.app/rheged-studio/issue/A-2684).
+  [R-2684](https://linear.app/rheged-studio/issue/R-2684).

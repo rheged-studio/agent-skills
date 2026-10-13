@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1151
+  - R-1151
 stats:
   files_changed: 16
   loc_added: 386
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Added
 
-- **`send-it` Step 11 — chain into `triage-pr` ([A-1151](https://linear.app/rheged-studio/issue/A-1151)).**
+- **`send-it` Step 11 — chain into `triage-pr` ([R-1151](https://linear.app/rheged-studio/issue/R-1151)).**
   After the Linear writeback, send-it hands the PR it just opened to the
   [`triage-pr`](https://github.com/acme-skunkworks/agent-skills/blob/main/skills/triage-pr/SKILL.md)
   skill and runs the full chain: Phase A fixes in-scope CI failures and promotes the
@@ -83,7 +83,7 @@ version: 1.4.0
   alongside the other default-on booleans, so consumers do not see it flagged
   `needs-manual-input`. Deliberately _not_ inferred from whether `triage-pr` is
   vendored — Step 11's soft-skip already covers absence, so presence-inference could
-  only misfire the way it once did for `changelog` ([A-570](https://linear.app/rheged-studio/issue/A-570)).
+  only misfire the way it once did for `changelog` ([R-570](https://linear.app/rheged-studio/issue/R-570)).
 
 - Bundles: `send-it` `0.7.0` → `0.8.0`, `triage-pr` `0.10.1` → `0.10.2`,
   `initialise-skills` `0.10.9` → `0.10.10`.
@@ -96,6 +96,6 @@ version: 1.4.0
   the skill's Notes and the README config table.
 - **Estate fan-out.** This adds a `send-it` config key, so consumers need a re-vendor.
   Batch it into the existing `humanEnvelope` sweep
-  ([A-1183](https://linear.app/rheged-studio/issue/A-1183) …
-  [A-1190](https://linear.app/rheged-studio/issue/A-1190)) rather than triggering a
+  ([R-1183](https://linear.app/rheged-studio/issue/R-1183) …
+  [R-1190](https://linear.app/rheged-studio/issue/R-1190)) rather than triggering a
   separate rollout.

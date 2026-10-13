@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-387
+  - R-387
 stats:
   files_changed: 5
   loc_added: 199
@@ -33,10 +33,10 @@ PR title **is** the release signal, so this silently mis-cut real releases — t
 workaround was a manual `--title` override.
 
 Both buggy paths — `deriveBump` (the release magnitude) and `deriveCategory` (the
-[A-598](https://linear.app/rheged-studio/issue/A-598) `type` / `category` / `releaseTriggering` decision) — now derive from the
+[R-598](https://linear.app/rheged-studio/issue/R-598) `type` / `category` / `releaseTriggering` decision) — now derive from the
 **strongest Conventional-Commit type across all commits** via a new
 `deriveDominantType` helper (`feat` outranks `fix`/`perf`, which outrank the
 non-release types). When no commit is a release type the derivation stays on the
 lead commit, preserving the changelog category for non-release branches.
 `deriveBody` deliberately stays on the HEAD commit — it is an explicitly-draft
-one-line summary the ship flow may rewrite ([A-387](https://linear.app/rheged-studio/issue/A-387)).
+one-line summary the ship flow may rewrite ([R-387](https://linear.app/rheged-studio/issue/R-387)).

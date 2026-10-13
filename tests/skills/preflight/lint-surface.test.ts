@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure
-// lint-surface detector (A-1203): which changed paths are lint config, which
+// lint-surface detector (R-1203): which changed paths are lint config, which
 // added lines introduce an ignore / disable directive, and the report preflight
 // writes to `.preflight-summary.json`. Directive fixtures are assembled from
 // pieces so this file's own added lines never read as directives to the

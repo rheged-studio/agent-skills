@@ -1,6 +1,6 @@
 // Parse references/detectable-keys.md into a per-key description map, so the
 // read-only `--review` report can annotate each config key with what it is and
-// where its value comes from (A-702).
+// where its value comes from (R-702).
 //
 // The reference doc is a single GFM pipe table whose columns are fixed:
 //   | Key | Used by | Detection source | Fallback / when undetectable |

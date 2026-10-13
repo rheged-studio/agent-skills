@@ -1,5 +1,5 @@
 // Imports the BUNDLE lib directly (the distributed `.mjs`). Covers the pure
-// reconcile-report builder and its human renderer (A-465): aggregation of
+// reconcile-report builder and its human renderer (R-465): aggregation of
 // per-key statuses into totals + drift/manual buckets, and the text formatting
 // Claude shows the user. No filesystem or git — `buildReport` consumes the merge
 // results verbatim.

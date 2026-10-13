@@ -1,7 +1,7 @@
 // Tests the canonical repo-root `lib/issue-keys.mjs` — the helper the
 // linear-sync / cleanup-repo / triage-pr / send-it prose mirrors and the
 // changelog bundle vendors (ADR-0004). The multi-team fixtures model one repo
-// carrying `c-` (Cadogan), `r-` (Rheged) and legacy `a-` branches (A-2682).
+// carrying `c-` (Cadogan), `r-` (Rheged) and legacy `a-` branches (R-2682).
 import {
   buildBranchIssueRe,
   buildIssueRe,
@@ -11,12 +11,12 @@ import { describe, expect, it } from "vitest";
 
 const MULTI_TEAM_KEYS = ["C", "R", "A"];
 
-describe("extractBranchIssueId — leading ID only (A-2682)", () => {
+describe("extractBranchIssueId — leading ID only (R-2682)", () => {
   it.each([
     ["c-12-fix-r-3-thing", "C-12"],
     ["r-40-add-c-2-support", "R-40"],
     ["a-2651-2-agent-skills-make-the-linear-skills-multi-team", "A-2651"],
-    ["A-123/demo", "A-123"],
+    ["R-123/demo", "R-123"],
     ["R-7", "R-7"],
   ])("%s → %s", (branch, expected) => {
     expect(extractBranchIssueId(branch, MULTI_TEAM_KEYS)).toBe(expected);
@@ -77,10 +77,10 @@ describe("buildBranchIssueRe", () => {
 describe("buildIssueRe — prose matcher stays unanchored", () => {
   it("still finds every ID anywhere in prose", () => {
     const re = buildIssueRe(MULTI_TEAM_KEYS) ?? /$^/;
-    expect("Closes C-12, see R-3 and A-9.".match(re)).toEqual([
+    expect("Closes C-12, see R-3 and R-9.".match(re)).toEqual([
       "C-12",
       "R-3",
-      "A-9",
+      "R-9",
     ]);
   });
 });

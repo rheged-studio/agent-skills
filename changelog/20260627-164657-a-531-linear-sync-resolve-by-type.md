@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-531
+  - R-531
 stats:
   files_changed: 3
   loc_added: 82
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Changed
 
-- **`linear-sync` resolves workflow states by type, not display name ([A-531](https://linear.app/rheged-studio/issue/A-531)).**
+- **`linear-sync` resolves workflow states by type, not display name ([R-531](https://linear.app/rheged-studio/issue/R-531)).**
   The skill matched target and current states by literal display name
   (`In Progress` / `In Review` / `Done` / …), so a consumer who renamed a state
   (e.g. `In Progress` → `Doing`, `In Review` → `Code Review`) silently failed to

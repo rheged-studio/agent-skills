@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-702
+  - R-702
 stats:
   files_changed: 10
   loc_added: 539
@@ -44,4 +44,4 @@ Implemented as a new `scripts/lib/references.mjs` (parses the detectable-keys
 table) plus `buildReviewReport` / `formatReview` in `scripts/lib/report.mjs`,
 reusing the existing three-way merge classification and status ordering. The
 `initialise-skills` bundle version is bumped `0.6.2` → `0.7.0`
-([A-702](https://linear.app/rheged-studio/issue/A-702)).
+([R-702](https://linear.app/rheged-studio/issue/R-702)).

@@ -6,7 +6,7 @@ authors or updates the dated `changelog/<ts>-<slug>.md` entry, composes a
 **Conventional Commits PR title** (CI + humans; a derived title's entire first
 line is at most 72 characters; a supplied `--title` stays verbatim and warns if
 overlong; feature PRs merge via merge commit and release-please ranks
-landed commit subjects for the bump — A-1176),
+landed commit subjects for the bump — R-1176),
 pushes the branch, opens or updates a pull request, transitions the linked
 Linear issues to **In Review**, and then drives that PR to merge-ready.
 
@@ -60,7 +60,7 @@ and fill it in by hand.
 | `changelog` _(optional)_ | Whether to author a dated `changelog/` entry at all. Set `false` only for repos with no changelog flow (no `changelog/` dir, no `changelog` skill). | `true` |
 | `triage` _(omit or `true` by default)_ | Chain into [`triage-pr`](../triage-pr) after the PR opens (Step 11). Set `false` to stop at the open PR, or where `triage-pr` is not installed / CI never registers on drafts (`draft == false` gating). | `true` |
 
-**Release-type is decided by category, not path (A-598).** send-it reads the
+**Release-type is decided by category, not path (R-598).** send-it reads the
 Conventional-Commit type of the work it committed: `feat`/`fix`/`perf` — or any
 breaking change — cut a release; `docs`/`refactor`/`chore`/`ci`/`build`/`test`/`style`
 do not, wherever the files live. So a docs-only edit under `skills/` is `docs:` (no
@@ -69,7 +69,7 @@ release), not `feat:`. `shippablePaths`/`shippableManifestKeys` are advisory onl
 **Every PR gets a `changelog/` entry** when `changelog` isn't `false` — the
 "record everything, filter later" model. Release notes filter the dated changelog to
 the version-stamped (release-triggering) entries at release time. The old
-`changelogScope` knob was removed (A-600); only the `changelog: true|false` master
+`changelogScope` knob was removed (R-600); only the `changelog: true|false` master
 switch remains.
 
 The team name, issue-ID prefixes, and workspace slug are **not** configured here —

@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-719
+  - R-719
 stats:
   files_changed: 12
   loc_added: 190
@@ -23,12 +23,12 @@ version: 1.2.0
 
 ## Fixed
 
-CodeRabbit's review of the [A-681](https://linear.app/rheged-studio/issue/A-681) Wave B re-vendor flagged defects in the canonical
-bundle _source_ (sibling of [A-710](https://linear.app/rheged-studio/issue/A-710), which covered Wave A). Per the
-[A-573](https://linear.app/rheged-studio/issue/A-573) disposition, these are fixed upstream here and propagate to consumers on the
+CodeRabbit's review of the [R-681](https://linear.app/rheged-studio/issue/R-681) Wave B re-vendor flagged defects in the canonical
+bundle _source_ (sibling of [R-710](https://linear.app/rheged-studio/issue/R-710), which covered Wave A). Per the
+[R-573](https://linear.app/rheged-studio/issue/R-573) disposition, these are fixed upstream here and propagate to consumers on the
 next sync.
 
-**`commit` (0.1.1 → 0.1.2) — fresh-branch out-of-scope guard.** [A-710](https://linear.app/rheged-studio/issue/A-710) tightened the
+**`commit` (0.1.1 → 0.1.2) — fresh-branch out-of-scope guard.** [R-710](https://linear.app/rheged-studio/issue/R-710) tightened the
 directory-only leak but kept the fresh-branch escape hatch: on a branch with no
 commits of its own, _every_ uncommitted file was treated as in-scope. That reopened
 the exact leak the guard exists to close — a stray file left by another branch or

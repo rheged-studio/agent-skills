@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-2755
+  - R-2755
 stats:
   files_changed: 11
   loc_added: 294
@@ -22,7 +22,7 @@ version: 1.13.0
 
 ## Fixed
 
-- **triage-pr review settle ([A-2755](https://linear.app/rheged-studio/issue/A-2755)).** CodeRabbit edits its sticky summary
+- **triage-pr review settle ([R-2755](https://linear.app/rheged-studio/issue/R-2755)).** CodeRabbit edits its sticky summary
   comment into a "Currently processing new changes" placeholder minutes before
   its review exists. Every state of that comment carries CodeRabbit's
   `auto-generated comment` marker, so `review-threads.mjs` counted an unmapped
@@ -33,7 +33,7 @@ version: 1.13.0
 
 ## Added
 
-- **rheged-skills-setup CodeRabbit mapping ([A-2755](https://linear.app/rheged-studio/issue/A-2755)).** When a repo has a root
+- **rheged-skills-setup CodeRabbit mapping ([R-2755](https://linear.app/rheged-studio/issue/R-2755)).** When a repo has a root
   `.coderabbit.yaml` (or `.yml`) that doesn't set `commit_status: false`, the
   `reviewBotChecks` detector now maps `coderabbitai` to
   `{ "name": "CodeRabbit", "producer": "coderabbitai" }`. triage-pr then settles

@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-710
+  - R-710
 stats:
   files_changed: 21
   loc_added: 274
@@ -23,8 +23,8 @@ version: 1.2.0
 
 ## Fixed
 
-CodeRabbit's review of the [A-681](https://linear.app/rheged-studio/issue/A-681) Wave A re-vendor flagged defects in the canonical
-bundle _source_. Per the [A-573](https://linear.app/rheged-studio/issue/A-573) disposition these are fixed upstream here and
+CodeRabbit's review of the [R-681](https://linear.app/rheged-studio/issue/R-681) Wave A re-vendor flagged defects in the canonical
+bundle _source_. Per the [R-573](https://linear.app/rheged-studio/issue/R-573) disposition these are fixed upstream here and
 propagate to consumers on the next sync.
 
 **`commit` (0.1.0 → 0.1.1) — in-scope rule.** Directory-level auto-inclusion ("any

@@ -6,7 +6,7 @@ branch: a-813-initialise-skills-skip-or-clear-packageroots-on-single
 category: fix
 breaking: false
 issues:
-  - A-813
+  - R-813
 merged_at: '2026-07-10T17:26:05Z'
 commit: 8c134f7
 pr: 125
@@ -20,7 +20,7 @@ version: 1.2.5
 
 ## Fixed
 
-- **`packageRoots` gated by `affectedPackages` ([A-813](https://linear.app/rheged-studio/issue/A-813)).**
+- **`packageRoots` gated by `affectedPackages` ([R-813](https://linear.app/rheged-studio/issue/R-813)).**
   On a single-package host the roots detector still returns null, but with
   `affectedPackages: false` the merge reclassifies `packageRoots` from
   `needs-manual-input` to `unchanged` and leaves the example placeholder in

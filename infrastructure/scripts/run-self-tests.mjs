@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fleet self-test runner (A-533).
+// Fleet self-test runner (R-533).
 //
 // Several skill bundles ship an in-script `--self-test` mode — a built-in,
 // offline smoke test (`node <script> --self-test`) that asserts the script's
@@ -8,7 +8,7 @@
 // (and any assertion only wired into it) is never exercised by `pnpm test`.
 //
 // This runner discovers every skill script under `skills/<name>/scripts/` — and
-// every repo tooling script under `infrastructure/scripts/` (A-2454) — that
+// every repo tooling script under `infrastructure/scripts/` (R-2454) — that
 // declares the literal `--self-test`, runs each with `node <script>
 // --self-test`, and exits non-zero if any fail — so the self-tests are CI-gated
 // alongside the unit tests. Zero-dependency: Node built-ins only.

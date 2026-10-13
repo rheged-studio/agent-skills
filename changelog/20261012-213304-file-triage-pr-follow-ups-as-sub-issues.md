@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-2756
+  - R-2756
 stats:
   files_changed: 9
   loc_added: 102
@@ -22,7 +22,7 @@ version: 1.13.0
 
 ## Changed
 
-- **triage-pr follow-up routing ([A-2756](https://linear.app/rheged-studio/issue/A-2756)).** A follow-up is now filed as a
+- **triage-pr follow-up routing ([R-2756](https://linear.app/rheged-studio/issue/R-2756)).** A follow-up is now filed as a
   sub-issue (`parentId`) of the Linear issue the PR was raised under. It takes
   that issue's project and milestone as they are. When the PR has no linked
   issue, or the lookup misses, it goes to the `followUpProject` catch-all with

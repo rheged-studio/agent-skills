@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-718
+  - R-718
 stats:
   files_changed: 4
   loc_added: 102
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Fixed
 
-`infrastructure/scripts/fleet-update.mjs` ([A-617](https://linear.app/rheged-studio/issue/A-617)) installed the shared bundles with
+`infrastructure/scripts/fleet-update.mjs` ([R-617](https://linear.app/rheged-studio/issue/R-617)) installed the shared bundles with
 `skills add <local-checkout-path> --copy`. The skills.sh CLI records whatever source
 it was given verbatim in the consumer's **committed** `skills-lock.json`, so a
 fan-out run wrote an absolute machine path plus `sourceType: local` into every
@@ -40,4 +40,4 @@ verify source (local checkout) are now distinct roles. A URL install resolves th
 default branch, which is what the recurring roll-onto-latest fan-out wants; the
 pinned/bootstrap path stays the runbook's local-clone approach.
 
-Found immediately after [A-617](https://linear.app/rheged-studio/issue/A-617) (#107) merged.
+Found immediately after [R-617](https://linear.app/rheged-studio/issue/R-617) (#107) merged.

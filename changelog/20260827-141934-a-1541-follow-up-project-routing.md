@@ -8,7 +8,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1541
+  - R-1541
 merged_at: "2026-08-27T17:20:39Z"
 commit: 1e03c30
 pr: 174
@@ -22,7 +22,7 @@ version: 1.6.0
 
 ## Changed
 
-- **Inherit-then-fallback capture routing ([A-1541](https://linear.app/rheged-studio/issue/A-1541)).**
+- **Inherit-then-fallback capture routing ([R-1541](https://linear.app/rheged-studio/issue/R-1541)).**
   Phase B no longer files every follow-up into a single per-repo
   `followUpProject`. It extracts the PR's Linear id (`issueKeys` /
   `linear-sync` regex), inherits that issue's project when the project is

@@ -1,4 +1,4 @@
-// Detector registry keyed by config-KEY NAME, not by skill (A-409).
+// Detector registry keyed by config-KEY NAME, not by skill (R-409).
 //
 // One detector per config key serves every skill that uses it — `baseBranch`
 // covers changelog + send-it + preflight; `issueKeys` covers changelog +
@@ -27,7 +27,7 @@ const MAX_REVIEW_ROUNDS = 2;
 const REVIEW_WAIT_MAX_MINUTES = 20;
 // The estate Claude review reusable workflow (rheged-studio/shared-workflows).
 // A repo calling it gets a `<caller job id> / claude-review` check run on every
-// reviewed head, posted by GitHub Actions (A-2453).
+// reviewed head, posted by GitHub Actions (R-2453).
 // Only the estate's own shared-workflows repo counts — a same-named reusable
 // workflow elsewhere need not post a `claude-review` check. The pre-rename
 // `acme-skunkworks` owner still resolves via GitHub's redirect, and some callers
@@ -38,7 +38,7 @@ const CLAUDE_REVIEW_PRODUCER = "github-actions";
 // CodeRabbit posts a `CodeRabbit` commit status on every reviewed head
 // (`pending — Review in progress` → `success — Review completed`), produced by its
 // own GitHub App. A repo with a root `.coderabbit.yaml` has it installed, unless
-// that file turns the status off with `commit_status: false` (A-2755).
+// that file turns the status off with `commit_status: false` (R-2755).
 const CODERABBIT_CONFIG_FILES = [".coderabbit.yaml", ".coderabbit.yml"];
 const CODERABBIT_STATUS_OFF = /^\s*commit_status:\s*["']?false["']?\s*(#.*)?$/m;
 const CODERABBIT_CHECK = { name: "CodeRabbit", producer: "coderabbitai" };
@@ -235,7 +235,7 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
     // over-installed the skill but keeps no changelog of its own (e.g.
     // release-orchestrator, which runs *other* repos' `changelog:finalise`) was
     // wrongly flipped `true` and would then try to author entries with nowhere to
-    // live (A-570). A repo with no `changelog/` dir gets `false` so send-it skips
+    // live (R-570). A repo with no `changelog/` dir gets `false` so send-it skips
     // authoring entirely.
     //
     // Like `changelogDir` / `fallbackPackage`, this always emits a value (never
@@ -258,7 +258,7 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
     deferNonBlocking: () => ({ value: true }),
     fallbackPackage: () => ({ value: "infrastructure" }),
     // triage-pr follow-up capture: estate default label matches config.example.json
-    // so a configured "follow-up" is not wiped when it equals the example (A-2054).
+    // so a configured "follow-up" is not wiped when it equals the example (R-2054).
     followUpLabel: () => ({ value: "follow-up" }),
     followUpProject: () => {
       const fromFacts = linearFacts.followUpProject;
@@ -313,10 +313,10 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
     // Map `claude` to the estate Claude review check when the repo calls the
     // shared reusable workflow, so a clean review (no PR review, no threads)
     // still settles on the terminal check rather than waiting out the review cap
-    // (A-2453). Pinned to the GitHub Actions producer (A-2328). Map
+    // (R-2453). Pinned to the GitHub Actions producer (R-2328). Map
     // `coderabbitai` to its `CodeRabbit` status when the repo configures
     // CodeRabbit, so the settle waits for the review rather than its in-progress
-    // placeholder (A-2755). Neither → `{}` (never null), and a later edit reads
+    // placeholder (R-2755). Neither → `{}` (never null), and a later edit reads
     // as drift and is kept.
     reviewBotChecks: () => {
       const job = detectClaudeReviewCallerJob(repoRoot);
@@ -332,7 +332,7 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
       return { value: checks };
     },
     reviewBots: () => ({ value: [...REVIEW_BOTS] }),
-    // Hybrid review-settle knobs (A-1179) — structural defaults, never null.
+    // Hybrid review-settle knobs (R-1179) — structural defaults, never null.
     reviewIdleMinutes: () => ({ value: REVIEW_IDLE_MINUTES }),
     reviewWaitMaxMinutes: () => ({ value: REVIEW_WAIT_MAX_MINUTES }),
     shippableManifestKeys: () => ({ value: [...SHIPPABLE_MANIFEST_KEYS] }),
@@ -347,7 +347,7 @@ export function createDetectors({ linearFacts = {}, repoRoot }) {
     // No repo signal; emit send-it's default-on triage chain (never null) so it isn't
     // flagged needs-manual-input. Deliberately not keyed off `triage-pr` being
     // vendored: send-it's Step 11 already soft-skips with a warning when the sibling
-    // is absent, so a fixed `true` can't misfire the way `changelog` did (A-570). A
+    // is absent, so a fixed `true` can't misfire the way `changelog` did (R-570). A
     // later edit to `false` reads as drift and is kept.
     triage: () => ({ value: true }),
     // preflight self-detects its workspace map at runtime; never write it.

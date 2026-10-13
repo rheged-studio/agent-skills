@@ -220,7 +220,7 @@ no `npm install`:
 - `scripts/lib/{scope,diff-lines,paths}.mjs` — shared helpers (workspace/base-branch
   detection, diff-line mapping, path normalisation).
 - `scripts/lib/lint-surface.mjs` — the `lintSurface` detector: changed lint config
-  files and added ignore / disable directives (A-1203).
+  files and added ignore / disable directives (R-1203).
 - `references/lint-surfaces.md` — the shared lint-surface rule, vendored from the
   repo's `lib/lint-surfaces.md` (ADR-0006). Edit the source, not the copy.
 

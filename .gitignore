@@ -8,7 +8,7 @@
 # preflight skill scratch output (written at the repo root on each run)
 .preflight-summary.json
 
-# Per-skill config.json is generated, not tracked (A-615): `skills add --copy`
+# Per-skill config.json is generated, not tracked (R-615): `skills add --copy`
 # vendors every tracked file under skills/<name>/, so a tracked config.json would
 # leak this repo's own values into consumers. The neutral config.example.json is
 # the only config that ships; this repo's real values live in the tracked
@@ -41,7 +41,7 @@ coverage/
 .claude/worktrees/
 .claude/settings.local.json
 
-# Dogfood-only (A-616): a manual `initialise-skills --write` against THIS repo emits
+# Dogfood-only (R-616): a manual `initialise-skills --write` against THIS repo emits
 # a consumer lock at .claude/skills.lock. The source repo IS the source of truth, so
 # its own lock is noise — consumers commit theirs; this repo ignores it.
 .claude/skills.lock

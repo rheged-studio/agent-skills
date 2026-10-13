@@ -11,7 +11,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-1178
+  - R-1178
 stats:
   files_changed: 6
   loc_added: 81
@@ -24,7 +24,7 @@ version: 1.4.0
 
 - **Step 6 / Step 12 alert carve-out.** Clarified that documented Phase-A early stops (promotion disabled / gate failed / `--ci-only` / `--dry-run`) are valid completion alerts, not interim mid-watch pings — Step 12 remains the alert for a full run.
 
-- **Completion contract ([A-1178](https://linear.app/rheged-studio/issue/A-1178)).**
+- **Completion contract ([R-1178](https://linear.app/rheged-studio/issue/R-1178)).**
   Agents must not claim the triage run is complete, green, or ready for attention
   while any required check is still queued, pending, or in progress. Step 6 stays
   quiet during the watch; Step 12 is the only completion alert and must cite the

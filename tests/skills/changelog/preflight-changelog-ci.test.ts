@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure
-// version-parsing helpers (A-465): the no-semver-dependency parsing of
+// version-parsing helpers (R-465): the no-semver-dependency parsing of
 // `.nvmrc` / `process.version` / `engines.node` ranges and the comparison the
 // Node-version gate is built on. The IO half (reading files, spawning pnpm)
 // stays behind the CLI `main()` guard and is not imported here.

@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-369
+  - R-369
 affected_packages:
   - changelog
   - infrastructure

@@ -3,9 +3,9 @@
 // Run: node skills/send-it/scripts/derive-bump.mjs
 //
 // Under release-please (Conventional Commits) there is no changeset file.
-// Dual merge policy (A-1176 / ADR-0005):
+// Dual merge policy (R-1176 / ADR-0005):
 //   - Feature / ship PRs land as **merge commits** — post-merge, release-please
-//     ranks the landed **commit subjects** (A-824), not the PR title alone.
+//     ranks the landed **commit subjects** (R-824), not the PR title alone.
 //   - Release-please version PRs and fan-out PRs stay **squash** (orchestrator /
 //     fanout-spine) — for those paths the squash subject (often the PR title)
 //     remains the bump declaration.
@@ -20,15 +20,15 @@
 //   body             : a one-line draft summary (the ship flow may rewrite this)
 //   type             : the strongest Conventional-Commit type across all commits
 //                      (feat/fix/perf/docs/refactor/chore/…) — the PR-title prefix
-//                      (dominant type, A-387 — not "lead"/HEAD-only)
+//                      (dominant type, R-387 — not "lead"/HEAD-only)
 //   breaking         : whether any commit is breaking (`!` or BREAKING CHANGE:)
 //   category         : the dated changelog `category` enum value for this change
-//   releaseTriggering: whether this change cuts a release (A-598 — by the change's
+//   releaseTriggering: whether this change cuts a release (R-598 — by the change's
 //                      semantic category, NOT by which paths it touches)
 //
 // Release-type is decided by the change's **semantic category** (the commit
 // types send-it itself authored), not by whether the diff touches a publish path
-// (A-598): feat/fix/perf — or any breaking change — cut a release; docs/refactor/
+// (R-598): feat/fix/perf — or any breaking change — cut a release; docs/refactor/
 // chore/ci/build/test/style do not, wherever the files live.
 //
 // Reads from git via `git branch --show-current` and
@@ -72,7 +72,7 @@ export function deriveBump(commits) {
   }
 
   // Minor when the branch's strongest type is a feat — scanned across all
-  // commits, not just HEAD (A-387), mirroring the all-commits breaking scan.
+  // commits, not just HEAD (R-387), mirroring the all-commits breaking scan.
   if (deriveDominantType(commits) === "feat") {
     return "minor";
   }
@@ -127,7 +127,7 @@ function significance(type) {
   return Object.hasOwn(TYPE_SIGNIFICANCE, type) ? TYPE_SIGNIFICANCE[type] : 0;
 }
 
-// The strongest Conventional-Commit type across ALL commits (A-387). Starts from
+// The strongest Conventional-Commit type across ALL commits (R-387). Starts from
 // the newest commit and only upgrades to a strictly-stronger later commit, so a
 // branch whose HEAD is chore/docs but which contains an earlier feat/fix derives
 // from that feat/fix. When no commit is a release type it stays on the newest
@@ -149,9 +149,9 @@ export function deriveDominantType(commits) {
   return best;
 }
 
-// Decide release-type by the change's semantic category, not by path (A-598).
+// Decide release-type by the change's semantic category, not by path (R-598).
 // The branch's strongest type drives the title/category — scanned across all
-// commits, not just HEAD (A-387) — as does breaking-change detection; both
+// commits, not just HEAD (R-387) — as does breaking-change detection; both
 // mirror deriveBump. (deriveBody stays on commits[0]: it is an explicitly-draft
 // summary the ship flow may rewrite.) Returns the PR-title `type`, whether it's
 // `breaking`, the changelog `category`, and whether it is `releaseTriggering`.

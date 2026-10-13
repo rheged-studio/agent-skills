@@ -1,5 +1,5 @@
 // Imports the helper directly (the distributed `.mjs`). Covers the pure
-// vendor-sync core (ADR-0004 / A-534, ADR-0006 / A-1203): the rendered banner+body a vendored copy
+// vendor-sync core (ADR-0004 / R-534, ADR-0006 / R-1203): the rendered banner+body a vendored copy
 // must hold, and the drift detection that gates CI. The same assertions back the
 // script's `--self-test`; this wires them into the vitest suite. Two layers are
 // exercised: synthetic temp-repo fixtures (deterministic), and the REAL repo —
@@ -30,7 +30,7 @@ describe("renderVendored", () => {
     expect(renderVendored("lib/x.mjs", body).endsWith(body)).toBe(true);
   });
 
-  // ADR-0006 / A-1203: shared reference prose gets an HTML-comment banner, so
+  // ADR-0006 / R-1203: shared reference prose gets an HTML-comment banner, so
   // the generated notice never renders as visible markdown.
   it("gives a markdown source an HTML-comment banner, not a // comment", () => {
     const body = "# Lint surfaces\n";

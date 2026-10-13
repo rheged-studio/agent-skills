@@ -8,7 +8,7 @@ dispositions, and apply Phase B per `humanEnvelope` (unattended by default). Set
 forces unattended for one run. Opt out of promotion with `--no-promote` (or
 `promoteOnGreen: false`); merge to the trunk stays with a human.
 
-When `/send-it` chains into this skill (A-1151), the run completes only when
+When `/send-it` chains into this skill (R-1151), the run completes only when
 triage-pr reaches a terminal outcome — see [`SKILL.md`](SKILL.md).
 
 ## Install

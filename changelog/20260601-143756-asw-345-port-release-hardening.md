@@ -12,7 +12,7 @@ author: "rob@acmeskunkworks.io"
 co_authors: []
 category: chore
 breaking: false
-issues: ["ASW-345"]
+issues: ["R-345"]
 stats:
   files_changed: 34
   loc_added: 3656

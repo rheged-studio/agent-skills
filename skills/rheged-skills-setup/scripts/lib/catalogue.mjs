@@ -1,4 +1,4 @@
-// Estate skill catalogue — parse, resolve install sets, and build skills.sh argv (A-1904).
+// Estate skill catalogue — parse, resolve install sets, and build skills.sh argv (R-1904).
 // Pure functions only; fleet-update and rheged-skills-setup import this module.
 
 export const DEFAULT_CATALOGUE_URL =
@@ -7,8 +7,8 @@ export const DEFAULT_CATALOGUE_URL =
 export const RHEGED_AGENT_SKILLS_PACKAGE = "@rheged-studio/agent-skills";
 
 /**
- * Bundles retired by rename (A-1904) or removed upstream with no replacement
- * (`resolving-merge-conflicts`, mattpocock/skills 1.3.0 — A-2298); wipe on
+ * Bundles retired by rename (R-1904) or removed upstream with no replacement
+ * (`resolving-merge-conflicts`, mattpocock/skills 1.3.0 — R-2298); wipe on
  * consumers but never re-install.
  */
 export const LEGACY_BUNDLE_NAMES = [
@@ -244,7 +244,7 @@ export function buildSkillsAddArgsForSource(url, skills, agents) {
 }
 
 /**
- * Wipe targets for install set + legacy retired bundles (A-1904).
+ * Wipe targets for install set + legacy retired bundles (R-1904).
  * @param {string[]} mirrors
  * @param {string[]} installSkills
  * @param {string[]} [legacyNames]

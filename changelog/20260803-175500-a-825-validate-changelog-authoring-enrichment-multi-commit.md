@@ -1,5 +1,5 @@
 ---
-title: 'changelog: document multi-commit and merge-merge enrichment (A-825)'
+title: 'changelog: document multi-commit and merge-merge enrichment (R-825)'
 release_note: Changelog authoring and finalise/enrich are documented and fixture-tested as safe across multi-commit branches and merge merges — one entry per branch, mergeCommit.oid for commit, non-merge commit counts.
 created_at: '2026-08-03T17:55:00Z'
 merged_at: '2026-08-03T17:03:32Z'
@@ -11,7 +11,7 @@ co_authors: []
 category: docs
 breaking: false
 issues:
-  - A-825
+  - R-825
 stats:
   files_changed: 8
   loc_added: 161
@@ -26,7 +26,7 @@ version: 1.4.0
   behaviour in `SKILL.md` and `references/changelog-contract.md` — one dated
   entry per `branch:` (update vs create), post-merge `commit` from
   `mergeCommit.oid`, and `stats.commits` excluding branch merge commits
-  ([A-825](https://linear.app/rheged-studio/issue/A-825)).
+  ([R-825](https://linear.app/rheged-studio/issue/R-825)).
 - **`finalise-changelog.mjs` / `commit-count.mjs`:** refresh header comments —
   production enrichment is `@acme-skunkworks/changelog-core` via
   `reusable-changelog-enrich.yml`; skill scripts remain published source.

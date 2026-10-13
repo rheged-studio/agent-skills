@@ -1,4 +1,4 @@
-// Read each installed skill bundle's version, for the skills.lock inventory (A-616).
+// Read each installed skill bundle's version, for the skills.lock inventory (R-616).
 //
 // The lock records the version of every installed bundle so a consumer (and WS3's
 // push fleet-update orchestrator) can tell which skills are behind. The canonical

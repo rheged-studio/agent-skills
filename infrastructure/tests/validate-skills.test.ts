@@ -159,7 +159,7 @@ describe("configKeyParityErrors", () => {
     expect(errors.join("\n")).toContain("bundleVersioning.manifest");
   });
 
-  // A-555: bundleVersioning is config-only optional (single-package templates omit
+  // R-555: bundleVersioning is config-only optional (single-package templates omit
   // it). config.json may carry the whole subtree while the example omits it entirely.
   it("exempts a config-only bundleVersioning subtree when the example omits it wholesale", () => {
     const config = JSON.stringify({
@@ -185,7 +185,7 @@ describe("configKeyParityErrors", () => {
     );
   });
 
-  // A-2453: reviewBotChecks is a data map (bot login → check spec), so its entries
+  // R-2453: reviewBotChecks is a data map (bot login → check spec), so its entries
   // are values, not structure — but the key itself must still be in both.
   it("does not recurse into the reviewBotChecks data map", () => {
     const config = JSON.stringify({

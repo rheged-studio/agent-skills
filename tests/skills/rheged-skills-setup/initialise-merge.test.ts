@@ -337,7 +337,7 @@ describe("mergeConfig", () => {
     });
 
     it("recomputes changed=false when a --set restores a detector-inferred key to its original value", () => {
-      // Regression (A-728): detection infers ["DEF","GHI"] into `data` for the
+      // Regression (R-728): detection infers ["DEF","GHI"] into `data` for the
       // placeholder issueKeys, then a --set restores the original ["ABC","XYZ"].
       // The intermediate inferred write is undone, so the net result equals the
       // original config and `changed` must be false — not stuck true from the
@@ -355,10 +355,10 @@ describe("mergeConfig", () => {
     });
   });
 
-  // A-813: packageRoots must not flag needs-manual-input when the monorepo gate
+  // R-813: packageRoots must not flag needs-manual-input when the monorepo gate
   // is off — the placeholder stays, unused at runtime, so the single→mono flip
   // can still infer when a workspace appears later.
-  describe("gated packageRoots (A-813)", () => {
+  describe("gated packageRoots (R-813)", () => {
     const changelogExample = {
       affectedPackages: true,
       fallbackPackage: "infrastructure",
@@ -502,7 +502,7 @@ describe("mergeConfig", () => {
       expect(data.packageRoots).toEqual(["apps", "packages"]);
     });
 
-    it("heals reviewBots drift when the only difference is deprecated cursor (A-2054)", () => {
+    it("heals reviewBots drift when the only difference is deprecated cursor (R-2054)", () => {
       const triageExample = {
         reviewBots: ["claude", "coderabbitai"],
       };
@@ -516,7 +516,7 @@ describe("mergeConfig", () => {
       expect(data.reviewBots).toEqual(["claude", "coderabbitai"]);
     });
 
-    // A-2453: an existing `{}` equals the example placeholder, so a consumer that
+    // R-2453: an existing `{}` equals the example placeholder, so a consumer that
     // never mapped a check heals to the detected Claude mapping on reconcile, while
     // a deliberate mapping is drift and is kept.
     it("fills an empty reviewBotChecks placeholder with the detected claude mapping", () => {

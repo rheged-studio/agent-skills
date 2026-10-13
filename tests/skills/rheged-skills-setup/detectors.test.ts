@@ -1,6 +1,6 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). The two boolean
 // detectors return repo-independent constants, so a dummy repoRoot is fine —
-// they never touch the filesystem. Regression cover for A-459: before this,
+// they never touch the filesystem. Regression cover for R-459: before this,
 // triage-pr's `promoteOnGreen` / `replyOnAccept` had no detector and were
 // reported `needs-manual-input` on every `initialise-skills` run.
 import {
@@ -42,7 +42,7 @@ describe("createDetectors — triage-pr boolean defaults", () => {
     expect(detect("humanEnvelope")).toEqual({ value: false });
   });
 
-  // A-1151: send-it's Step 11 triage chain. Fixed `true` rather than "is triage-pr
+  // R-1151: send-it's Step 11 triage chain. Fixed `true` rather than "is triage-pr
   // vendored?" — Step 11 soft-skips with a warning when the sibling is absent.
   it("infers triage=true (send-it chains into triage-pr by default)", () => {
     const { detect, has } = detectorsFor();
@@ -69,7 +69,7 @@ describe("createDetectors — triage-pr boolean defaults", () => {
   });
 });
 
-// A-567 / A-1204: triage-pr follow-up capture defaults — label + state stay
+// R-567 / R-1204: triage-pr follow-up capture defaults — label + state stay
 // confident structural defaults; project is required when capture is on
 // (linearTeamName supplied via facts) and otherwise stays empty.
 describe("createDetectors — triage-pr follow-up capture defaults", () => {
@@ -107,7 +107,7 @@ describe("createDetectors — triage-pr follow-up capture defaults", () => {
   });
 });
 
-// Regression cover for A-460: packageRoots must signal "couldn't detect" (null)
+// Regression cover for R-460: packageRoots must signal "couldn't detect" (null)
 // when there's no workspace manifest and none of the default candidates exist,
 // rather than reporting a fabricated `["apps","packages","services"]`.
 describe("createDetectors — packageRoots", () => {
@@ -144,7 +144,7 @@ describe("createDetectors — packageRoots", () => {
   });
 });
 
-// A-461: affected_packages is monorepo-only. The detector mirrors the
+// R-461: affected_packages is monorepo-only. The detector mirrors the
 // packageRoots workspace signal so single-package repos get `false` (field
 // omitted) and genuine monorepos get `true`. It always emits a value (never
 // null) so it is never flagged needs-manual-input.
@@ -190,7 +190,7 @@ jobs:
 `;
 }
 
-// A-2453: map `claude` to the estate Claude review check when the repo calls the
+// R-2453: map `claude` to the estate Claude review check when the repo calls the
 // shared reusable workflow, so a clean review settles on the terminal check.
 describe("createDetectors — reviewBotChecks", () => {
   let directory: string;
@@ -269,7 +269,7 @@ describe("createDetectors — reviewBotChecks", () => {
     expect(detectClaudeReviewCallerJob(directory)).toBeNull();
   });
 
-  // A-2755: map `coderabbitai` to its `CodeRabbit` commit status when the repo
+  // R-2755: map `coderabbitai` to its `CodeRabbit` commit status when the repo
   // configures CodeRabbit, so the settle waits for the review, not its
   // "Currently processing" placeholder.
   it("maps coderabbitai to its CodeRabbit status when .coderabbit.yaml exists", () => {

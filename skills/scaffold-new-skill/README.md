@@ -3,7 +3,7 @@
 Generate a spec-compliant skeleton for a new `skills/<name>/` bundle in the
 agent-skills repo, so new skills start consistent with the bundle contract and
 stop drifting. Every artefact the generator writes passes the same
-`pnpm validate:skills` gate (ADR-0001, A-364) the moment it lands.
+`pnpm validate:skills` gate (ADR-0001, R-364) the moment it lands.
 
 ## Install
 

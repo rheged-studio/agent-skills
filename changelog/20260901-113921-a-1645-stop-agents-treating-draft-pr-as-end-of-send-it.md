@@ -11,7 +11,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-1645
+  - R-1645
 stats:
   loc_added: 127
   loc_removed: 59
@@ -28,7 +28,7 @@ version: 1.6.1
   wording that read as the _step_ being optional. A default run now states
   **done criteria** up front and a **completion gate** at Step 11: reporting a
   draft PR URL as the final outcome without `ℹ️ triage chain skipped …` and a
-  reason is a failed run ([A-1645](https://linear.app/rheged-studio/issue/A-1645)).
+  reason is a failed run ([R-1645](https://linear.app/rheged-studio/issue/R-1645)).
 
 - **`triage-pr` (0.13.1):** replace "complements `/send-it` (which **opens** the
   draft PR)" with language that `/send-it` opens or updates the PR and then

@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Regression cover
-// for A-460: the fallback used to return a hard-coded `["apps","packages",
+// for R-460: the fallback used to return a hard-coded `["apps","packages",
 // "services"]` regardless of what existed on disk, so a repo with no workspace
 // manifest "detected" three phantom roots.
 import {
@@ -107,7 +107,7 @@ describe("workspace pure parsers", () => {
     expect(parseWorkspaceGlobs(yaml)).toEqual(["apps/*", "packages/ui"]);
   });
 
-  it("parseWorkspaceGlobs strips quotes and keeps tab-indented list items (A-465)", () => {
+  it("parseWorkspaceGlobs strips quotes and keeps tab-indented list items (R-465)", () => {
     // Tab-indented items must not be read as a new top-level key ending the
     // block, and surrounding quotes are stripped.
     const yaml = "packages:\n\t- 'apps/*'\n\t- \"packages/*\"\n";

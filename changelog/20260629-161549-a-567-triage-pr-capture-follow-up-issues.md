@@ -13,7 +13,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-567
+  - R-567
 stats:
   files_changed: 13
   loc_added: 304
@@ -23,7 +23,7 @@ stats:
 
 ## Added
 
-- **Defer out-of-scope findings into tracked Linear issues ([A-567](https://linear.app/rheged-studio/issue/A-567)).**
+- **Defer out-of-scope findings into tracked Linear issues ([R-567](https://linear.app/rheged-studio/issue/R-567)).**
   `triage-pr` Phase B can now flag any valid-but-out-of-scope review finding — per-thread
   **or** issue-level — as a follow-up candidate. After the thread loop converges, a new capture
   step (SKILL.md Step 10) surfaces every candidate as a single batch and, **only on explicit

@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-06-27
-- **Tracking:** [A-534](https://linear.app/rheged-studio/issue/A-534)
+- **Tracking:** [R-534](https://linear.app/rheged-studio/issue/R-534)
 - **Supersedes:** —
 - **Superseded by:** —
 
@@ -16,7 +16,7 @@ inside it. To honour that, load-bearing logic that several bundles need has been
 
 - **issue-key regex / branch→issue-key extraction** — the correct, tested
   construction lives in `changelog/scripts/add-links.mjs` (`ISSUE_RE`); `linear-sync`
-  and `cleanup-repo` re-derived it in prose and shipped the naive-join bug. A-539 was
+  and `cleanup-repo` re-derived it in prose and shipped the naive-join bug. R-539 was
   the interim fix (it pointed both at the canonical impl) but left the code copied.
 - **`detectBaseBranch`** — byte-identical in `preflight/scripts/lib/scope.mjs` and
   `initialise-skills/scripts/lib/git.mjs`, each carrying a "keep the two in sync"
@@ -24,7 +24,7 @@ inside it. To honour that, load-bearing logic that several bundles need has been
 - Other dupes in the same shape: `normaliseBot` (triage-pr), base-branch/workspace
   detection, the `assertGitRepo` destructive-safety primitive.
 
-A-466 catalogued the duplication but did not settle the mechanism. This ADR settles
+R-466 catalogued the duplication but did not settle the mechanism. This ADR settles
 it and migrates the first two dupes as proof.
 
 ## Decision
@@ -94,7 +94,7 @@ other bundle edit. The shared `lib/` itself carries no version.
   are gone.
 - **Adding a shared helper** is now: write `lib/<file>.mjs`, add a manifest row, run
   `pnpm vendor:sync`, bump the touched bundles. `pnpm vendor:check` guards the rest.
-- **Pairs with scaffold-new-skill (A-535):** a generated skill can emit the vendored
+- **Pairs with scaffold-new-skill (R-535):** a generated skill can emit the vendored
   helpers it needs straight from the manifest.
 
 ## Out of scope

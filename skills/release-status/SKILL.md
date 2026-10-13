@@ -44,7 +44,7 @@ doing. The two never call each other. This skill may reference `send-it` in pros
 (e.g. how `/send-it` composes a Conventional-Commit PR title from branch
 commits), but it never runs it. Version preview itself reads **commits since the
 last tag** (merge commits excluded) — the same per-commit signal release-please
-uses under multi-commit history (A-824) — not merged PR titles.
+uses under multi-commit history (R-824) — not merged PR titles.
 
 ## What it inspects
 

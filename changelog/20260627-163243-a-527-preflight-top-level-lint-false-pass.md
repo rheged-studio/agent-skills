@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-527
+  - R-527
 stats:
   files_changed: 5
   loc_added: 68
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Fixed
 
-- **`preflight` no longer silently skips top-level lintable code ([A-527](https://linear.app/rheged-studio/issue/A-527)).**
+- **`preflight` no longer silently skips top-level lintable code ([R-527](https://linear.app/rheged-studio/issue/R-527)).**
   In `classifyChangedFiles`, a changed code file outside `scripts/`, outside every
   detected workspace, and not the root ESLint config set `codeChanged = true` but
   fell through into no ESLint bucket. Preflight then logged that it ran scoped

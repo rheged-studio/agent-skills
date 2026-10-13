@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// initialise-skills CLI (A-409).
+// initialise-skills CLI (R-409).
 //
 // Scans a host repo and reconciles every installed skill's config.json with
 // detected facts. Deterministic git/fs detection + a three-way merge live here
@@ -16,7 +16,7 @@
 // `--set` pushes an arbitrary value a detector wouldn't produce into a named
 // skill's config.json — validated against that skill's config.example.json key
 // set, applied through the same merge/serialise path (dry-run first, --write to
-// commit), so key order + formatting are preserved (A-704).
+// commit), so key order + formatting are preserved (R-704).
 //
 // Exit codes: 0 success; 2 usage/IO error.
 
@@ -198,7 +198,7 @@ export function acceptedDriftFor(skill, acceptDrift, repoRoot) {
 }
 
 /**
- * The A-706 clobber-restore message suffix, worded on what actually happened —
+ * The R-706 clobber-restore message suffix, worded on what actually happened —
  * not just the mode. A `--write` whose `git checkout` failed (permissions, disk,
  * git error) restores nothing (`restoredCount === 0`), so it must NOT claim
  * success: the reconcile that follows would then regress the values. Pure.
@@ -272,8 +272,8 @@ async function main() {
 
   let skills = discoverSkills(options.skillsDir);
 
-  // A-706: a `skills add --copy` re-vendor clobbers each tracked config.json
-  // (agent-skills ships none — A-615), so restore them from HEAD *before*
+  // R-706: a `skills add --copy` re-vendor clobbers each tracked config.json
+  // (agent-skills ships none — R-615), so restore them from HEAD *before*
   // reconciling — otherwise the merge runs against the wiped/example values and
   // silently regresses every no-detector key. --write restores; a dry-run/review
   // only warns. Re-discover after a restore so the reconcile reads the recovered
@@ -293,7 +293,7 @@ async function main() {
         clobbered.length,
         restored.length,
         options.write,
-      )} (A-706):`,
+      )} (R-706):`,
     );
     for (const path of clobbered) {
       console.error(`  ${path}`);
@@ -385,7 +385,7 @@ async function main() {
     return;
   }
 
-  // Mutations outside config.json on the root .gitignore (A-569 / A-812):
+  // Mutations outside config.json on the root .gitignore (R-569 / R-812):
   // 1. Ensure preflight's scratch output is ignored when preflight is installed.
   // 2. Strip erroneous skill-config ignore rules so consumers can commit
   //    resolved config.json (never touches source-repo `skills/*/config.json`).
@@ -402,7 +402,7 @@ async function main() {
     } catch (error) {
       // The top-level main() catch already funnels this to exit(2); name the
       // .gitignore write specifically so the failure is diagnosable, mirroring
-      // the per-skill config write handler above (A-583). The per-skill writes
+      // the per-skill config write handler above (R-583). The per-skill writes
       // are idempotent, so a re-run after fixing the I/O cause is safe.
       console.error(
         `${CLI_NAME}: could not reconcile .gitignore: ${error.message}`,
@@ -428,7 +428,7 @@ async function main() {
     process.exit(2);
   }
 
-  // Emit/refresh the consumer's .claude/skills.lock inventory (A-616). A full walk
+  // Emit/refresh the consumer's .claude/skills.lock inventory (R-616). A full walk
   // of every installed bundle (not the config-filtered `skills` list), gated on at
   // least one bundle being present so a skill-less repo gets no spurious file. The
   // source/ref provenance is facts-only — supplied via stdin, preserved from any

@@ -12,10 +12,10 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-469
-  - A-461
-  - A-464
-  - A-465
+  - R-469
+  - R-461
+  - R-464
+  - R-465
 stats:
   files_changed: 34
   loc_added: 1406
@@ -26,7 +26,7 @@ version: 1.2.0
 
 ## Added
 
-- **`affectedPackages` config flag for the `changelog` skill ([A-461](https://linear.app/goose-and-hobbes/issue/A-461)).** A new
+- **`affectedPackages` config flag for the `changelog` skill ([R-461](https://linear.app/rheged-studio/issue/R-461)).** A new
   boolean in the changelog `config.json` (default `false`) decides whether the
   `affected_packages` field is emitted at all. Single-package repos leave it off
   and get clean entries — the field was write-only and redundant there — while
@@ -35,14 +35,14 @@ version: 1.2.0
   (`["packages"]`), which a length check would mis-gate. `initialise-skills`
   derives the flag from the same workspace signal as `packageRoots`, so monorepos
   opt in automatically on reconcile.
-- **Fleet deployment runbook and wipe helper ([A-464](https://linear.app/goose-and-hobbes/issue/A-464)).**
+- **Fleet deployment runbook and wipe helper ([R-464](https://linear.app/rheged-studio/issue/R-464)).**
   `docs/fleet-deployment.md` documents the repeatable
   wipe→install→reconcile→verify mechanism every per-repo skill migration shares —
   the install-set per repo type, tag-pinning, and the re-install/upgrade path.
   `infrastructure/scripts/fleet-wipe.mjs` previews and removes a target repo's
   bespoke command shims (safe by default: it never deletes vendored skill
   bundles, only lists them for manual review; ships a `--self-test`).
-- **Test coverage for the previously-untested bundled skill scripts ([A-465](https://linear.app/goose-and-hobbes/issue/A-465)).**
+- **Test coverage for the previously-untested bundled skill scripts ([R-465](https://linear.app/rheged-studio/issue/R-465)).**
   New vitest suites cover `scope.mjs`, `report.mjs`, `discover.mjs`, the
   `preflight-changelog-ci.mjs` version helpers, the `initialise.mjs` argument/drift
   helpers, `lint-fix.mjs` command planning, and `preflight.mjs` summary assembly,
@@ -50,11 +50,11 @@ version: 1.2.0
 
 ## Changed
 
-- **`set-affected-packages.mjs` no-ops when `affectedPackages` is off ([A-461](https://linear.app/goose-and-hobbes/issue/A-461)).**
+- **`set-affected-packages.mjs` no-ops when `affectedPackages` is off ([R-461](https://linear.app/rheged-studio/issue/R-461)).**
   In both normal and `--check` modes it exits 0 without rewriting, so CI never
   demands the field on a single-package repo. This repo sets
   `affectedPackages: false` — so this very entry carries no `affected_packages`.
-- **Pure logic extracted to exports behind the CLI guard ([A-465](https://linear.app/goose-and-hobbes/issue/A-465)).** The version
+- **Pure logic extracted to exports behind the CLI guard ([R-465](https://linear.app/rheged-studio/issue/R-465)).** The version
   helpers in `preflight-changelog-ci.mjs`, `planFixCommands` in `lint-fix.mjs`,
   `buildSummary` in `preflight.mjs`, and the argument/drift helpers in
   `initialise.mjs` are now exported and importable without running the CLI, with

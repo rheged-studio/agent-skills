@@ -46,12 +46,12 @@ function placeholderEntry(): string {
     "commit:",
     "category: fix",
     "breaking: false",
-    'issues: ["A-123"]',
+    'issues: ["R-123"]',
     "---",
     "",
     "## Fixed",
     "",
-    "- A thing for A-123.",
+    "- A thing for R-123.",
     "",
   ].join("\n");
 }
@@ -73,13 +73,13 @@ describe("finaliseEntry", () => {
       loc_removed: 2,
     });
     expect(content).toContain(
-      "[A-123](https://linear.app/rheged-studio/issue/A-123)",
+      "[R-123](https://linear.app/rheged-studio/issue/R-123)",
     );
   });
 
-  it("re-enriches when stats is present but the commits child is missing (A-579)", () => {
-    // An entry finalised between stats existing (A-380) and stats.commits
-    // (A-560): every other post-merge field is set and stats is populated, but
+  it("re-enriches when stats is present but the commits child is missing (R-579)", () => {
+    // An entry finalised between stats existing (R-380) and stats.commits
+    // (R-560): every other post-merge field is set and stats is populated, but
     // commits is absent. The gate must still treat it as enrichable so the
     // resolver fills commits — before version-stamping makes it permanent.
     const raw = [
@@ -97,12 +97,12 @@ describe("finaliseEntry", () => {
       "  files_changed: 3",
       "  loc_added: 10",
       "  loc_removed: 2",
-      'issues: ["A-123"]',
+      'issues: ["R-123"]',
       "---",
       "",
       "## Fixed",
       "",
-      "- A thing for A-123.",
+      "- A thing for R-123.",
       "",
     ].join("\n");
     let called = false;
@@ -149,7 +149,7 @@ describe("finaliseEntry", () => {
     expect(parseFrontmatter(out as string).data.version).toBe("9.9.9");
   });
 
-  it("stores mergeCommit.oid (not the feature tip) as commit for a merge-merge PR (A-825)", () => {
+  it("stores mergeCommit.oid (not the feature tip) as commit for a merge-merge PR (R-825)", () => {
     const mergeOid = "cafebab1234567890abcdef1234567890abcd";
     const mergeMergePr: ResolvedPr = {
       ...PR,
@@ -303,7 +303,7 @@ describe("makeResolver", () => {
     expect(resolved?.changedFiles).toBeNull();
   });
 
-  it("uses mergeCommit.oid as mergeSha for a merge-merge PR (A-825)", () => {
+  it("uses mergeCommit.oid as mergeSha for a merge-merge PR (R-825)", () => {
     const mergeOid = "deadbeef1234567890abcdef1234567890abcd";
     const { run } = makeRunner({
       "gh api": () =>

@@ -3,7 +3,7 @@
 
 // Canonical base-branch detection — the single source of truth vendored into
 // every bundle that resolves the repo's default branch (preflight,
-// initialise-skills). See ADR-0004 (A-534): bundles stay independently
+// initialise-skills). See ADR-0004 (R-534): bundles stay independently
 // installable, so `pnpm vendor:sync` copies this file into each consumer's
 // `scripts/lib/vendor/` rather than them importing across bundles.
 //

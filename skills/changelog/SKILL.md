@@ -87,7 +87,7 @@ filename, rewrite the rest. Otherwise you are in **create mode**.
 (`git fetch origin <base>`) so the diff is accurate — skip the fetch if the
 caller already did it (e.g. a ship flow fetches in its preflight step).
 
-### Multi-commit and merge-commit safety (A-825)
+### Multi-commit and merge-commit safety (R-825)
 
 Authoring and post-merge enrichment are safe across **multi-commit feature
 branches** and **merge merges** (as well as squash/rebase merges):
@@ -199,7 +199,7 @@ node skills/changelog/scripts/set-affected-packages.mjs --check   # current bran
 node skills/changelog/scripts/add-links.mjs --check               # ALL entries in the changelog dir
 ```
 
-Both enrichers are **branch-scoped by default** (A-603): `add-links.mjs` with no
+Both enrichers are **branch-scoped by default** (R-603): `add-links.mjs` with no
 arguments rewrites only the entry/entries whose `branch:` frontmatter matches the
 current git branch, so authoring a new entry never churns unrelated, already-merged
 ones. Two modes still scan the **whole** directory: `--all` (a deliberate
@@ -258,7 +258,7 @@ shared-workflows `reusable-changelog-enrich.yml` (`mode: finalise` for npm targe
 result back as `road-runner-bot[bot]`; CI `validate` and the completeness gate call
 `changelog-core validate` / `changelog-core check-completeness`. This replaced the old
 release-orchestrator inline finalise step and the retired daily `enrich-changelogs.yml`
-cron (A-801) — **no central orchestrator or cron runs these any more.**
+cron (R-801) — **no central orchestrator or cron runs these any more.**
 
 The equivalent bundled scripts below are the original zero-dependency implementation.
 They remain **published skill source** (and are still `--help`/`--self-test`ed here),

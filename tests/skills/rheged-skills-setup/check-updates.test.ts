@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure
-// diff transforms of check-updates (A-616): semver-core comparison and the
+// diff transforms of check-updates (R-616): semver-core comparison and the
 // lock-vs-target classification. main()/git I/O stay behind the isCliEntry() guard,
 // so importing here runs nothing.
 import {
@@ -166,7 +166,7 @@ describe("restrictToAllowlist", () => {
     ).toEqual({ "send-it": "1.0.0" });
   });
 
-  it("scoping both sides drops an upstream-only internal skill from `added` (A-741)", () => {
+  it("scoping both sides drops an upstream-only internal skill from `added` (R-741)", () => {
     // scaffold-new-skill ships in every source checkout but no consumer installs it,
     // so unscoped it is a perpetual `added` update that wedges the fan-out verify.
     const lockSkills = { "send-it": "1.0.0" };

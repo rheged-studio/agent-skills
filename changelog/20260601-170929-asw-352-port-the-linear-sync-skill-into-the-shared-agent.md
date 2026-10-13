@@ -15,7 +15,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - ASW-352
+  - R-352
 stats:
   files_changed: 7
   loc_added: 276

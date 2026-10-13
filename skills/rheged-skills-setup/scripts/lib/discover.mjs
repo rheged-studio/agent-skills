@@ -1,4 +1,4 @@
-// Locate the sibling skill bundles installed alongside this one (A-409).
+// Locate the sibling skill bundles installed alongside this one (R-409).
 //
 // Where bundles live is install-dependent: `skills add` may vendor them under
 // `.claude/skills/`, `.agents/skills/`, or a repo's own `skills/`. We resolve the

@@ -1,5 +1,5 @@
 # Non-secret repo policy consumed by CI and Release workflows via
-# Loaded by reusable-load-repo-config.yml@v1 — see CLAUDE.md (A-779).
+# Loaded by reusable-load-repo-config.yml@v1 — see CLAUDE.md (R-779).
 #
 # NOTE: Workflow triggers (on.push.branches) cannot reference this file at runtime;
 # keep defaultBranch in sync with branches listed in release.yml.
@@ -7,12 +7,12 @@
 defaultBranch: main
 nodeVersionFile: .nvmrc
 npmRegistryUrl: https://registry.npmjs.org
-# Secondary publish target (A-323). GitHub Packages' npm registry; npmScope
+# Secondary publish target (R-323). GitHub Packages' npm registry; npmScope
 # must equal the owning GitHub org so setup-node scopes .npmrc correctly.
 npmScope: "@rheged-studio"
 githubPackagesRegistryUrl: https://npm.pkg.github.com
 
-# Changelog write-back identity (A-1927 / A-1953). Feeds reusable-changelog-enrich
+# Changelog write-back identity (R-1927 / R-1953). Feeds reusable-changelog-enrich
 # via the config job's outputs in pkg-release.yml. The bot must match the
 # protected-branch bypass actor on main; the private key stays an org secret
 # (ROADRUNNER_PRIVATE_KEY, passed through `secrets: inherit`).

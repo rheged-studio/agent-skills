@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-541
+  - R-541
 stats:
   files_changed: 10
   loc_added: 569
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Added
 
-- **`--help` and `--self-test` on every changelog script ([A-541](https://linear.app/rheged-studio/issue/A-541)).**
+- **`--help` and `--self-test` on every changelog script ([R-541](https://linear.app/rheged-studio/issue/R-541)).**
   All six scripts under `skills/changelog/scripts/` — `add-links`,
   `check-changelog-completeness`, `finalise-changelog`, `preflight-changelog-ci`,
   `set-affected-packages`, and `validate-changelog` — now accept `--help` / `-h`
@@ -41,7 +41,7 @@ version: 1.2.0
   scripts and said finalisation was "owned by the orchestrator … not invoked here"
   — but `finalise-changelog.mjs`, `check-changelog-completeness.mjs`,
   `lib/enrich.mjs`, and `lib/stamp.mjs` ship **inside this bundle** and are wired
-  into the consumer's `package.json` + CI (post-[A-369](https://linear.app/rheged-studio/issue/A-369)). The section now splits the
+  into the consumer's `package.json` + CI (post-[R-369](https://linear.app/rheged-studio/issue/R-369)). The section now splits the
   scripts into **authoring** (run by the skill) and **finalisation / CI gate** (run
   by the consumer's `package.json` scripts / CI / the release orchestrator), making
   clear which actor runs each, so an adopter wiring the orchestrator/CI gate

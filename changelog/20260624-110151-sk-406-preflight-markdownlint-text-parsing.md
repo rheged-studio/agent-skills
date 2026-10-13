@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-406
+  - R-406
 affected_packages:
   - infrastructure
 stats:

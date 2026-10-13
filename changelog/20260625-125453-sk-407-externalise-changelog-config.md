@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-407
+  - R-407
 affected_packages:
   - infrastructure
 stats:

@@ -1,9 +1,9 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure,
-// git-free base-ref candidate logic (A-532): derive-bump / check-skill-bumps must
+// git-free base-ref candidate logic (R-532): derive-bump / check-skill-bumps must
 // honour config.json's baseBranch, not the hardcoded origin/main → main chain, so a
 // consumer whose trunk is `develop` diffs against the right base. The git-backed
 // resolveBaseRef itself needs a live repo and is exercised by the skill end-to-end.
-// Also asserts `git log --no-merges` for the dual merge policy (A-1176).
+// Also asserts `git log --no-merges` for the dual merge policy (R-1176).
 import {
   baseRefCandidates,
   gitLogRangeArgs,

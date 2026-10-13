@@ -32,7 +32,7 @@ belong to another branch or worktree are flagged and never staged.
 ## Notes
 
 - Group by **intent**, not component/package boundaries (per-component splitting
-  is parked — A-374).
+  is parked — R-374).
 - Author commit prose in the repo's documented language (British English across
   this estate); mark breaking changes honestly with `!` / `BREAKING CHANGE:`.
 - Keep each Conventional Commits header (the entire first line) at or under 72

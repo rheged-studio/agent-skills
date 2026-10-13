@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-617
+  - R-617
 stats:
   files_changed: 4
   loc_added: 1164
@@ -24,11 +24,11 @@ version: 1.2.0
 ## Added
 
 The final workstream (WS3) of the cross-repo skill-update efficiency effort. WS1
-([A-615](https://linear.app/rheged-studio/issue/A-615)) made each `config.json`
-locally-generated; WS2 ([A-616](https://linear.app/rheged-studio/issue/A-616))
+([R-615](https://linear.app/rheged-studio/issue/R-615)) made each `config.json`
+locally-generated; WS2 ([R-616](https://linear.app/rheged-studio/issue/R-616))
 added `.claude/skills.lock` + `check-updates.mjs`. This adds the single-repo
 **update** pipeline the private release-orchestrator's fan-out
-([A-713](https://linear.app/rheged-studio/issue/A-713)) calls once per consumer.
+([R-713](https://linear.app/rheged-studio/issue/R-713)) calls once per consumer.
 
 **`infrastructure/scripts/fleet-update.mjs` — install → restore → reconcile →
 verify (no wipe).** Parameterised by one repo's install profile (a JSON contract
@@ -38,7 +38,7 @@ supplied on `--profile <file>` or stdin), it:
    agent-skills checkout it runs inside;
 2. **restores every `config.json` the `--copy` re-vendor clobbers** from the
    consumer's trunk (`git checkout HEAD -- …`), baking in the
-   [A-706](https://linear.app/rheged-studio/issue/A-706) workaround so
+   [R-706](https://linear.app/rheged-studio/issue/R-706) workaround so
    operator-set no-detector keys (`promoteOnGreen`, `linearTeamName`, …) survive.
    The current skills.sh CLI **overwrites** the tracked config rather than
    deleting it, so the detection catches both a delete and a modification
@@ -57,6 +57,6 @@ companion (`infrastructure/tests/fleet-update.test.ts`) wires that core into CI.
 **Install-profile schema** — the documented input contract (`repo`, `skills`,
 `agents`, `repoType`, `facts`) is set out in
 [`docs/fleet-deployment.md`](../docs/fleet-deployment.md), so the orchestrator's
-unified manifest ([A-715](https://linear.app/rheged-studio/issue/A-715)) can
+unified manifest ([R-715](https://linear.app/rheged-studio/issue/R-715)) can
 populate one profile per repo. The script **holds no repo list** — private repo
 names never surface in this public repo's CI.

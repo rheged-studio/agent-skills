@@ -6,7 +6,7 @@ branch: a-797-phase-3-roll-out-in-repo-enricher-to-agent-skills-npm
 category: chore
 breaking: false
 issues:
-  - A-797
+  - R-797
 merged_at: '2026-07-10T14:30:22Z'
 commit: 344b516
 pr: 123
@@ -20,12 +20,12 @@ version: 1.2.5
 
 ## Changed
 
-Migrate `agent-skills` onto the in-repo post-merge enricher (Phase 3 · [A-797](https://linear.app/rheged-studio/issue/A-797)),
+Migrate `agent-skills` onto the in-repo post-merge enricher (Phase 3 · [R-797](https://linear.app/rheged-studio/issue/R-797)),
 following the eslint-config canary:
 
 - Add `@acme-skunkworks/changelog-core` and point CI `validate:changelog` /
   completeness at it.
-- Fold `reusable-changelog-enrich.yml` (`mode: finalise`, pinned at [A-821](https://linear.app/rheged-studio/issue/A-821) SHA)
+- Fold `reusable-changelog-enrich.yml` (`mode: finalise`, pinned at [R-821](https://linear.app/rheged-studio/issue/R-821) SHA)
   into `pkg-release.yml` with `secrets: inherit` for road-runner-bot write-back.
 - Keep `skills/changelog/scripts/*` as the published skill source — CI no longer
   shells out to them for validate/completeness.

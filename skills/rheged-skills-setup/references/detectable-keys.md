@@ -10,9 +10,9 @@ detector serves every skill that uses a key. A key found in a skill's
 | `issueKeys` | changelog, cleanup-repo, `linear-sync`, triage-pr | Leading `<KEY>-<num>` (uppercased; single-letter keys like `A` accepted) from the **most recently committed** branch — `git for-each-ref --sort=-committerdate` — so a renamed team yields its current key, not the historical union; or supplied facts | `needs-manual-input` when no branches match |
 | `linearTeamName` | cleanup-repo, `linear-sync`, triage-pr | Supplied via stdin `facts` (Linear MCP `list_teams`) | `needs-manual-input` |
 | `linearWorkspaceSlug` | changelog | Supplied via stdin `facts` (Linear MCP) | `needs-manual-input` |
-| `changelog` | send-it | `true` when a `changelog/` directory exists at the repo root; `false` otherwise (no changelog flow). Skill-presence alone does **not** enable it — a repo that vendors the `changelog` skill but keeps no `changelog/` dir stays `false` (A-570) | `true` |
+| `changelog` | send-it | `true` when a `changelog/` directory exists at the repo root; `false` otherwise (no changelog flow). Skill-presence alone does **not** enable it — a repo that vendors the `changelog` skill but keeps no `changelog/` dir stays `false` (R-570) | `true` |
 | `changelogDir` | changelog | Structural default | `changelog` |
-| `packageRoots` | changelog | `pnpm-workspace.yaml` `packages:` globs → top dirs; else root `package.json` `workspaces` field; else existing `apps` / `packages` / `services` directories on disk | Example placeholder `["apps", "packages", "services"]` kept when undetectable; **not** flagged `needs-manual-input` when `affectedPackages` is `false` (A-813) |
+| `packageRoots` | changelog | `pnpm-workspace.yaml` `packages:` globs → top dirs; else root `package.json` `workspaces` field; else existing `apps` / `packages` / `services` directories on disk | Example placeholder `["apps", "packages", "services"]` kept when undetectable; **not** flagged `needs-manual-input` when `affectedPackages` is `false` (R-813) |
 | `fallbackPackage` | changelog | Structural default | `infrastructure` |
 | `affectedPackages` | changelog | `true` when a workspace config is detected (same signal as `packageRoots`); `false` otherwise — so single-package repos omit the redundant `affected_packages` field | `false` |
 | `mainBranch` | cleanup-repo | Same as `baseBranch` (the detected default branch) | `main` |
@@ -20,17 +20,17 @@ detector serves every skill that uses a key. A key found in a skill's
 | `shippablePaths` | send-it | Root `package.json` `files` field (paths npm ships), else detected package roots | `[]` |
 | `shippableManifestKeys` | send-it | Fixed | `["name", "version", "files", "publishConfig"]` |
 | `bundleVersioning` | send-it | Present only when the repo ships multiple skill bundles (a `skills/`-style dir with ≥1 `SKILL.md` subdir) | omitted otherwise |
-| `triage` | send-it | Fixed (chain into `triage-pr` once the PR is open — send-it Step 11). Not keyed off `triage-pr` being vendored: Step 11 soft-skips with a warning when the sibling is absent (A-1151) | `true` |
+| `triage` | send-it | Fixed (chain into `triage-pr` once the PR is open — send-it Step 11). Not keyed off `triage-pr` being vendored: Step 11 soft-skips with a warning when the sibling is absent (R-1151) | `true` |
 | `reviewBots` | triage-pr | Fixed | `["claude", "coderabbitai"]` |
 | `maxCiRounds` | triage-pr | Fixed | `5` |
 | `maxReviewRounds` | triage-pr | Fixed (Phase B re-review rounds after apply pushes) | `2` |
-| `reviewBotChecks` | triage-pr | `{ "claude": { "name": "<job id>", "producer": "github-actions" } }` when a `.github/workflows/*.yml` job calls the estate `reusable-claude-code-review.yml` (the caller job id is the check's leading `<job id> / claude-review` segment), so a clean Claude review settles on its terminal check (A-2453); plus `"coderabbitai": { "name": "CodeRabbit", "producer": "coderabbitai" }` when a root `.coderabbit.yaml`/`.yml` exists and doesn't set `commit_status: false`, so the settle waits for CodeRabbit's review rather than its "Currently processing" placeholder (A-2755); `{}` when neither applies. An existing `{}` equals the example placeholder, so it is filled on reconcile; any other mapping is a deliberate edit (drift) and is kept | `{}` |
+| `reviewBotChecks` | triage-pr | `{ "claude": { "name": "<job id>", "producer": "github-actions" } }` when a `.github/workflows/*.yml` job calls the estate `reusable-claude-code-review.yml` (the caller job id is the check's leading `<job id> / claude-review` segment), so a clean Claude review settles on its terminal check (R-2453); plus `"coderabbitai": { "name": "CodeRabbit", "producer": "coderabbitai" }` when a root `.coderabbit.yaml`/`.yml` exists and doesn't set `commit_status: false`, so the settle waits for CodeRabbit's review rather than its "Currently processing" placeholder (R-2755); `{}` when neither applies. An existing `{}` equals the example placeholder, so it is filled on reconcile; any other mapping is a deliberate edit (drift) and is kept | `{}` |
 | `deferNonBlocking` | triage-pr | Fixed (impact gate: defer valid in-scope but non-blocking findings) | `true` |
 | `humanEnvelope` | triage-pr | Fixed (unattended Phase B; set `true` to halt for disposition approval) | `false` |
 | `reviewIdleMinutes` | triage-pr | Fixed (hybrid review-settle idle window) | `10` |
 | `reviewWaitMaxMinutes` | triage-pr | Fixed (hybrid review-settle hard cap) | `20` |
 | `followUpLabel` | triage-pr | Fixed (opt-in follow-up capture) | `"follow-up"` |
-| `followUpProject` | triage-pr | Supplied via stdin `facts.followUpProject`; **fallback catch-all** for a follow-up whose PR has no linked Linear issue to file it under as a sub-issue (A-1541 / A-2756). Required when capture is on (`linearTeamName` set) | `needs-manual-input` when team is set and no fact; `""` when capture is off |
+| `followUpProject` | triage-pr | Supplied via stdin `facts.followUpProject`; **fallback catch-all** for a follow-up whose PR has no linked Linear issue to file it under as a sub-issue (R-1541 / R-2756). Required when capture is on (`linearTeamName` set) | `needs-manual-input` when team is set and no fact; `""` when capture is off |
 | `followUpState` | triage-pr | Fixed (opt-in follow-up capture; initial state for created issues) | `"Backlog"` |
 | `workspaces` | preflight | n/a — preflight self-detects | never written |
 
@@ -51,7 +51,7 @@ detector serves every skill that uses a key. A key found in a skill's
 - **`issueKeys` prefers the current key, not the historical union.** Detection reads
   the prefix of the most recently committed branch, so a repo whose Linear team was
   renamed (…→ASW→SK→A) yields `["A"]` rather than every prefix on stale branches
-  (A-556). Pass `facts.issueKeys` to override when the heuristic is wrong (e.g. a
+  (R-556). Pass `facts.issueKeys` to override when the heuristic is wrong (e.g. a
   fresh repo with no keyed branches).
 - **`issueKeys` detection never unions keys — multi-key repos need `--set`.** A
   repo carrying several teams' branches (e.g. `c-` Cadogan, `r-` Rheged and legacy
@@ -64,7 +64,7 @@ detector serves every skill that uses a key. A key found in a skill's
 - **Structural defaults can read as a placeholder.** When an existing value equals
   both the example placeholder and the structural default, the key is `unchanged`
   (not flagged), because the detector emits that same default confidently.
-- **`packageRoots` is gated by `affectedPackages` (A-813).** On a single-package
+- **`packageRoots` is gated by `affectedPackages` (R-813).** On a single-package
   host the roots detector returns null, but with `affectedPackages: false` the
   merge reclassifies `packageRoots` from `needs-manual-input` to `unchanged` and
   leaves the example placeholder in place. That placeholder is unused at runtime

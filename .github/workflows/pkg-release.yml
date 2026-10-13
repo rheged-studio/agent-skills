@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  # No workflow_dispatch (A-326). Re-run a failed release via "Re-run jobs" on
+  # No workflow_dispatch (R-326). Re-run a failed release via "Re-run jobs" on
   # the original push run.
 
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 # Defence-in-depth: deny default token permissions; each job declares only what
-# it needs (ASW-313).
+# it needs (R-313).
 permissions: {}
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
     with:
       npm-scope: ${{ needs.config.outputs.npm_scope }}
       # Bundle-only package (ships skills.sh bundles) — no build script, so skip
-      # the verification build (A-624).
+      # the verification build (R-624).
       build: false
     permissions:
       # Required by the reusable release workflow to create releases and tags.
@@ -41,9 +41,9 @@ jobs:
       # Required for artifact attestations.
       attestations: write
 
-  # Post-merge changelog enrich / finalise via changelog-core (A-797 / A-821).
+  # Post-merge changelog enrich / finalise via changelog-core (R-797 / R-821).
   # The write-back bot/App identity comes from infrastructure/repo-config.yaml
-  # via the config job (A-1927 / A-1953); secrets: inherit passes
+  # via the config job (R-1927 / R-1953); secrets: inherit passes
   # ROADRUNNER_PRIVATE_KEY for the App-token mint. Runs independently of
   # `release` — both read the bumped version from the committed package.json;
   # no publish artifact is needed.

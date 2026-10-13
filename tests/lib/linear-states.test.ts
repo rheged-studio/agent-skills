@@ -1,6 +1,6 @@
 // Tests the canonical repo-root `lib/linear-states.mjs` — the per-issue-team
 // state resolution the linear-sync / cleanup-repo / send-it prose mirrors
-// (A-2682). One repo configured with ["C","R","A"] carries `c-` (Cadogan),
+// (R-2682). One repo configured with ["C","R","A"] carries `c-` (Cadogan),
 // `r-` (Rheged) and legacy `a-` branches; an `a-` ID can belong to either team,
 // so the team is read from each issue, never from config.
 import { extractBranchIssueId } from "../../lib/issue-keys.mjs";
@@ -146,7 +146,7 @@ describe("createTeamStateCache", () => {
   });
 });
 
-describe("planTransitions — one repo, three keys, two teams (A-2682)", () => {
+describe("planTransitions — one repo, three keys, two teams (R-2682)", () => {
   const KEYS = ["C", "R", "A"];
   const BRANCHES = [
     "c-12-fix-r-3-thing",
@@ -220,7 +220,7 @@ describe("planTransitions — one repo, three keys, two teams (A-2682)", () => {
     const plan = await planTransitions({
       cache: createTeamStateCache(fetch),
       fallbackTeamName: "Rheged Studio",
-      issues: [{ id: "A-7", status: "Todo", statusType: "unstarted" }],
+      issues: [{ id: "R-7", status: "Todo", statusType: "unstarted" }],
       target: "In Progress",
     });
     expect(plan[0]).toMatchObject({
@@ -234,10 +234,10 @@ describe("planTransitions — one repo, three keys, two teams (A-2682)", () => {
   it("skips with a reason when the team can't be resolved", async () => {
     const plan = await planTransitions({
       cache: createTeamStateCache(fakeFetcher()),
-      issues: [{ id: "A-7", status: "Todo", statusType: "unstarted" }],
+      issues: [{ id: "R-7", status: "Todo", statusType: "unstarted" }],
       target: "In Progress",
     });
-    expect(plan[0]).toMatchObject({ action: "skip", id: "A-7" });
+    expect(plan[0]).toMatchObject({ action: "skip", id: "R-7" });
     expect(plan[0]?.reason).toMatch(/team/i);
   });
 });

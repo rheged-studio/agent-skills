@@ -28,7 +28,7 @@ describe("parseIssueKeysFromBranches", () => {
     ).toEqual(["ABC", "QA"]);
   });
 
-  it("matches single-letter keys (e.g. Linear's A) — A-556", () => {
+  it("matches single-letter keys (e.g. Linear's A) — R-556", () => {
     expect(parseIssueKeysFromBranches(["a-558-foo", "QA-3-bar"])).toEqual([
       "A",
       "QA",
@@ -46,7 +46,7 @@ describe("parseIssueKeysFromBranches", () => {
   });
 });
 
-// A-556: prefer the current key from the most recent branch over the historical
+// R-556: prefer the current key from the most recent branch over the historical
 // union, so a renamed team (…→ASW→SK→A) yields the active key.
 describe("currentIssueKeys", () => {
   it("returns the key of the most recently committed branch (recency-first input)", () => {
@@ -70,13 +70,13 @@ describe("currentIssueKeys", () => {
     ).toEqual(["A"]);
   });
 
-  it("yields the R key once branches move to it (A-2683)", () => {
+  it("yields the R key once branches move to it (R-2683)", () => {
     expect(currentIssueKeys(["r-2682-multi-team", "a-2651-legacy"])).toEqual([
       "R",
     ]);
   });
 
-  // A-2683: a repo genuinely carrying several teams' branches (c-, r-, legacy
+  // R-2683: a repo genuinely carrying several teams' branches (c-, r-, legacy
   // a-) still detects only the newest branch's key — detection never unions
   // keys, so multi-key repos must pass `--set <skill>.issueKeys=…` or facts.
   it("detects only one key even when c-, r- and a- branches coexist", () => {
@@ -95,8 +95,8 @@ describe("currentIssueKeys", () => {
   });
 });
 
-// A-580: the remote-prefix strip must only drop the ref namespace, not the first
-// segment of a slash-named local branch — `A-123/demo` keeps its `A` key.
+// R-580: the remote-prefix strip must only drop the ref namespace, not the first
+// segment of a slash-named local branch — `R-123/demo` keeps its `A` key.
 describe("listBranchNames / detectIssueKeys — slash-named local branches", () => {
   let repoRoot: string;
 
@@ -188,7 +188,7 @@ describe("changelog detector", () => {
     rmSync(repoRoot, { force: true, recursive: true });
   });
 
-  it("is false when there is no changelog/ dir, even if the changelog skill is vendored (A-570)", () => {
+  it("is false when there is no changelog/ dir, even if the changelog skill is vendored (R-570)", () => {
     // Skill-presence alone must not flip changelog true: a repo that
     // over-installed the bundle but keeps no changelog/ dir (e.g.
     // release-orchestrator) would otherwise try to author entries with nowhere

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Validates infrastructure/skill-catalogue.json against the local skills/ tree (A-1904).
+// Validates infrastructure/skill-catalogue.json against the local skills/ tree (R-1904).
 
 import {
   allCatalogueSkillNames,
@@ -33,7 +33,7 @@ function main() {
   }
 
   if (allCatalogueSkillNames(catalogue).includes("scaffold-new-skill")) {
-    errors.push("catalogue must not include scaffold-new-skill (A-729)");
+    errors.push("catalogue must not include scaffold-new-skill (R-729)");
   }
 
   for (const skill of rhegedSkillNames(catalogue)) {

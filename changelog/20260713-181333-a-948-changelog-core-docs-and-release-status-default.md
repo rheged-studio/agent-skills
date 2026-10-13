@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-948
+  - R-948
 stats:
   files_changed: 18
   loc_added: 145
@@ -25,8 +25,8 @@ stats:
 - **`release-status`:** the skill defaulted `requiredCheck` to the decommissioned
   `🔬 Build & Lint` check, so a repo relying on the default reported the required
   check as not-found. Default it to the `GO/NO GO` aggregator that replaced it
-  ([A-437](https://linear.app/rheged-studio/issue/A-437) /
-  [A-596](https://linear.app/rheged-studio/issue/A-596)) — updated in the
+  ([R-437](https://linear.app/rheged-studio/issue/R-437) /
+  [R-596](https://linear.app/rheged-studio/issue/R-596)) — updated in the
   `DEFAULTS` constant, `config.example.json`, and the docs.
 
 ## Changed
@@ -37,8 +37,8 @@ stats:
   `reusable-changelog-enrich.yml` (`mode: enrich` / `mode: finalise`) powered by
   `@acme-skunkworks/changelog-core`, written back as `road-runner-bot[bot]`. The
   release-orchestrator's inline finalise step and the daily `enrich-changelogs.yml`
-  cron are retired ([A-801](https://linear.app/rheged-studio/issue/A-801)).
+  cron are retired ([R-801](https://linear.app/rheged-studio/issue/R-801)).
 - Dropped `merge_strategy` from the changelog contract, schema, and field lists
-  ([A-802](https://linear.app/rheged-studio/issue/A-802)), and removed the now
+  ([R-802](https://linear.app/rheged-studio/issue/R-802)), and removed the now
   unused `changelog:finalise` / `changelog:enrich` npm aliases. The bundled
   finalise/enrich/completeness `.mjs` remain as published skill source.

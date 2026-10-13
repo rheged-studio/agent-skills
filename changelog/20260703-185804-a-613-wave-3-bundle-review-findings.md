@@ -12,8 +12,8 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-613
-  - A-676
+  - R-613
+  - R-676
 stats:
   files_changed: 25
   loc_added: 290
@@ -27,7 +27,7 @@ version: 1.2.0
 **preflight:** the two early-exit paths (empty diff / no lintable changes) now
 thread the resolved `blockOnWarnings` into `buildSummary`, so
 `.preflight-summary.json` reports the configured value rather than the default
-`false` when preflight short-circuits ([A-613](https://linear.app/rheged-studio/issue/A-613)).
+`false` when preflight short-circuits ([R-613](https://linear.app/rheged-studio/issue/R-613)).
 
 **changelog:** `backfill-commits` now synthesises a minimal `stats:` block for an
 entry that omits `stats` entirely — the contract permits this — instead of
@@ -36,21 +36,21 @@ is documented and pinned by a test (a commit without parent data counts as
 authored work, never a merge). The `add-links` / `backfill-commits` /
 `finalise-changelog` CLI-entry guards now use the two-sided `realpathSync`
 comparison used elsewhere, so a symlinked entrypoint (macOS `/var`→`/private/var`,
-the pnpm store) no longer skips `main()` ([A-613](https://linear.app/rheged-studio/issue/A-613)).
+the pnpm store) no longer skips `main()` ([R-613](https://linear.app/rheged-studio/issue/R-613)).
 
 **initialise-skills:** a deliberately un-ignored `.preflight-summary.json`
 (`!.preflight-summary.json`) is now reported as a distinct `negated` status,
 honouring `.gitignore`'s last-match-wins rule, instead of being mislabelled
-"already ignored" ([A-613](https://linear.app/rheged-studio/issue/A-613)).
+"already ignored" ([R-613](https://linear.app/rheged-studio/issue/R-613)).
 
 ## Changed
 
 **changelog / send-it:** the `pr` frontmatter field is now documented consistently
 as owned by the release/enrich step — resolved post-merge from the entry's
 `branch:`, never written by the ship flow. Reconciles the changelog skill, the
-changelog contract's field-ownership table, and send-it's Step 7 ([A-676](https://linear.app/rheged-studio/issue/A-676)).
+changelog contract's field-ownership table, and send-it's Step 7 ([R-676](https://linear.app/rheged-studio/issue/R-676)).
 
 **triage-pr:** the Linear-resolution rule is kept inside the bundle rather than
 pointing at a sibling skill's file, the `skills-ref` validation command is pinned
 to `@0.1.5` to match CI, and the README synopsis is refreshed for the
-`promoteOnGreen` default ([A-613](https://linear.app/rheged-studio/issue/A-613)).
+`promoteOnGreen` default ([R-613](https://linear.app/rheged-studio/issue/R-613)).

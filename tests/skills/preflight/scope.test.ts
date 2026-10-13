@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). These cover the
-// pure, git-free surface of the preflight scope helpers (A-465): the
+// pure, git-free surface of the preflight scope helpers (R-465): the
 // changed-file classifier, the workspace-relativiser, the workspace
 // auto-detector, and the config-override resolver. The git-backed helpers
 // (gitMergeBase / gitChangedFiles / getBranchScope) need a live repo and are
@@ -68,7 +68,7 @@ describe("classifyChangedFiles", () => {
     expect(out.eslint.scripts).toEqual([]);
   });
 
-  it("routes top-level lintable code with no workspace match into the root bucket (A-527 regression)", () => {
+  it("routes top-level lintable code with no workspace match into the root bucket (R-527 regression)", () => {
     // Before the fix these set codeChanged=true but landed in no eslint bucket,
     // so preflight reported ESLint "ran", skipped every empty group, and passed
     // — a silent false-pass. They must now be linted at the repo root.

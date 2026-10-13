@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1647
+  - R-1647
 stats:
   loc_added: 297
   loc_removed: 87
@@ -29,4 +29,4 @@ version: 1.7.0
   permalinks from the review-threads fetcher. Prose `[Y/n]` remains the
   fallback when neither tool is available. The same contract applies on
   `/send-it` chains and Step 12 re-envelopes
-  ([A-1647](https://linear.app/rheged-studio/issue/A-1647)).
+  ([R-1647](https://linear.app/rheged-studio/issue/R-1647)).

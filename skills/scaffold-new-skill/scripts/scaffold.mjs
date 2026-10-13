@@ -3,7 +3,7 @@
 //
 // Given a kebab-case skill name (--name=<kebab>), this writes a fresh
 // `skills/<name>/` bundle whose layout and metadata satisfy the same rules
-// `pnpm validate:skills` enforces (ADR-0001 / A-364):
+// `pnpm validate:skills` enforces (ADR-0001 / R-364):
 //
 //   - package.json   : name "@rheged-studio/skill-<name>", private: true,
 //                      version "0.1.0", repository.directory "skills/<name>"
@@ -13,7 +13,7 @@
 //                      construction — the example is generated from the same
 //                      template object, so the two can never drift on creation)
 //   - scripts/<name>.mjs : an entry script pre-wired to the standardised
-//                      --help / --dry-run / --self-test dispatch idiom (A-462)
+//                      --help / --dry-run / --self-test dispatch idiom (R-462)
 //   - tests/skills/<name>/<name>.test.ts : a vitest stub
 //   - README.md      : install + usage skeleton
 //
@@ -199,7 +199,7 @@ function entryScript(name) {
 // Entry script for the ${name} skill.
 //
 // Pre-wired to the standardised --help / --dry-run / --self-test dispatch idiom
-// (A-462). Replace the TODO bodies with the skill's real logic; keep the three
+// (R-462). Replace the TODO bodies with the skill's real logic; keep the three
 // flags so the bundle stays consistent with the rest of the fleet.
 //
 // Usage:

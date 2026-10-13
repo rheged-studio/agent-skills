@@ -2,13 +2,13 @@
 
 - **Status:** Accepted
 - **Date:** 2026-05-27
-- **Tracking:** [A-133](https://linear.app/goose-and-hobbes/issue/A-133)
+- **Tracking:** [R-133](https://linear.app/rheged-studio/issue/R-133)
 - **Supersedes:** —
 - **Superseded by:** [ADR-0002](0002-repo-level-npm-versioning.md) supersedes **Decision 1** (per-skill versioning via pnpm workspaces). Decisions 2–4 stand; ADR-0002 amends how Decision 2's semver semantics apply (to the out-of-band `metadata.version` label) and withdraws Decision 4's per-skill Git-tag scheme.
 
 ## Context
 
-This repo is a container for shared agent skills distributed as [skills.sh](https://skills.sh)-compatible bundles, following the open [Agent Skills specification](https://agentskills.io/specification) originated by Anthropic. Consumers install with `npx skills add <git-url> --skill <name>`, which fetches directly from this Git repo — there is no npm registry or centralized skills.sh registry in the path. The bootstrap (A-132) deliberately deferred the foundational structural questions to this ADR:
+This repo is a container for shared agent skills distributed as [skills.sh](https://skills.sh)-compatible bundles, following the open [Agent Skills specification](https://agentskills.io/specification) originated by Anthropic. Consumers install with `npx skills add <git-url> --skill <name>`, which fetches directly from this Git repo — there is no npm registry or centralized skills.sh registry in the path. The bootstrap (R-132) deliberately deferred the foundational structural questions to this ADR:
 
 1. **Versioning** — single root version vs. independent per-skill versions, and the semver semantics of each bump. (Addressed across Decisions 1 and 2 below.)
 2. **Bundle layout** — what files a `skills/<name>/` directory must contain, and the `SKILL.md` manifest schema. (Decision 3.)
@@ -98,7 +98,7 @@ The reference validator `skills-ref` (from `agentskills/agentskills`, published 
 npx skills-ref validate ./skills/<name>
 ```
 
-Confirmed installable via `npx` as of 2026-05-27 (v0.1.5). This becomes the manifest-lint step in `validate.yml` when A-134 lands, per CLAUDE.md's deferred plan.
+Confirmed installable via `npx` as of 2026-05-27 (v0.1.5). This becomes the manifest-lint step in `validate.yml` when R-134 lands, per CLAUDE.md's deferred plan.
 
 ## Decision 4 — Distribution conventions
 
@@ -146,13 +146,13 @@ If the spec adds a native deprecation field later, switch to it and supersede th
 - Adding a skill is a workspace change: it needs `SKILL.md` (matching parent dir name), `package.json` (named `@rheged-studio/skill-<name>`, `private: true`, version `0.1.0`), and a `.changeset/<slug>.md` referencing the package name.
 - Migrating later from per-skill versions or from the chosen name pattern would break any pinned consumers — so the decision is locked before skill #1 lands.
 - The CLI's lack of `--ref` pinning is an accepted limitation; we publish tags anyway so consumers have a recovery path via local-clone.
-- Manifest lint joins `validate.yml` with A-134, using `skills-ref validate` against every `skills/<name>/` directory.
+- Manifest lint joins `validate.yml` with R-134, using `skills-ref validate` against every `skills/<name>/` directory.
 - The root `@rheged-studio/agent-skills` package must be added to Changesets' `ignore` list when workspace plumbing lands.
 
 ## Out of scope
 
 - Workspace plumbing (`pnpm-workspace.yaml`, Changesets `ignore` entry, skill `package.json` template) — tracked in the sibling ticket created from this ADR.
-- Skill #1 (`cleanup-repo`) — A-134.
-- Manifest lint wiring in `validate.yml` — joins A-134 per CLAUDE.md.
+- Skill #1 (`cleanup-repo`) — R-134.
+- Manifest lint wiring in `validate.yml` — joins R-134 per CLAUDE.md.
 - Husky / lint-staged / commitlint — deferred to first skill per CLAUDE.md.
 - Testing conventions for skills — future ADR.

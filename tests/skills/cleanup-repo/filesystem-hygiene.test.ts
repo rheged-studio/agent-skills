@@ -1,7 +1,7 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). cleanup-repo is the
 // one skill that irreversibly removes branches, worktrees, and directories, yet it
 // shipped only an in-script `--self-test` that `pnpm test` never ran — so a
-// regression in detect/apply/assertGitRepo could land green (A-528). These port the
+// regression in detect/apply/assertGitRepo could land green (R-528). These port the
 // 15 self-test cases into vitest so the destructive surface is CI-gated.
 import {
   apply,

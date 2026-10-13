@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Vendor-sync — stamp the canonical `lib/` files into each consuming bundle
-// (ADR-0004 / A-534 for `.mjs` modules, ADR-0006 / A-1203 for `.md` reference
+// (ADR-0004 / R-534 for `.mjs` modules, ADR-0006 / R-1203 for `.md` reference
 // prose).
 //
 // Bundles must stay independently installable (zero cross-bundle imports), so

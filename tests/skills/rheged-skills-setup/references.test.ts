@@ -1,4 +1,4 @@
-// Covers the detectable-keys reference parser (A-702) that annotates the
+// Covers the detectable-keys reference parser (R-702) that annotates the
 // read-only `--review` report. Parses the bundled GFM table into a per-key
 // description map, ignoring the intro prose and the `## Notes` bullet list.
 import {

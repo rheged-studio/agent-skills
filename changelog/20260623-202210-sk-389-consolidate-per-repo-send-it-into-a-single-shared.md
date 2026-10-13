@@ -13,7 +13,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-389
+  - R-389
 stats:
   files_changed: 18
   loc_added: 737

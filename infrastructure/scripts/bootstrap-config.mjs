@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Materialise this repo's own (dogfood) skill configs (A-615).
+// Materialise this repo's own (dogfood) skill configs (R-615).
 //
 // agent-skills dogfoods its own skills, so it needs a real `config.json` for each
 // — but those configs must NOT travel to consumers via `skills add --copy`, which

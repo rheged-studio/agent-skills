@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-670
+  - R-670
 stats:
   files_changed: 3
   loc_added: 105
@@ -28,7 +28,7 @@ When a repo is being spun up to run the shared Claude workflows, one per-repo st
 is unavoidable regardless of the caller-tag strategy: the Claude GitHub App must be
 installed and the `CLAUDE_CODE_OAUTH_TOKEN` repository Actions secret set, or the
 workflows authenticate with an empty token and fail
-([A-646](https://linear.app/rheged-studio/issue/A-646)). The required secret is
+([R-646](https://linear.app/rheged-studio/issue/R-646)). The required secret is
 `CLAUDE_CODE_OAUTH_TOKEN`, **not** `ANTHROPIC_API_KEY` — a recurring confusion this
 step names explicitly.
 
@@ -56,4 +56,4 @@ falls back to a textual reminder. The pure-Node config-reconcile script
 (`scripts/initialise.mjs`) is deliberately untouched — the check is prose-driven, so
 its unit tests and the config-key contract are unaffected. The `initialise-skills`
 bundle version is bumped `0.9.1` → `0.10.0`
-([A-670](https://linear.app/rheged-studio/issue/A-670)).
+([R-670](https://linear.app/rheged-studio/issue/R-670)).

@@ -11,7 +11,7 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-1224
+  - R-1224
 stats:
   files_changed: 90
   loc_added: 215
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Changed
 
-- **Linear team name and workspace slug ([A-1224](https://linear.app/rheged-studio/issue/A-1224)).**
+- **Linear team name and workspace slug ([R-1224](https://linear.app/rheged-studio/issue/R-1224)).**
   The estate rebranded from ACME Skunkworks to Rheged Studio. The Linear team was
   renamed first and the workspace URL key followed, but this repo still resolved the
   team by its old name — so every Linear writeback (`linear-sync`, `triage-pr`,

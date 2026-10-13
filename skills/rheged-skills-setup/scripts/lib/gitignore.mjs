@@ -1,8 +1,8 @@
 // Ensure the consumer repo's root .gitignore is correct for installed skills:
 //
-// 1. Preflight scratch (A-569): append .preflight-summary.json when preflight is
+// 1. Preflight scratch (R-569): append .preflight-summary.json when preflight is
 //    installed (append-only, idempotent).
-// 2. Skill-config ignore strip (A-812): remove erroneous consumer rules that
+// 2. Skill-config ignore strip (R-812): remove erroneous consumer rules that
 //    gitignore vendored skill config.json under .claude/.agents (those patterns
 //    belong only in the agent-skills source repo and the npm-package-template
 //    seed). In a consumer the resolved config.json must be committed.
@@ -29,9 +29,9 @@ export const IGNORE_COMMENT =
  *
  * Both `"positive"` and `"negated"` count as already-handled: the reconcile is
  * intent-preserving and append-only, and appending a positive rule after a
- * deliberate negation would silently flip the consumer's choice (A-582). The two
+ * deliberate negation would silently flip the consumer's choice (R-582). The two
  * are reported distinctly so a deliberate un-ignore isn't mislabelled "already
- * ignored" (A-613).
+ * ignored" (R-613).
  * @param {string} text
  * @returns {"positive"|"negated"|"absent"}
  */
@@ -82,8 +82,8 @@ export function reconcilePreflightIgnore(repoRoot, { write = false } = {}) {
 
     if (verdict === "negated") {
       // A deliberate un-ignore already settles the path — leave it untouched
-      // (A-582), but report it distinctly so it doesn't read as "already
-      // ignored" (A-613).
+      // (R-582), but report it distinctly so it doesn't read as "already
+      // ignored" (R-613).
       return { path: gitignorePath, status: "negated" };
     }
 
@@ -117,7 +117,7 @@ export function reconcilePreflightIgnore(repoRoot, { write = false } = {}) {
 }
 
 /**
- * Consumer patterns that must not ignore resolved skill config.json (A-812).
+ * Consumer patterns that must not ignore resolved skill config.json (R-812).
  */
 export const SKILL_CONFIG_IGNORE_PATTERNS = [
   ".claude/skills/*/config.json",
@@ -141,7 +141,7 @@ function isSkillConfigIgnoreComment(trimmed) {
   return (
     lower.includes("a-640") ||
     lower.includes("a-812") ||
-    // The same issues after the Linear key flip (A → R, A-2683): reference
+    // The same issues after the Linear key flip (A → R, R-2683): reference
     // sweeps rewrite these comments, so match both spellings.
     lower.includes("r-640") ||
     lower.includes("r-812") ||

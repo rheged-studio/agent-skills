@@ -1,5 +1,5 @@
 #!/usr/bin/env -S npx tsx
-// Validates the per-skill bundle metadata under `skills/<name>/` (A-364).
+// Validates the per-skill bundle metadata under `skills/<name>/` (R-364).
 //
 // Skills are NOT npm-published and NOT Changesets-managed (ADR-0002): each
 // carries its own version OUT OF BAND, as a non-npm label. This guard makes
@@ -30,7 +30,7 @@ import { join } from "node:path";
 export const SKILLS_DIR = "skills";
 export const SKILL_SCOPE = "@rheged-studio";
 // This repo's real (dogfood) configs live here, not in skills/<name>/config.json
-// (gitignored since A-615). The key-parity guard validates these tracked files.
+// (gitignored since R-615). The key-parity guard validates these tracked files.
 export const DOGFOOD_CONFIG_DIR = join("infrastructure", "dogfood-config");
 
 const SEMVER_RE =
@@ -127,7 +127,7 @@ export function validateSkill(
  * specs. Its entries are values, so parity compares the key itself but never
  * recurses into it: the example ships the neutral `{}` (so a consumer's untouched
  * `{}` still equals the placeholder and is filled on reconcile) while this repo's
- * dogfood config carries the detected `claude` mapping (A-2453).
+ * dogfood config carries the detected `claude` mapping (R-2453).
  */
 const MAP_VALUED_TOPLEVEL = new Set(["reviewBotChecks"]);
 
@@ -159,7 +159,7 @@ function keyPaths(value: unknown, prefix = ""): string[] {
  * Top-level config keys that may legitimately live in `config.json` without
  * appearing in the template `config.example.json`. These are opt-in, config-only
  * features a neutral single-package template deliberately omits — `send-it`'s
- * `bundleVersioning` is the canonical case (A-555): it is added by hand only in
+ * `bundleVersioning` is the canonical case (R-555): it is added by hand only in
  * multi-bundle repos, so shipping it in the example would force a bogus key into
  * every single-package consumer's reset config (and flag it `needs-manual-input`
  * on every `initialise-skills` run). The exemption applies to the **whole subtree**
@@ -177,11 +177,11 @@ function topLevelKey(key: string): string {
 /**
  * The shipped `config.example.json` (the template a consumer copies over) and this
  * repo's own real config must share a key structure — a key in one but not the
- * other means an adopter silently gets a stale or incomplete config (A-538). Values
+ * other means an adopter silently gets a stale or incomplete config (R-538). Values
  * may differ (the example carries placeholders); only the key sets are compared,
  * recursively.
  *
- * Since A-615 the per-skill `config.json` is gitignored (it would otherwise be
+ * Since R-615 the per-skill `config.json` is gitignored (it would otherwise be
  * vendored into consumers by `skills add --copy`), so this repo's real values live
  * in the tracked `infrastructure/dogfood-config/<name>.json` tree — that is what
  * `configRaw` carries here, not `skills/<name>/config.json`. Skills with no dogfood

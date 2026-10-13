@@ -1,6 +1,6 @@
 // Parse and validate `--set <skill>.<key>=<value>` CLI overrides into a per-skill
 // map the reconcile can apply, so a caller can push an arbitrary config value a
-// detector would never produce (A-704).
+// detector would never produce (R-704).
 //
 // The reconcile's config keys are flat, so a `--set` address is exactly two
 // segments: the skill (bundle directory name) and a top-level config key. We

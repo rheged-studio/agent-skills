@@ -13,7 +13,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-576
+  - R-576
 stats:
   files_changed: 6
   loc_added: 96
@@ -23,7 +23,7 @@ stats:
 
 ## Added
 
-- **`send-it` gains a `changelogScope` config knob ([A-576](https://linear.app/rheged-studio/issue/A-576)).**
+- **`send-it` gains a `changelogScope` config knob ([R-576](https://linear.app/rheged-studio/issue/R-576)).**
   Until now `send-it` authored a dated `changelog/` entry **only for shippable changes** — the
   same shippability decision that drives the PR title also gated whether an entry existed. That
   conflated two independent concerns: the PR-title release type (the release-please/npm signal,

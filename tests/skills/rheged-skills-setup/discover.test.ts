@@ -1,5 +1,5 @@
 // Imports the BUNDLE lib directly (the distributed `.mjs`). Covers the sibling-
-// bundle discovery (A-465): which installed skills get reconciled — only those
+// bundle discovery (R-465): which installed skills get reconciled — only those
 // shipping a config.example.json — with the self-configuring `preflight` skill
 // and unparseable config.json files handled specially. Uses a tmp skills directory so
 // the assertions don't depend on which skills happen to be installed here.
