@@ -45,8 +45,9 @@ read-only too (no Linear writes).
 ## Step 11 — mint as a sub-issue of the PR's issue
 
 A follow-up is filed as a **sub-issue of the Linear issue the PR was raised under**,
-so it stays visible from that issue. Only when the PR has no linked issue does it go
-to the catch-all project. Linear create details (team by **name**, state by **type**,
+so it stays visible from that issue. The catch-all project is used only when the PR
+has no linked issue (filed flat), or when that issue has no project (still filed as
+its sub-issue). Linear create details (team by **name**, state by **type**,
 the required **label**, **project**, `parentId`, and the parent's **milestone** when
 it has one) — resolve via `list_issue_statuses` / `list_projects` /
 `list_issue_labels` and fail loudly on typos.
