@@ -2,10 +2,10 @@
 title: file triage-pr follow-ups as sub-issues of the PR's issue
 release_note: triage-pr now files each follow-up as a sub-issue of the Linear issue the PR was raised under, and uses the catch-all project only when the PR has no linked issue.
 created_at: "2026-10-12T21:33:04Z"
-merged_at:
+merged_at: "2026-10-13T08:14:45Z"
 branch: a-2756-triage-pr-follow-ups-as-sub-issues
-pr:
-commit:
+pr: 205
+commit: b38a69f
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - A-2756
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 9
+  loc_added: 102
+  loc_removed: 73
   commits:
 version:
 ---
