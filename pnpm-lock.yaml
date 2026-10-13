@@ -12,8 +12,8 @@ importers:
         specifier: ^21.2.1
         version: 21.2.3(@types/node@26.6.4)(conventional-commits-parser@7.1.2)(typescript@6.0.3)
       '@rheged-studio/changelog-core':
-        specifier: ^1.1.1
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
       '@rheged-studio/commitlint-config':
         specifier: ^2.0.0
         version: 2.0.0
@@ -674,8 +674,8 @@ packages:
   '@repeaterjs/repeater@3.1.0':
     resolution: {integrity: sha512-TaoVksZRSx2KWYYpyLQtMQXXeS98VsgZImzW65xmiVgbYhXLk+aEsmzPLirqVuE4/XuUapH2iMtxUzaBNDzdSQ==}
 
-  '@rheged-studio/changelog-core@1.1.2':
-    resolution: {integrity: sha512-wfHZPpws0nhs47ZkzEX9R4lJuMbeBdR5o3FqOB4B0Ihv0neXnnlAHRJ34CVfCkZBK04IWR4lpf5X2XPPxHQqZQ==}
+  '@rheged-studio/changelog-core@1.2.0':
+    resolution: {integrity: sha512-DIAfBc8E6vl2nEE8XlqG8q/xuo4vNASit8yNR5EuHvpzbRtAkbDoPz6V55Oc2tE84po1C0KAxHSdGkfCuymJSA==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -4302,7 +4302,7 @@ snapshots:
 
   '@repeaterjs/repeater@3.1.0': {}
 
-  '@rheged-studio/changelog-core@1.1.2': {}
+  '@rheged-studio/changelog-core@1.2.0': {}
 
   '@rheged-studio/commitlint-config@2.0.0':
     dependencies:

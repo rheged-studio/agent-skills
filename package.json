@@ -69,7 +69,7 @@
     ]
   },
   "devDependencies": {
-    "@rheged-studio/changelog-core": "^1.1.1",
+    "@rheged-studio/changelog-core": "^1.2.0",
     "@rheged-studio/commitlint-config": "^2.0.0",
     "@rheged-studio/eslint-config": "^1.1.3",
     "@rheged-studio/markdownlint-config": "^3.0.0",
