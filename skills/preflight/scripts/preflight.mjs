@@ -235,6 +235,12 @@ function runActionlint(files) {
  * @param {ReturnType<typeof import('./lib/lint-surface.mjs').buildLintSurface>} lintSurface
  */
 function reportLintSurface(lintSurface) {
+  if (lintSurface.error) {
+    console.warn(
+      `preflight: lint-surface ${lintSurface.error} (informational, not blocking)`,
+    );
+  }
+
   if (lintSurface.count === 0) {
     return;
   }

@@ -6,10 +6,15 @@
 // detector it tests.
 import {
   buildLintSurface,
+  detectLintSurface,
+  directiveCandidates,
   findIgnoreDirective,
   isLintConfigPath,
   parseAddedLines,
 } from "../../../skills/preflight/scripts/lib/lint-surface.mjs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ESLINT_DISABLE = ["eslint", "disable"].join("-");
@@ -161,6 +166,52 @@ describe("buildLintSurface", () => {
     const report = buildLintSurface(
       ["src/a.ts"],
       new Map([["src/a.ts", [{ line: 1, text: "const a = 1;" }]]]),
+    );
+    expect(report).toEqual({ configFiles: [], count: 0, directives: [] });
+  });
+});
+
+describe("directiveCandidates", () => {
+  it("keeps only file types that can carry a directive, minus lint config", () => {
+    expect(
+      directiveCandidates([
+        "src/a.ts",
+        "README.md",
+        "pnpm-lock.yaml",
+        "data/huge.json",
+        "eslint.config.mjs",
+        "scripts/run.sh",
+        "assets/logo.png",
+      ]),
+    ).toEqual(["src/a.ts", "README.md", "pnpm-lock.yaml", "scripts/run.sh"]);
+  });
+});
+
+describe("detectLintSurface", () => {
+  // The report is informational: a failed scan must never throw and stop the
+  // lint gate, and must say it failed rather than read as "no lint surfaces".
+  it("degrades to an error report instead of throwing when git diff fails", () => {
+    const directory = mkdtempSync(join(tmpdir(), "lint-surface-"));
+    try {
+      const report = detectLintSurface(
+        "no-such-ref",
+        ["src/a.ts", ".prettierrc"],
+        directory,
+      );
+      expect(report.error).toMatch(/directive scan skipped/);
+      expect(report.configFiles).toEqual([".prettierrc"]);
+      expect(report.directives).toEqual([]);
+      expect(report.count).toBe(1);
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("skips git entirely when no changed file can carry a directive", () => {
+    const report = detectLintSurface(
+      "no-such-ref",
+      ["data/huge.json"],
+      tmpdir(),
     );
     expect(report).toEqual({ configFiles: [], count: 0, directives: [] });
   });

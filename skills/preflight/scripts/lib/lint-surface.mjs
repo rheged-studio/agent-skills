@@ -175,8 +175,31 @@ export function buildLintSurface(changedFiles, addedLines) {
   };
 }
 
+// Paths per `git diff` call, so a branch touching thousands of files never hits
+// the argument-length limit.
+const DIFF_CHUNK = 100;
+
 /**
- * Detect the branch's lint-surface changes against `mergeBase`.
+ * The changed files an ignore / disable directive could appear in: a file type
+ * with a directive pattern, and not itself lint config (reported whole).
+ * Diffing only these keeps an unrelated large change — a lockfile, generated
+ * data — out of the scan.
+ * @param {string[]} changedFiles
+ * @returns {string[]}
+ */
+export function directiveCandidates(changedFiles) {
+  return changedFiles.filter(
+    (file) =>
+      !isLintConfigPath(file) &&
+      DIRECTIVES.some(([, appliesTo]) => appliesTo(file)),
+  );
+}
+
+/**
+ * Detect the branch's lint-surface changes against `mergeBase`. Never throws:
+ * the report is informational, so a failed directive scan must not fail the
+ * lint gate. It comes back with `error` set (and the config files, which need
+ * no diff) instead of reading as "no lint surfaces".
  * @param {string} mergeBase
  * @param {string[]} changedFiles
  * @param {string} [cwd]
@@ -186,20 +209,33 @@ export function detectLintSurface(
   changedFiles,
   cwd = process.cwd(),
 ) {
-  const result = spawnSync(
-    "git",
-    ["diff", `${mergeBase}...HEAD`, "-U0", "--no-color"],
-    { cwd, encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
-  );
-  if (result.error || result.status !== 0) {
-    const detail =
-      result.error?.message ||
-      result.stderr?.trim() ||
-      "unknown git diff error";
-    throw new Error(`preflight: git diff for lint surfaces failed: ${detail}`);
+  const candidates = directiveCandidates(changedFiles);
+  /** @type {Map<string, Array<{ line: number, text: string }>>} */
+  const addedLines = new Map();
+  for (let index = 0; index < candidates.length; index += DIFF_CHUNK) {
+    const chunk = candidates.slice(index, index + DIFF_CHUNK);
+    const result = spawnSync(
+      "git",
+      ["diff", `${mergeBase}...HEAD`, "-U0", "--no-color", "--", ...chunk],
+      { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    );
+    if (result.error || result.status !== 0) {
+      const detail =
+        result.error?.message ||
+        result.stderr?.trim() ||
+        "unknown git diff error";
+      return {
+        ...buildLintSurface(changedFiles, new Map()),
+        error: `directive scan skipped — git diff failed: ${detail}`,
+      };
+    }
+
+    for (const [file, lines] of parseAddedLines(result.stdout)) {
+      addedLines.set(file, lines);
+    }
   }
 
-  return buildLintSurface(changedFiles, parseAddedLines(result.stdout));
+  return buildLintSurface(changedFiles, addedLines);
 }
 
 export const EMPTY_LINT_SURFACE = Object.freeze({

@@ -109,7 +109,9 @@ shared with `triage-pr` and `commit`. In preflight it means:
   (`configFiles`) and the ignore / disable directives it adds (`directives`, each
   with `file`, `line`, `directive` and `text`), with a `count`. Preflight can't
   tell who made them, so it is **informational and never blocks**: the exit code
-  is unchanged. When `count > 0`, list them in the report as developer decisions
+  is unchanged. Only changed files that can carry a directive are diffed, and if
+  that scan fails, `lintSurface.error` says so (config files are still listed)
+  instead of the failure stopping preflight. When `count > 0`, list them in the report as developer decisions
   for the developer to confirm. Don't revert them, and don't make more.
 
 The report is the natural stopping point. Never stop mid-loop to ask about a lint
