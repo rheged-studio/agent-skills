@@ -2,10 +2,10 @@
 title: resolve each issue's own team in the Linear skills
 release_note: linear-sync, cleanup-repo, send-it and triage-pr now resolve Linear states against each issue's own team and read only a branch's leading issue ID, so one repo can carry issues from several teams.
 created_at: "2026-10-13T09:20:06Z"
-merged_at:
+merged_at: "2026-10-13T10:33:48Z"
 branch: a-2682-resolve-each-issues-team
-pr:
-commit:
+pr: 207
+commit: 8a59c38
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -14,9 +14,9 @@ issues:
   - A-2682
   - A-2683
 stats:
-  files_changed:
-  loc_added:
-  loc_removed:
+  files_changed: 30
+  loc_added: 927
+  loc_removed: 164
   commits:
 version:
 ---
