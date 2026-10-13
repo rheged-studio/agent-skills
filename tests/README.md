@@ -24,10 +24,15 @@ published bundle stays test-free whilst the scripts are still exercised in CI
 ```text
 tests/
   README.md
+  lib/                # tests for the canonical repo-root lib/*.mjs
   skills/
     changelog/        # tests for skills/changelog/scripts/**/*.mjs
     <name>/           # future bundled-script skills add their tests here
 ```
+
+`tests/lib/` covers the canonical repo-root `lib/` modules (ADR-0004). Some
+are vendored into bundles; others (`lib/linear-states.mjs`) exist only to pin
+the rules that script-less skills such as `linear-sync` describe in prose.
 
 A future bundled-script skill (`linear-sync`, say, were it ever to grow scripts)
 adds its tests under `tests/skills/<name>/`, importing that skill's bundled

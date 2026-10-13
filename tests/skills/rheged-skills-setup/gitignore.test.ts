@@ -187,6 +187,23 @@ describe("stripSkillConfigIgnores (A-812)", () => {
     );
   });
 
+  it("strips a comment block that cites the post-flip R-640 / R-812 ids (A-2683)", () => {
+    writeFileSync(
+      ignorePath(),
+      [
+        "node_modules/",
+        "",
+        "# Vendored skill config (R-640, R-812).",
+        ".claude/skills/*/config.json",
+        "",
+      ].join("\n"),
+    );
+
+    const result = stripSkillConfigIgnores(directory, { write: true });
+    expect(result.status).toBe("stripped");
+    expect(read()).toBe("node_modules/\n");
+  });
+
   it("leaves the agent-skills source skills/*/config.json rule alone", () => {
     const original = ["# source-only (A-615)", "skills/*/config.json", ""].join(
       "\n",

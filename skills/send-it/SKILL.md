@@ -22,7 +22,7 @@ compatibility: >-
   silently; missing `triage-pr` warns and stops at the open PR (not a successful
   default run — install it).
 metadata:
-  version: 0.12.0
+  version: 0.12.1
   author: Rob Easthope
 allowed-tools: Write, Read, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(pnpm:*), Bash(node:*), Bash(npx:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects
 ---
@@ -545,9 +545,11 @@ Drop `## Related Issues` when no issues were found.
 ### Step 10: Transition linked Linear issues to In Review — delegate to the `linear-sync` skill
 
 Follow the [`linear-sync`](../linear-sync/SKILL.md) skill with target state **In
-Review**: read its `config.json` for `linearTeamName` and `issueKeys`, extract issue
-IDs from the branch and commits, resolve the live state ID by team **name** (once),
-and apply the transition idempotently (skip any issue already at or past In Review).
+Review**: read its `config.json` for `issueKeys` (and the fallback
+`linearTeamName`), take the branch's **leading** issue ID plus any IDs found in the
+commits, resolve the live state ID against **each issue's own team** by team
+**name** (once per team, cached), and apply the transition idempotently (skip any
+issue already at or past In Review).
 Skip silently if `linear-sync` or the Linear MCP server is unavailable.
 
 ### Step 11: Drive the PR to merge-ready — delegate to the `triage-pr` skill
