@@ -2,10 +2,10 @@
 title: code-span the skill names in AGENTS.md
 release_note: ""
 created_at: "2026-10-13T15:00:00Z"
-merged_at: ""
+merged_at: "2026-10-13T16:37:30Z"
 branch: r-2690-code-span-the-skill-names
-pr: ""
-commit: ""
+pr: 211
+commit: 4a2bb18
 author: rob@rheged.studio
 co_authors: []
 category: docs
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - R-2690
 stats:
-  loc_added: 0
-  loc_removed: 0
-  files_changed: 0
+  loc_added: 26
+  loc_removed: 2
+  files_changed: 2
 version: ""
 ---
 
