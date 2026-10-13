@@ -19,6 +19,38 @@ const SCOPE = {
 const CLEAN = { introduced: [], preExisting: [] };
 
 describe("buildSummary", () => {
+  // A-1203: lint-surface changes are reported, never blocking.
+  it("defaults lintSurface to an empty report", () => {
+    const summary = buildSummary(
+      SCOPE,
+      { actionlintStatus: "skipped" },
+      CLEAN,
+      false,
+    );
+    expect(summary.lintSurface).toEqual({
+      configFiles: [],
+      count: 0,
+      directives: [],
+    });
+  });
+
+  it("carries lintSurface through without blocking", () => {
+    const lintSurface = {
+      configFiles: [".markdownlint-cli2.jsonc"],
+      count: 1,
+      directives: [],
+    };
+    const summary = buildSummary(
+      SCOPE,
+      { actionlintStatus: "skipped", lintSurface },
+      CLEAN,
+      false,
+    );
+    expect(summary.lintSurface).toEqual(lintSurface);
+    expect(summary.passed).toBe(true);
+    expect(summary.blocking).toBe(false);
+  });
+
   it("passes when nothing is introduced and no linter failed", () => {
     const summary = buildSummary(
       SCOPE,
