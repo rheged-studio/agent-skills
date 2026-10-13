@@ -18,36 +18,39 @@ skip silently when the Linear MCP server is unavailable.
 | `linearTeamName` | Linear team **name** (not the key — the key is renamed over time, the name is stable) the follow-up issues are created under. Empty disables capture entirely. | `""` |
 | `issueKeys` | Team-key prefixes that may appear in branch names, used to recognise issue ids the same way `linear-sync` does. Mirrors the established `issueKeys` convention. | `[]` |
 | `followUpLabel` | Label applied to every created follow-up (provenance: this came from a review disposition). **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never mint without the label). Do not also apply the repo's agent-ready triage label. Rheged estate value: `follow-up`. | `"follow-up"` |
-| `followUpProject` | Linear project (name, id, or slug) used as the **catch-all** when a follow-up cannot inherit a live project from the PR's Linear issue. **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never file with no project). Rheged estate value: `Follow-up issues`. | `""` |
+| `followUpProject` | Linear project (name, id, or slug) used as the **catch-all** when the PR has no linked Linear issue to file the follow-up under (or that issue has no project). **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never file with no project). Rheged estate value: `Follow-up issues`. | `""` |
 | `followUpState` | Optional initial workflow state (type, name, or id — e.g. `Backlog`) for created issues. Empty = the team's default state. | `"Backlog"` |
 
 ## Step 9 — read-only destination resolve
 
-Before mint, each follow-up item in the plan needs a `→ file under …` line.
+Before mint, each follow-up item in the plan needs a destination line.
 
 When the plan includes any `follow-up` — or, on the unattended path, any `[gated]`
-item — and capture is enabled (`linearTeamName` set), run the **destination cascade
+item — and capture is enabled (`linearTeamName` set), run the **destination rule
 below read-only** — before Step 10 on the envelope path, and before mint on the
-unattended path. Use only `get_issue`, `list_projects`, `list_milestones`, and
-`list_issue_labels`; do **not** call `save_milestone` or `save_issue` in this step.
+unattended path. Use only `get_issue`, `list_projects`, and `list_issue_labels`; do
+**not** call `save_issue` in this step.
 
 Reuse that destination on mint in Step 11; do not re-decide it then.
 
-If routing fail-closes (empty or unresolved catch-all, or empty or unresolved
-`followUpLabel`), keep the item as a follow-up candidate but say on the plan line
-that capture will decline / `Follow-up not tracked`. On the catch-all, when the repo
-milestone does not yet exist, still show
-`file under <catch-all> / <repo> (no live parent project)` on the plan line — Step 11
-creates the milestone on mint. Skip this resolve when capture is disabled
-(`linearTeamName` empty). Under `--dry-run`, this resolve stays read-only too (no
-Linear writes).
+If routing fail-closes under Step 11's rules — an empty or unresolved
+`followUpLabel`, or an empty or unresolved catch-all when the destination needs it
+(no parent, **or** a parent with no project) — keep the item as a follow-up
+candidate but say on the plan line that capture will decline / `Follow-up not
+tracked`. Never show a destination on the plan line that Step 11 would refuse to
+mint. Skip this resolve when
+capture is disabled (`linearTeamName` empty). Under `--dry-run`, this resolve stays
+read-only too (no Linear writes).
 
-## Step 11 — mint and destination cascade
+## Step 11 — mint as a sub-issue of the PR's issue
 
-Linear create details (team by **name**, state by **type**, links, the required
-**label**, **project**, and **milestone** when the cascade has one) — resolve via
-`list_issue_statuses` / `list_projects` / `list_milestones` / `list_issue_labels` and
-fail loudly on typos.
+A follow-up is filed as a **sub-issue of the Linear issue the PR was raised under**,
+so it stays visible from that issue. The catch-all project is used only when the PR
+has no linked issue (filed flat), or when that issue has no project (still filed as
+its sub-issue). Linear create details (team by **name**, state by **type**,
+the required **label**, **project**, `parentId`, and the parent's **milestone** when
+it has one) — resolve via `list_issue_statuses` / `list_projects` /
+`list_issue_labels` and fail loudly on typos.
 
 **Fail closed on project and label.** When capture is enabled (`linearTeamName`
 set), every minted issue **must** have a resolved `project` and the configured
@@ -71,48 +74,31 @@ unattended path, with no Linear-only gate.
    if there are no configured keys. Match in this order — **stop at the first
    source that yields a match**:
    1. the **upper-cased** branch name — if it has at least one match, the
-      **first** match is the primary parent (later matches on the branch, and
-      every match on the PR title, are ignored);
+      **first** match is the parent (later matches on the branch, and every
+      match on the PR title, are ignored);
    2. else the PR title — if it has at least one match, the **first** match is
       the parent;
    3. else there is **no** parent id.
-   When a parent id was resolved, `get_issue` on that id and set `relatedTo` to
-   that id on every `save_issue` create, including the catch-all. **Do not**
-   nest as a sub-issue (`parentId`). When there is no parent id, omit
-   `relatedTo`.
-3. **Live project, then milestone.** Only when step 2 resolved a parent. If it
-   has a `project`, resolve that project with `list_projects` and inspect its
-   status **type**. Types `completed` and `canceled` are **not live** — treat
-   as no inherit and go to step 4, even if the issue still has a milestone. On
-   a live project:
-   - If `projectMilestone` is set, `list_milestones` on that project. An exact
-     name match (a completed milestone still counts) → pass both `project` and
-     `milestone` on `save_issue`. Do **not** attach the repo milestone.
-     Plan line:
-     `file under <project> / <milestone> (inherited from A-NNNN)`.
-   - If there is no milestone, or it is not in the list → pass `project` only.
-     Do **not** invent a milestone, and do **not** attach the repo milestone.
-     Plan line: `file under <project> (inherited from A-NNNN)`.
-4. **Otherwise fall back to `followUpProject` (the catch-all).** Typical
-   reasons: no parent id, parent has no project, or the parent project is
-   completed/canceled. If `followUpProject` is empty → **do not** call
-   `save_issue`. Abort capture loudly (tell the human to set `followUpProject`
-   in `config.json`), and fall back to decline / `Follow-up not tracked` for
-   each follow-up candidate. If set → resolve it with `list_projects` (name,
-   id, or slug). On a miss → **do not** call `save_issue`; fail loudly with the
-   unresolved value (same decline fallback).
-5. **On the catch-all, bucket by repo milestone.** GitHub repo **short name**
-   from `gh repo view --json name --jq .name` (not the worktree directory).
-   In Step 9, `list_milestones` only — never `save_milestone`. If a milestone
-   with that exact name exists, use it on mint. If not, still show the plan
-   line below; **on mint in this step** `save_milestone` to create it
-   (`project` + `name`), then use the created milestone. Pass both `project`
-   and `milestone` on `save_issue`. Plan line:
-   `file under <catch-all> / <repo> (no live parent project)`. Still `relatedTo`
-   the parent when step 2 resolved one.
-6. On a successful inherit **or** fallback, always pass the resolved `project`
-   and the resolved `followUpLabel` on every `save_issue` create. Never omit
-   `project`. Never omit the label.
+   Then `get_issue` on that id. A miss (the id doesn't exist, or isn't visible)
+   counts as **no parent**.
+3. **Parent resolved → file as its sub-issue.** Pass `parentId` set to the
+   parent, `project` set to the parent's project, and `milestone` set to the
+   parent's milestone when it has one. Take them as they are — no project-status
+   check and no milestone lookup. Plan line:
+   `file as sub-issue of A-NNNN (<project>)`. If the parent has no project,
+   still pass `parentId`, but take `project` from `followUpProject` (step 4's
+   resolve and fail-closed rules apply). Plan line:
+   `file as sub-issue of A-NNNN (<catch-all>)`.
+4. **No parent → the `followUpProject` catch-all, flat.** No `parentId`, no
+   milestone. If `followUpProject` is empty → **do not** call `save_issue`.
+   Abort capture loudly (tell the human to set `followUpProject` in
+   `config.json`), and fall back to decline / `Follow-up not tracked` for each
+   follow-up candidate. If set → resolve it with `list_projects` (name, id, or
+   slug). On a miss → **do not** call `save_issue`; fail loudly with the
+   unresolved value (same decline fallback). Plan line:
+   `file under <catch-all> (no linked issue)`.
+5. Always pass the resolved `project` and the resolved `followUpLabel` on every
+   `save_issue` create. Never omit `project`. Never omit the label.
 
 ## Unattended follow-up issue body
 
