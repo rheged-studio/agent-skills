@@ -86,8 +86,9 @@ unattended path, with no Linear-only gate.
    1. the **upper-cased** branch name — its **leading** id only
       (`extractBranchIssueId`: `^(?:R|A)-\d+\b`, or `^R-\d+\b` for a single
       key), so a slug token such as `-c-2-` never becomes the parent;
-   2. else the PR title — the **first** match anywhere (`buildIssueRe`:
-      `\b(?:R|A)-\d+\b`), since a title carries ids in prose;
+   2. else the **upper-cased** PR title — the **first** match anywhere
+      (`buildIssueRe`: `\b(?:R|A)-\d+\b`, which has no case-insensitive flag),
+      since a title carries ids in prose;
    3. else there is **no** parent id.
    Then `get_issue` on that id. A miss (the id doesn't exist, or isn't visible)
    counts as **no parent**. On a hit, record the parent's **team name**.
