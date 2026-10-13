@@ -2,10 +2,10 @@
 title: bump changelog-core to 1.2.0
 release_note: ""
 created_at: "2026-10-13T13:00:00Z"
-merged_at: ""
+merged_at: "2026-10-13T13:30:38Z"
 branch: a-2781-agent-skills-bump-changelog-core
-pr: ""
-commit: ""
+pr: 209
+commit: e14ca3e
 author: rob@rheged.studio
 co_authors: []
 category: chore
@@ -13,7 +13,10 @@ breaking: false
 issues:
   - A-2781
   - A-2684
-stats: {}
+stats:
+  loc_added: 31
+  loc_removed: 6
+  files_changed: 3
 version: ""
 ---
 
