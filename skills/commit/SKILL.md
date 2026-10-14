@@ -17,7 +17,7 @@ compatibility: >-
   dependency; the grouping logic is model-driven and this prose is the source of
   truth.
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   author: Rob Easthope
 allowed-tools: Read, Bash(git:*)
 ---

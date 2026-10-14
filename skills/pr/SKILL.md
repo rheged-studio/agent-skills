@@ -7,7 +7,7 @@ compatibility: >-
   (authenticated), via a temporary body file. No bundled script, no npm
   dependency, no config.
 metadata:
-  version: 0.1.0
+  version: 0.1.1
   author: Rob Easthope
   credits:
     - skill: pr
