@@ -17,7 +17,7 @@ compatibility: >-
   read needs the `git` CLI. If the Linear MCP server is unavailable the skill
   cannot run — it has no non-MCP fallback.
 metadata:
-  version: 0.4.1
+  version: 0.4.2
   author: Rob Easthope
 allowed-tools: Read, Bash(git:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses
 ---
@@ -40,7 +40,7 @@ match the consuming repo:
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `linearTeamName` | **Fallback** Linear team **name**, used only when an issue's `get_issue` result carries no team. States are otherwise resolved against each issue's own team. Use the name, not the key — the key is renamed over time but the name is stable. | `"Rheged Studio"` |
-| `issueKeys` | Team-key prefixes that may lead a branch name — every team whose issues this repo carries, plus any legacy keys still on open branches (e.g. `["R", "A"]`). The branch issue-ID regex is built from these. | `["R", "A"]` |
+| `issueKeys` | Team-key prefixes that may lead a branch name — every team whose issues this repo carries, (e.g. `["R"]`). The branch issue-ID regex is built from these. | `["R"]` |
 
 A neutral [`config.example.json`](config.example.json) ships alongside it as a
 template — copy it over `config.json` and fill in your values, or edit
@@ -80,12 +80,12 @@ no scripts, so it mirrors the helper rather than vendoring it — ADR-0004):
 1. **Escape regex metacharacters** in each key (a configured key such as `C++`
    would otherwise throw or silently widen the match).
 2. **Group the alternation.** Wrap the keys in `(?:…)` whenever there is more than
-   one, so the `-\d+` binds to the whole alternation: `^(?:R|A)-\d+\b`. The naive
+   one, so the `-\d+` binds to the whole alternation: `^(?:C|R)-\d+\b`. The naive
    join `^R|A-\d+\b` is **wrong** — it parses as `^R` _or_ `A-\d+\b`. A single
    key needs no wrapper: `^R-\d+\b`.
 3. **Anchor at the start** (`^`) and match **once** (no `g` flag). A slug token
    such as the `-c-2-` in `r-40-add-c-2-support` must never resolve to an issue —
-   in a repo configured with `["C", "R", "A"]` it would otherwise transition an
+   in a repo configured with `["C", "R"]` it would otherwise transition an
    unrelated Cadogan issue.
 4. **Guard the empty case.** With no configured keys, match nothing — never build
    an empty alternation.
@@ -93,9 +93,9 @@ no scripts, so it mirrors the helper rather than vendoring it — ADR-0004):
 Match against the **upper-cased** branch name — branches like `r-7-as-acquired`
 carry the key in lower case, and a flow such as `--issue=R-7` produces upper-case
 branch names like `R-7-as-acquired`. So `c-12-fix-r-3-thing` → `C-12`,
-`a-2651-2-agent-skills` → `R-2651`, `R-123/demo` → `R-123`, and
-`feature/r-1-x` → no issue. Keeping legacy keys in `issueKeys` means leftover
-branches from before a team-key rename are still recognised. A bogus or
+`r-2651-2-agent-skills` → `R-2651`, `R-123/demo` → `R-123`, and
+`feature/r-1-x` → no issue. A branch that predates a team-key rename resolves only if its old key is
+still listed in `issueKeys`. A bogus or
 malformed ID simply errors on lookup and is skipped with a warning — no
 separate validation pass.
 
@@ -105,8 +105,7 @@ one), use that instead of re-extracting.
 ## Resolving the target state (per issue's team)
 
 A repo can carry issues from **several Linear teams** — e.g. `c-` (Cadogan),
-`r-` (Rheged) and legacy `a-` branches in one repo, where an `a-` ID may belong
-to either team. Workflow state IDs are per-team, so never resolve them once for
+`r-` (Rheged) branches in one repo. Workflow state IDs are per-team, so never resolve them once for
 a configured team. For each issue (mirroring `planTransitions` in the repo-root
 [`lib/linear-states.mjs`](../../lib/linear-states.mjs)):
 

@@ -22,14 +22,14 @@ This skill ships only [`config.example.json`](config.example.json), a neutral
 template — the per-skill `config.json` is generated on install, not vendored, so
 you never inherit another repo's values. Run the `rheged-skills-setup` skill to
 generate `config.json` from the example with your repo's facts, or copy it to
-`config.json` and fill it in by hand. Set `issueKeys` to every team key (plus any
-legacy key) your branches start with, or branch issue-IDs won't match, and set
+`config.json` and fill it in by hand. Set `issueKeys` to every team key your
+branches start with, or branch issue-IDs won't match, and set
 `linearTeamName` as the fallback team.
 
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `linearTeamName` | **Fallback** Linear team **name**, used only when an issue carries no team; states are otherwise resolved against each issue's own team. Stable across team-key renames — always resolve by name, not key. | `"Rheged Studio"` |
-| `issueKeys` | Team-key prefixes that may lead a branch name; the anchored issue-ID regex is built from these. | `["R", "A"]` |
+| `issueKeys` | Team-key prefixes that may lead a branch name; the anchored issue-ID regex is built from these. | `["R"]` |
 
 ## Requirements
 

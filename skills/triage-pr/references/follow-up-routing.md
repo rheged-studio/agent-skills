@@ -16,7 +16,7 @@ skip silently when the Linear MCP server is unavailable.
 | Key | Meaning | Default |
 | --- | --- | --- |
 | `linearTeamName` | Linear team **name** (not the key — the key is renamed over time, the name is stable) a follow-up is created under when it has **no parent** (filed flat under `followUpProject`). A follow-up with a parent is created in the **parent's** team. Empty disables capture entirely. | `""` |
-| `issueKeys` | Team-key prefixes that may lead a branch name (e.g. `["R", "A"]`), used to recognise issue ids the same way `linear-sync` does. Mirrors the established `issueKeys` convention. | `[]` |
+| `issueKeys` | Team-key prefixes that may lead a branch name (e.g. `["R"]`), used to recognise issue ids the same way `linear-sync` does. Mirrors the established `issueKeys` convention. | `[]` |
 | `followUpLabel` | Label applied to every created follow-up (provenance: this came from a review disposition). **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never mint without the label). Do not also apply the repo's agent-ready triage label. Rheged estate value: `follow-up`. | `"follow-up"` |
 | `followUpProject` | Linear project (name, id, or slug) used as the **catch-all** when the PR has no linked Linear issue to file the follow-up under (or that issue has no project). **Required when `linearTeamName` is set** — empty or unresolved must refuse create (never file with no project). Rheged estate value: `Follow-up issues`. | `""` |
 | `followUpState` | Optional initial workflow state (type, name, or id — e.g. `Backlog`) for created issues. Empty = the team's default state. | `"Backlog"` |
@@ -55,7 +55,7 @@ team, the required **label**, **project**, `parentId`, and the parent's
 `list_projects` / `list_issue_labels` and fail loudly on typos.
 
 **The follow-up lives in its parent's team.** A repo can carry issues from
-several Linear teams (e.g. `c-`, `r-` and legacy `a-` branches), so the PR's
+several Linear teams (e.g. `c-` and `r-` branches), so the PR's
 issue may not be in `linearTeamName`'s team. Filing the child in the parent's
 team keeps parent and child together and keeps the parent's project and
 milestone valid. Workflow states are per-team, so resolve `followUpState` with
@@ -84,10 +84,10 @@ unattended path, with no Linear-only gate.
    configured keys. Check in this order — **stop at the first source that yields
    an id**:
    1. the **upper-cased** branch name — its **leading** id only
-      (`extractBranchIssueId`: `^(?:R|A)-\d+\b`, or `^R-\d+\b` for a single
+      (`extractBranchIssueId`: `^(?:C|R)-\d+\b`, or `^R-\d+\b` for a single
       key), so a slug token such as `-c-2-` never becomes the parent;
    2. else the **upper-cased** PR title — the **first** match anywhere
-      (`buildIssueRe`: `\b(?:R|A)-\d+\b`, which has no case-insensitive flag),
+      (`buildIssueRe`: `\b(?:C|R)-\d+\b`, which has no case-insensitive flag),
       since a title carries ids in prose;
    3. else there is **no** parent id.
    Then `get_issue` on that id. A miss (the id doesn't exist, or isn't visible)

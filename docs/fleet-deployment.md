@@ -257,7 +257,7 @@ not overwritten).
 node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --dry-run
 
 # Write, supplying the facts the script can't derive from git/fs:
-echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","issueKeys":["A"]}}' \
+echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","issueKeys":["R"]}}' \
   | node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --write
 ```
 
@@ -270,7 +270,7 @@ for the full key → detection-source table.
 > preferring the most recently committed branch (R-556). If the team key was renamed
 > and stale branches still carry old prefixes — or detection is otherwise wrong (e.g.
 > a fresh repo with no keyed branches yet) — pass the canonical key(s) as a fact
-> (`"issueKeys":["A"]`, as above) to override. The `facts.issueKeys` value always
+> (`"issueKeys":["R"]`, as above) to override. The `facts.issueKeys` value always
 > wins over detection, so it is the canonical fix for a renamed team.
 
 ## Step 4 — Verify
@@ -339,7 +339,7 @@ is the only required field:
 | `repoType` | `single` \| `mono` \| `no-changelog` | | `single` | Informational — actual behaviour is detected by `rheged-skills-setup`. When `skills` is omitted, `no-changelog` subtracts `changelog` from the Rheged set (R-452). |
 | `facts.linearTeamName` | string | | — | Forwarded to `rheged-skills-setup` (it can't derive this). |
 | `facts.linearWorkspaceSlug` | string | | — | Forwarded to `rheged-skills-setup`. |
-| `facts.issueKeys` | string[] | | detected | Overrides branch-prefix detection (e.g. `["A"]`) — see the renamed-team note above. |
+| `facts.issueKeys` | string[] | | detected | Overrides branch-prefix detection (e.g. `["R"]`) — see the renamed-team note above. |
 | `facts.followUpProject` | string | | — | Fallback catch-all for triage-pr follow-ups whose PR has no linked Linear issue (otherwise a follow-up is filed as a sub-issue of that issue — R-2756); required when `linearTeamName` is set — R-1204 / R-1541. Rheged estate value: `Follow-up issues`. |
 
 The lock provenance (`lockSource`, `lockRef`) is supplied by the script, not the
@@ -354,7 +354,7 @@ profile. Worked example:
   "facts": {
     "linearTeamName": "Rheged Studio",
     "linearWorkspaceSlug": "rheged-studio",
-    "issueKeys": ["A"],
+    "issueKeys": ["R"],
     "followUpProject": "Follow-up issues"
   }
 }
