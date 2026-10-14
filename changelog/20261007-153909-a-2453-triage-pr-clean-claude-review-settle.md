@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-2453
+  - R-2453
 stats:
   files_changed: 14
   loc_added: 606
@@ -22,7 +22,7 @@ version: 1.12.0
 
 ## Added
 
-- **Claude review check detection ([A-2453](https://linear.app/rheged-studio/issue/A-2453)).** `rheged-skills-setup` 0.14.0 sets
+- **Claude review check detection ([R-2453](https://linear.app/rheged-studio/issue/R-2453)).** `rheged-skills-setup` 0.14.0 sets
   triage-pr's `reviewBotChecks.claude` to
   `{ "name": "<job id>", "producer": "github-actions" }` when a
   `.github/workflows/*.yml` job calls the estate
@@ -34,7 +34,7 @@ version: 1.12.0
 
 ## Fixed
 
-- **Clean Claude reviews settle ([A-2453](https://linear.app/rheged-studio/issue/A-2453)).** triage-pr 0.17.2's
+- **Clean Claude reviews settle ([R-2453](https://linear.app/rheged-studio/issue/R-2453)).** triage-pr 0.17.2's
   `review-threads.mjs` only counted sticky-marker summaries, PR reviews and
   review threads for an unmapped bot. A clean Claude review leaves just the
   claude-code-action tracking comment, so Claude stayed `missing` and every

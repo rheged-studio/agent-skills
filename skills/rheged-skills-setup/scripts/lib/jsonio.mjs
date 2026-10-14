@@ -1,4 +1,4 @@
-// Order-preserving read/serialise for a skill's config.json (A-409).
+// Order-preserving read/serialise for a skill's config.json (R-409).
 //
 // The reconcile must be idempotent: a second run with no new facts has to leave
 // every config.json byte-for-byte identical, or `git status` would churn and the

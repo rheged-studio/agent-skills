@@ -17,7 +17,7 @@ compatibility: >-
   read needs the `git` CLI. If the Linear MCP server is unavailable the skill
   cannot run — it has no non-MCP fallback.
 metadata:
-  version: 0.4.0
+  version: 0.4.1
   author: Rob Easthope
 allowed-tools: Read, Bash(git:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses
 ---
@@ -93,7 +93,7 @@ no scripts, so it mirrors the helper rather than vendoring it — ADR-0004):
 Match against the **upper-cased** branch name — branches like `r-7-as-acquired`
 carry the key in lower case, and a flow such as `--issue=R-7` produces upper-case
 branch names like `R-7-as-acquired`. So `c-12-fix-r-3-thing` → `C-12`,
-`a-2651-2-agent-skills` → `A-2651`, `A-123/demo` → `A-123`, and
+`a-2651-2-agent-skills` → `R-2651`, `R-123/demo` → `R-123`, and
 `feature/r-1-x` → no issue. Keeping legacy keys in `issueKeys` means leftover
 branches from before a team-key rename are still recognised. A bogus or
 malformed ID simply errors on lookup and is skipped with a warning — no

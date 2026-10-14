@@ -3,7 +3,7 @@
 // legacy mirror of `@rheged-studio/changelog-core finalise`. Production npm
 // targets run the CLI in-repo via shared-workflows `reusable-changelog-enrich.yml`
 // (`mode: finalise`), which writes enriched entries back as road-runner-bot[bot]
-// after the release PR merges (A-801 — no central orchestrator step).
+// after the release PR merges (R-801 — no central orchestrator step).
 //
 // Reads the just-bumped version from package.json (release-please updated it on
 // the release branch). For every entry that isn't finalised yet (empty `version`):
@@ -72,11 +72,11 @@ export function finaliseEntry(raw, version, resolvePr) {
   // Include blank(fm.stats) so a hand-authored entry that pre-fills
   // merged_at/commit/pr but leaves stats blank still gets stats from the PR.
   // Also treat a populated-but-commits-less stats block as enrichable: an entry
-  // finalised in the window between `stats` first existing (A-380) and
-  // `stats.commits` being added (A-560) has every other field set, so without
+  // finalised in the window between `stats` first existing (R-380) and
+  // `stats.commits` being added (R-560) has every other field set, so without
   // the `stats.commits` check needsEnrich is false, enrich is skipped, the entry
   // is version-stamped, and the later line-63 short-circuit makes the missing
-  // `commits` un-backfillable through finalise forever (A-579).
+  // `commits` un-backfillable through finalise forever (R-579).
   const needsEnrich =
     blank(fm.merged_at) ||
     blank(fm.commit) ||

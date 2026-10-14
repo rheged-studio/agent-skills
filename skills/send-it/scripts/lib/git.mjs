@@ -82,7 +82,7 @@ export function resolveBaseRef() {
  * `git log` argv for commits on HEAD not yet on `base`, newest first.
  * `--no-merges` keeps merge-commit subjects (often a PR title) out of the
  * bump scan so they are not double-counted against the branch's authored
- * commits under the dual merge policy (A-1176 / A-387 / A-824).
+ * commits under the dual merge policy (R-1176 / R-387 / R-824).
  * @param {string} base
  * @returns {string[]}
  */

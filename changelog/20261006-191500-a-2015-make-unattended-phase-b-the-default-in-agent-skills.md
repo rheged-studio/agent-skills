@@ -6,7 +6,7 @@ branch: a-2015-make-unattended-phase-b-the-default-in-agent-skills
 category: feature
 breaking: false
 issues:
-  - A-2015
+  - R-2015
 merged_at: "2026-10-06T18:31:10Z"
 commit: 14f8e37
 pr: 189
@@ -20,7 +20,7 @@ version: 1.10.0
 
 ## Added
 
-- **Unattended Phase B as the estate default ([A-2015](https://linear.app/rheged-studio/issue/A-2015)).**
+- **Unattended Phase B as the estate default ([R-2015](https://linear.app/rheged-studio/issue/R-2015)).**
   Port the Tempest trial into the agent-skills source: disposition-plan upsert,
   destination cascade (`followUpLabel` required when capture is on), head-commit
   review settle, and `maxReviewRounds`. `humanEnvelope` defaults to `false`; set
@@ -36,7 +36,7 @@ version: 1.10.0
   strips deprecated `cursor` from `reviewBots`.
 
 - **changelog 0.9.7.** Quote YAML scientific-notation commit SHAs on emit
-  ([A-2329](https://linear.app/rheged-studio/issue/A-2329)).
+  ([R-2329](https://linear.app/rheged-studio/issue/R-2329)).
 
 ## Skill bundle versions
 

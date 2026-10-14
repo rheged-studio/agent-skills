@@ -1,4 +1,4 @@
-// Covers the Node-major fail-closed gate (A-1702): the pure version parsers and
+// Covers the Node-major fail-closed gate (R-1702): the pure version parsers and
 // the `.nvmrc` / `engines.node` resolution. The `process.exit` half
 // (`assertNodeMajor`) stays behind the CLI guard.
 import {

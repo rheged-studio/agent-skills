@@ -97,7 +97,7 @@ some-pkg@1.2.3: deprecated do not use`;
   });
 });
 
-describe("parseEslintJson severity tagging (A-601)", () => {
+describe("parseEslintJson severity tagging (R-601)", () => {
   const json = JSON.stringify([
     {
       filePath: "/repo/src/a.ts",
@@ -117,7 +117,7 @@ describe("parseEslintJson severity tagging (A-601)", () => {
   });
 });
 
-describe("splitBySeverity (A-601)", () => {
+describe("splitBySeverity (R-601)", () => {
   const introduced = [
     { file: "a.ts", line: 1, message: "e", severity: "error" as const },
     { file: "a.ts", line: 2, message: "w", severity: "warning" as const },

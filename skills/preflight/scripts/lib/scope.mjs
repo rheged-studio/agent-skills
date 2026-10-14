@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Branch-scoped file classification for the preflight skill (originally A-282).
+ * Branch-scoped file classification for the preflight skill (originally R-282).
  * Shared by preflight.mjs, lint-fix.mjs, and classify-lint.mjs.
  *
  * Repo-specific configuration (linted workspaces + base branch) is auto-detected
- * rather than hardcoded (A-305, delivered under A-344): workspaces come from
+ * rather than hardcoded (R-305, delivered under R-344): workspaces come from
  * `pnpm-workspace.yaml` + each package's `lint` script, and the base branch from
  * `origin/HEAD`. A `preflight.config.json` at the repo root overrides both. This
  * keeps the preflight skill portable — a consuming repo edits at most one small
@@ -37,7 +37,7 @@ const DEFAULT_BASE_BRANCH = "main";
 
 /**
  * Minimal reader for the `packages:` block-sequence in `pnpm-workspace.yaml`.
- * Hand-rolled (no YAML dependency, per A-303) so the scripts travel without
+ * Hand-rolled (no YAML dependency, per R-303) so the scripts travel without
  * node_modules. Uses plain string operations rather than a backtracking regex.
  * @param {string} root
  * @returns {string[]}
@@ -335,7 +335,7 @@ export function resolveConfig(root = ROOT) {
   const config = {
     baseBranch: override.baseBranch ?? detectBaseBranch(root),
     // Default off: introduced ESLint warnings are surfaced but don't gate the
-    // ship, matching `pnpm lint` / CI (A-601). Opt in to block on them.
+    // ship, matching `pnpm lint` / CI (R-601). Opt in to block on them.
     blockOnWarnings: override.blockOnWarnings ?? false,
     workspaces: override.workspaces ?? detectWorkspaces(root),
   };
@@ -489,7 +489,7 @@ export function classifyChangedFiles(
       // `codeChanged = true` but landed in no bucket — preflight then reported
       // ESLint "ran", skipped every empty group, and passed: a silent
       // false-pass in the gate, breaking any non-pnpm consumer or a repo with
-      // linted code at the root outside `scripts/` (A-527).
+      // linted code at the root outside `scripts/` (R-527).
       let matched = false;
       for (const [key, { prefix }] of Object.entries(workspaces)) {
         if (file.startsWith(prefix)) {

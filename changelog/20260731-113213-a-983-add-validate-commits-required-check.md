@@ -4,7 +4,7 @@ created_at: '2026-07-31T11:32:14Z'
 category: chore
 breaking: false
 linear:
-  - A-983
+  - R-983
 prs: []
 merged_at:
 commit:

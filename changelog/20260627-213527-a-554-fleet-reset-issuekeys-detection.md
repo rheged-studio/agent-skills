@@ -12,8 +12,8 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-554
-  - A-556
+  - R-554
+  - R-556
 stats:
   files_changed: 7
   loc_added: 228
@@ -25,7 +25,7 @@ version: 1.2.0
 ## Fixed
 
 - **`initialise-skills` issue-key detection prefers the current key, not the historical
-  union ([A-556](https://linear.app/rheged-studio/issue/A-556)).** Detection now reads
+  union ([R-556](https://linear.app/rheged-studio/issue/R-556)).** Detection now reads
   the leading `<KEY>-<num>` prefix from the **most recently committed** branch
   (`git for-each-ref --sort=-committerdate`) rather than unioning every prefix across all
   branches, and **accepts single-letter keys** (the previous 2+-letter rule silently
@@ -38,7 +38,7 @@ version: 1.2.0
 ## Changed
 
 - **Fleet runbook: reset `config.json` from the example before reconciling
-  ([A-554](https://linear.app/rheged-studio/issue/A-554)).** `skills add … --copy`
+  ([R-554](https://linear.app/rheged-studio/issue/R-554)).** `skills add … --copy`
   vendors agent-skills' **own** `config.json`, which `initialise-skills` then treats as
   deliberate edits and won't overwrite — so a consumer silently inherits agent-skills'
   config. `docs/fleet-deployment.md` gains an explicit step (new Step 3) to overwrite each

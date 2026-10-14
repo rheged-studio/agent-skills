@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure
-// summary assembler (A-465): the machine-readable verdict the ship flow reads —
+// summary assembler (R-465): the machine-readable verdict the ship flow reads —
 // blocking/passed flags, per-category status, and the introduced/pre-existing
 // violation split, across normal and --dry-run modes. The lint-running half
 // (spawning eslint/markdownlint/actionlint) stays behind the CLI guard.
@@ -19,7 +19,7 @@ const SCOPE = {
 const CLEAN = { introduced: [], preExisting: [] };
 
 describe("buildSummary", () => {
-  // A-1203: lint-surface changes are reported, never blocking.
+  // R-1203: lint-surface changes are reported, never blocking.
   it("defaults lintSurface to an empty report", () => {
     const summary = buildSummary(
       SCOPE,
@@ -101,7 +101,7 @@ describe("buildSummary", () => {
     expect(buildSummary(SCOPE, {}, withPreExisting, true).deferred).toBe(false);
   });
 
-  describe("warn-severity introduced findings (A-601)", () => {
+  describe("warn-severity introduced findings (R-601)", () => {
     const withWarning = {
       introduced: [
         {

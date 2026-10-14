@@ -366,7 +366,7 @@ function claudeState(result: ReturnType<typeof buildResult>) {
   );
 }
 
-// A-2453: claude-code-action posts its tracking comment early as an in-progress
+// R-2453: claude-code-action posts its tracking comment early as an in-progress
 // ack and edits it in place to "**Claude finished @…'s task …**". On a clean
 // review that edit is Claude's only activity, so an unmapped `claude` must settle
 // on it — but only on the finished form, after ready, on the current head.
@@ -481,7 +481,7 @@ function coderabbitState(result: ReturnType<typeof buildResult>) {
   );
 }
 
-// A-2755: CodeRabbit edits its sticky summary in place into a "Currently
+// R-2755: CodeRabbit edits its sticky summary in place into a "Currently
 // processing" placeholder minutes before the review exists. That body carries
 // `auto-generated comment` (every state of the comment does) and, on a re-review,
 // can still carry the previous walkthrough, so an unmapped `coderabbitai` must not

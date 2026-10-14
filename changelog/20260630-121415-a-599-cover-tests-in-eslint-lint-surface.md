@@ -12,7 +12,7 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-599
+  - R-599
 stats:
   files_changed: 28
   loc_added: 447
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Fixed
 
-- **The consolidated skill tests under `tests/**` are linted again ([A-599](https://linear.app/rheged-studio/issue/A-599)).** When the skill
+- **The consolidated skill tests under `tests/**` are linted again ([R-599](https://linear.app/rheged-studio/issue/R-599)).** When the skill
   test suite was consolidated into `tests/skills/**`, the `pnpm lint` glob and
   `tsconfig.eslint.json` were left pointing at the old `infrastructure/tests/**` location, so the
   moved tests fell out of the lint surface entirely — CI's `🔬 Build & Lint` stayed green whilst

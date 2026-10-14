@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-455
+  - R-455
 affected_packages:
   - triage-pr
 stats:

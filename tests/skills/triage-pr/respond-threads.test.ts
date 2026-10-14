@@ -2,7 +2,7 @@
 // triage-pr bundle stays test-free whilst the symmetric reply/resolve +
 // idempotency logic is still covered in CI. The `gh` mutation layer is not
 // exercised here — only the pure planning/formatting functions, which is exactly
-// the surface A-410's "verifiable without spamming a real PR" criterion needs.
+// the surface R-410's "verifiable without spamming a real PR" criterion needs.
 // Legacy and new follow-up-pending markers are kept in sync with respond-threads.mjs.
 import {
   buildConsolidatedComment,
@@ -54,20 +54,20 @@ describe("planThreadResponses — symmetric accept/decline", () => {
 
   it("follow-ups → reply-resolve referencing the follow-up ticket + marker", () => {
     const [action] = planThreadResponses([
-      { decision: "follow-up", reference: "A-601", threadId: "T4" },
+      { decision: "follow-up", reference: "R-601", threadId: "T4" },
     ]);
     expect(action.kind).toBe("reply-resolve");
-    expect(action.body).toContain("A-601");
+    expect(action.body).toContain("R-601");
     expect(action.body).toContain("follow-up issue");
     expect(action.body).toContain(THREAD_MARKER);
   });
 
   it("defer alias → same as follow-up", () => {
     const [action] = planThreadResponses([
-      { decision: "defer", reference: "A-601", threadId: "T4_alias" },
+      { decision: "defer", reference: "R-601", threadId: "T4_alias" },
     ]);
     expect(action.kind).toBe("reply-resolve");
-    expect(action.body).toContain("A-601");
+    expect(action.body).toContain("R-601");
   });
 });
 
@@ -140,7 +140,7 @@ describe("planThreadResponses — replyOnAccept knob", () => {
 
   it("follow-ups still reply even when replyOnAccept is false", () => {
     const [action] = planThreadResponses(
-      [{ decision: "follow-up", reference: "A-601", threadId: "T3" }],
+      [{ decision: "follow-up", reference: "R-601", threadId: "T3" }],
       { replyOnAccept: false },
     );
     expect(action.kind).toBe("reply-resolve");
@@ -160,7 +160,7 @@ describe("planThreadResponses — guardrails and idempotency", () => {
       {
         decision: "follow-up",
         isHuman: true,
-        reference: "A-602",
+        reference: "R-602",
         threadId: "H2",
       },
     ]);
@@ -244,7 +244,7 @@ describe("buildConsolidatedComment — issue-level acknowledgement", () => {
       title: "Read missing from allowed-tools",
     },
     { reference: "YAGNI", status: "declined", title: "Add a retry wrapper" },
-    { reference: "A-411", status: "out-of-scope", title: "Refactor fetch" },
+    { reference: "R-411", status: "out-of-scope", title: "Refactor fetch" },
   ];
 
   it("maps each finding to its outcome + reference and carries the marker", () => {
@@ -253,7 +253,7 @@ describe("buildConsolidatedComment — issue-level acknowledgement", () => {
       "| Read missing from allowed-tools | Accepted | `abc1234` |",
     );
     expect(body).toContain("| Add a retry wrapper | Declined | YAGNI |");
-    expect(body).toContain("| Refactor fetch | Follow-up | A-411 |");
+    expect(body).toContain("| Refactor fetch | Follow-up | R-411 |");
     expect(body).toContain(SUMMARY_MARKER);
   });
 

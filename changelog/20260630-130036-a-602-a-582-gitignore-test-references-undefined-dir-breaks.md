@@ -1,5 +1,5 @@
 ---
-title: Fix undefined `dir` reference in the A-582 gitignore tests
+title: Fix undefined `dir` reference in the R-582 gitignore tests
 release_note:
 version: 1.2.0
 created_at: '2026-06-30T13:00:36Z'
@@ -13,7 +13,7 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-602
+  - R-602
 stats:
   files_changed: 2
   loc_added: 36
@@ -23,8 +23,8 @@ stats:
 
 ## Fixed
 
-- **The [A-582](https://linear.app/rheged-studio/issue/A-582) gitignore tests reference an undefined `dir`
-  ([A-602](https://linear.app/rheged-studio/issue/A-602)).** The two `!`-unignore cases
+- **The [R-582](https://linear.app/rheged-studio/issue/R-582) gitignore tests reference an undefined `dir`
+  ([R-602](https://linear.app/rheged-studio/issue/R-602)).** The two `!`-unignore cases
   added to `tests/skills/initialise-skills/gitignore.test.ts` called
   `reconcilePreflightIgnore(dir, …)`, but the `describe` block defines the temp root as
   `directory` — so both threw `ReferenceError: dir is not defined` and `pnpm test` failed.

@@ -13,7 +13,7 @@ once it is ready; set `humanEnvelope: true` for the human envelope), with the
 constraints below.
 
 **Relationship to `/send-it`:** since send-it 0.8.0, `/send-it` **opens or updates**
-the PR and then **invokes this skill as its Step 11** (A-1151). A default send-it
+the PR and then **invokes this skill as its Step 11** (R-1151). A default send-it
 run is incomplete until that hand-off happens. Running `/triage-pr` directly is for
 mid-flight re-entry (or when send-it was skipped), not the normal end of send-it.
 

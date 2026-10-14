@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fleet-deployment wipe helper (A-464).
+// Fleet-deployment wipe helper (R-464).
 //
 // Step 1 of the fleet runbook (docs/fleet-deployment.md): clear a target repo's
 // bespoke command shims before installing the shared skills via skills.sh, so

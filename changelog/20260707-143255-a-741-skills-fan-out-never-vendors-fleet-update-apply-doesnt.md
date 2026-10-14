@@ -6,7 +6,7 @@ branch: a-741-skills-fan-out-never-vendors-fleet-update-apply-doesnt
 category: fix
 breaking: false
 issues:
-  - A-741
+  - R-741
 merged_at: '2026-07-07T14:48:34Z'
 commit: 54b9bc2
 merge_strategy: squash
@@ -21,17 +21,17 @@ version: 1.2.2
 
 ## Fixed
 
-The skills-update fan-out ([A-713](https://linear.app/rheged-studio/issue/A-713)) **never vendored anything**: every roll's
+The skills-update fan-out ([R-713](https://linear.app/rheged-studio/issue/R-713)) **never vendored anything**: every roll's
 post-install verify reported the consumer as behind and the driver correctly
 aborted, so no `chore(skills)` PR ever opened. Reproduced end-to-end against a
 throwaway `markdownlint-config` — the `--copy` install and `initialise --write`
 actually advanced the consumer's `.claude/skills.lock` correctly; the wedge was
 **`check-updates`** counting `scaffold-new-skill` as an update.
 
-**Root cause — a regression from [A-730](https://linear.app/rheged-studio/issue/A-730) (#113).**
+**Root cause — a regression from [R-730](https://linear.app/rheged-studio/issue/R-730) (#113).**
 That change made `updatesAvailable` reflect the `added` bucket as well as changed
 locked skills, so a repo behind on a brand-new upstream bundle is no longer reported
-"up to date". But the repo-internal `scaffold-new-skill` ([A-729](https://linear.app/rheged-studio/issue/A-729))
+"up to date". But the repo-internal `scaffold-new-skill` ([R-729](https://linear.app/rheged-studio/issue/R-729))
 ships in every agent-skills checkout and is installed by **no** consumer, so it is
 `added` on every consumer forever — `updatesAvailable` is stuck `true` and the
 fan-out verify can never pass.
@@ -41,7 +41,7 @@ fan-out verify can never pass.
 install set on **both** sides. Scoped to the set the fan-out actually installs,
 `scaffold-new-skill` (upstream-only) drops out of `added` while a genuinely-new
 **canonical** skill the consumer lacks is still `added` — so legitimate adoption
-keeps firing and the [A-730](https://linear.app/rheged-studio/issue/A-730) intent is preserved. Omitting the flag (the local
+keeps firing and the [R-730](https://linear.app/rheged-studio/issue/R-730) intent is preserved. Omitting the flag (the local
 "am I behind?" use) is unchanged.
 
 **`fleet-update.mjs`.** The apply pipeline gains a **wipe** step before
@@ -49,6 +49,6 @@ keeps firing and the [A-730](https://linear.app/rheged-studio/issue/A-730) inten
 so `--copy` writes fresh `SKILL.md` files even when the installed skills.sh CLI
 does an additive copy that leaves stale versions on disk (the second failure mode
 seen in the live canary). The config.json the wipe removes is restored immediately
-afterwards by the existing [A-706](https://linear.app/rheged-studio/issue/A-706) step, and the post-roll verify now passes the
+afterwards by the existing [R-706](https://linear.app/rheged-studio/issue/R-706) step, and the post-roll verify now passes the
 resolved skill set to `check-updates --skills`. A new `--print-skills` mode emits
 the resolved set so the fan-out pre-flight can scope its probe identically.

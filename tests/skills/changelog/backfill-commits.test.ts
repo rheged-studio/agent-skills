@@ -68,7 +68,7 @@ describe("backfillEntry", () => {
     ).toBe(5);
   });
 
-  it("mirrors the stats-block child indent rather than hard-coding two spaces (A-581)", () => {
+  it("mirrors the stats-block child indent rather than hard-coding two spaces (R-581)", () => {
     // A stats block indented four spaces must get a four-space commits line, or
     // the inserted line is no longer a child of stats:.
     const raw = [
@@ -101,7 +101,7 @@ describe("backfillEntry", () => {
     ).toBe(6);
   });
 
-  it("synthesises a stats block for an entry that omits stats entirely (A-613)", () => {
+  it("synthesises a stats block for an entry that omits stats entirely (R-613)", () => {
     // The contract allows an entry to omit `stats` altogether; backfill must
     // create the block rather than throwing "no stats block to extend".
     const raw = [

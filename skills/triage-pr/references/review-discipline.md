@@ -143,7 +143,7 @@ thread with the `follow-up` reply. When Linear capture is disabled or fails clos
 leave the thread unresolved and report it as an outstanding gated item. It is still
 never applied.
 
-## Symmetric reply + resolve — recorded decisions (A-410)
+## Symmetric reply + resolve — recorded decisions (R-410)
 
 The reception above is symmetric on purpose. These are the decisions that settled
 how it is implemented, recorded so the SKILL.md steps have something to point at.

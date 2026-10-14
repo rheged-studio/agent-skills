@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Lint-surface detection (A-1203). Finds the branch's changes to lint / format /
+ * Lint-surface detection (R-1203). Finds the branch's changes to lint / format /
  * static-analysis config files and the ignore / disable directives it adds — the
  * surfaces `references/lint-surfaces.md` makes a developer decision. Reported in
  * the preflight summary, never blocking: preflight can't tell whether the agent

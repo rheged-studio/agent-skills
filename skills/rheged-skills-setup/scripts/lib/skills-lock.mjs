@@ -1,4 +1,4 @@
-// Build, read and write the consumer's `.claude/skills.lock` inventory (A-616).
+// Build, read and write the consumer's `.claude/skills.lock` inventory (R-616).
 //
 // The lock is a committed, machine-readable record of which skill versions a
 // consumer has installed, plus the `source` repo + `ref` they were installed from:
@@ -7,7 +7,7 @@
 //     "ref": "main",
 //     "skills": { "changelog": "1.2.0", "send-it": "2.1.3", … } }
 //
-// It is the foundation for WS3's push fleet-update orchestrator (A-617): given a
+// It is the foundation for WS3's push fleet-update orchestrator (R-617): given a
 // consumer's lock + a target ref, `check-updates.mjs` reports which skills are
 // behind.
 //
@@ -31,7 +31,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 /**
- * The lock's location under a consumer's repo root. Fixed by convention (A-616):
+ * The lock's location under a consumer's repo root. Fixed by convention (R-616):
  * the lock lives at the consumer root regardless of where `skills add` vendored
  * the bundles (`skills/`, `.claude/skills/`, `.agents/skills/`), so it is anchored
  * on repoRoot, not the skills dir.

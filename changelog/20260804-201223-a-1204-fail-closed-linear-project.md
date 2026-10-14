@@ -8,7 +8,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1204
+  - R-1204
 merged_at: '2026-08-04T20:38:25Z'
 commit: 9d2c5d6
 pr: 157
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Changed
 
-- **triage-pr `0.10.2` → `0.11.0` ([A-1204](https://linear.app/rheged-studio/issue/A-1204)).**
+- **triage-pr `0.10.2` → `0.11.0` ([R-1204](https://linear.app/rheged-studio/issue/R-1204)).**
   When follow-up capture is enabled (`linearTeamName` set), `followUpProject` is
   required. Empty or unresolved project aborts capture (decline / not-tracked
   fallback) instead of filing with no project. Dogfood sets

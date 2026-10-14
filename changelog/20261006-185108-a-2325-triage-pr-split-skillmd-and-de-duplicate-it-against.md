@@ -11,7 +11,7 @@ co_authors: []
 category: docs
 breaking: false
 issues:
-  - A-2325
+  - R-2325
 stats:
   files_changed: 11
   loc_added: 497
@@ -25,6 +25,6 @@ version: 1.10.0
 - **triage-pr (0.15.0 → 0.16.0).** Split Phase B into reference files
   (`phase-b-envelope`, `phase-b-unattended`, `follow-up-routing`); slim
   `SKILL.md` to a spine with pointers so impact rubric, lint surfaces, and
-  routing each have one home ([A-2325](https://linear.app/rheged-studio/issue/A-2325)).
+  routing each have one home ([R-2325](https://linear.app/rheged-studio/issue/R-2325)).
 - **send-it (0.9.1 → 0.9.2).** Trim Step 11 so it delegates to triage-pr instead
   of restating Phase B behaviour.

@@ -83,9 +83,9 @@ describe("parseFrontmatter — arrays and nested mappings", () => {
 
   it("parses a block (`- item`) array", () => {
     const { data } = parseFrontmatter(
-      "---\nissues:\n  - A-1\n  - A-2\n---\nbody\n",
+      "---\nissues:\n  - R-1\n  - R-2\n---\nbody\n",
     );
-    expect(data.issues).toEqual(["A-1", "A-2"]);
+    expect(data.issues).toEqual(["R-1", "R-2"]);
   });
 
   it("parses a nested `stats:` mapping", () => {
@@ -158,7 +158,7 @@ describe("stringifyFrontmatter — round-trips", () => {
   });
 
   it("round-trips inline arrays as block arrays without losing items", () => {
-    const data = { co_authors: ["alice", "bob"], issues: ["A-1"] };
+    const data = { co_authors: ["alice", "bob"], issues: ["R-1"] };
     const out = stringifyFrontmatter("body\n", data);
     expect(parseFrontmatter(out).data).toEqual(data);
   });

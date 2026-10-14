@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-462
+  - R-462
 affected_packages:
   - cleanup-repo
   - infrastructure
@@ -37,7 +37,7 @@ version: 1.2.0
   `services/` directories happened to exist as "detected" roots. A present
   manifest is now authoritative: its declared roots are returned verbatim
   (`[]` when none), which the caller maps to couldn't-detect (keep existing config
-  / flag for manual input) — the same no-invented-roots rule [SK-460](https://linear.app/goose-and-hobbes/issue/SK-460) established.
+  / flag for manual input) — the same no-invented-roots rule [R-460](https://linear.app/rheged-studio/issue/R-460) established.
 
 ## Changed
 

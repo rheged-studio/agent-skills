@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1179
+  - R-1179
 stats:
   files_changed: 14
   loc_added: 487
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Added
 
-- **Human envelope (default on, [A-1179](https://linear.app/rheged-studio/issue/A-1179)).**
+- **Human envelope (default on, [R-1179](https://linear.app/rheged-studio/issue/R-1179)).**
   After Phase A proves green and (optionally) promotes, Phase B hybrid-waits for
   configured review bots, verify-then-proposes dispositions, and halts for one
   batch `[y/N]` before accept / decline / Linear write (proposed-defer threads

@@ -13,7 +13,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-569
+  - R-569
 stats:
   files_changed: 11
   loc_added: 359
@@ -23,7 +23,7 @@ stats:
 
 ## Added
 
-- **`initialise-skills` gitignores preflight's scratch output ([A-569](https://linear.app/rheged-studio/issue/A-569)).**
+- **`initialise-skills` gitignores preflight's scratch output ([R-569](https://linear.app/rheged-studio/issue/R-569)).**
   The `preflight` skill writes `.preflight-summary.json` to the repo root on every real run,
   so without an ignore rule it surfaced as an untracked change after a `/send-it` run (which
   invokes preflight) — `gh pr create` then warned about an uncommitted change. `initialise-skills`

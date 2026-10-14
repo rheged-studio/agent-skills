@@ -1,5 +1,5 @@
 ---
-title: probe profile-only skills in the fleet-update A-757 guard
+title: probe profile-only skills in the fleet-update R-757 guard
 release_note: fleet-update now refuses to wipe a consumer when its profile lists a skill that is outside the catalogue and absent from agent-skills, instead of deleting that bundle with no way to re-vendor it.
 created_at: "2026-10-07T13:42:10Z"
 merged_at: "2026-10-07T15:28:09Z"
@@ -11,8 +11,8 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-1961
-  - A-757
+  - R-1961
+  - R-757
 stats:
   files_changed: 3
   loc_added: 134
@@ -23,7 +23,7 @@ version: 1.12.0
 
 ## Fixed
 
-- **Fleet update ([A-1961](https://linear.app/rheged-studio/issue/A-1961)).** The [A-757](https://linear.app/rheged-studio/issue/A-757) pre-apply guard in
+- **Fleet update ([R-1961](https://linear.app/rheged-studio/issue/R-1961)).** The [R-757](https://linear.app/rheged-studio/issue/R-757) pre-apply guard in
   `infrastructure/scripts/fleet-update.mjs` only probed the catalogue's Rheged
   skill names. An explicit profile `skills` list is passed as-is to the Rheged
   `skills add`, and its bundles are wiped first. So a repo-local extra still

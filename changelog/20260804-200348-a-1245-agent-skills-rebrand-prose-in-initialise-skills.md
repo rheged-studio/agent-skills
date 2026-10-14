@@ -11,7 +11,7 @@ co_authors: []
 category: docs
 breaking: false
 issues:
-  - A-1245
+  - R-1245
 stats:
   files_changed: 2
   loc_added: 28
@@ -25,4 +25,4 @@ version: 1.4.0
 - **initialise-skills command.** Worked-example team and workspace slug in
   `.claude/commands/initialise-skills.md` now read **Rheged Studio** /
   **rheged-studio** instead of ACME Skunkworks / acme-skunkworks
-  ([A-1245](https://linear.app/rheged-studio/issue/A-1245)).
+  ([R-1245](https://linear.app/rheged-studio/issue/R-1245)).

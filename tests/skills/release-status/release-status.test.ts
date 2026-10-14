@@ -63,7 +63,7 @@ describe("classifyTitle — Conventional-Commit bump rules", () => {
   });
 });
 
-describe("previewBump — strongest bump across commits (A-824)", () => {
+describe("previewBump — strongest bump across commits (R-824)", () => {
   it("feat beats fix", () => {
     expect(previewBump([{ subject: "fix: a" }, { subject: "feat: b" }])).toBe(
       "minor",

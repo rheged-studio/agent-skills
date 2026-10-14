@@ -13,7 +13,7 @@ import {
   resolveConfig,
 } from "./lib/scope.mjs";
 /**
- * Change-gated, branch-scoped lint preflight (originally A-282).
+ * Change-gated, branch-scoped lint preflight (originally R-282).
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -229,7 +229,7 @@ function runActionlint(files) {
 }
 
 /**
- * Print the branch's lint-surface changes (A-1203). Non-blocking: preflight
+ * Print the branch's lint-surface changes (R-1203). Non-blocking: preflight
  * can't tell whether the agent or the developer made them, so it lists them for
  * the developer to confirm (see references/lint-surfaces.md).
  * @param {ReturnType<typeof import('./lib/lint-surface.mjs').buildLintSurface>} lintSurface
@@ -265,7 +265,7 @@ function reportLintSurface(lintSurface) {
  * @param {{ failedLinters?: string[], actionlintStatus?: string, markdownlintStatus?: string, lintSurface?: ReturnType<typeof import('./lib/lint-surface.mjs').buildLintSurface> }} results
  * @param {{ introduced: import('./classify-lint.mjs').Violation[], preExisting: import('./classify-lint.mjs').Violation[] }} classified
  * @param {boolean} isDryRun
- * @param {boolean} [blockOnWarnings] gate on introduced warn-severity findings too (default off — A-601)
+ * @param {boolean} [blockOnWarnings] gate on introduced warn-severity findings too (default off — R-601)
  */
 export function buildSummary(
   scope,
@@ -281,7 +281,7 @@ export function buildSummary(
     markdown: scope.markdownChanged ? scope.markdown : "skipped",
   };
 
-  // Errors always block; warnings block only under blockOnWarnings (A-601).
+  // Errors always block; warnings block only under blockOnWarnings (R-601).
   const { blocking: introducedBlocking, warnings: introducedWarnings } =
     splitBySeverity(classified.introduced, blockOnWarnings);
 
@@ -290,7 +290,7 @@ export function buildSummary(
     categories,
     deferred: classified.preExisting.length > 0 && !isDryRun,
     dryRun: isDryRun,
-    // Lint-surface changes on the branch (A-1203): informational, never
+    // Lint-surface changes on the branch (R-1203): informational, never
     // blocking — a developer decision to confirm, per references/lint-surfaces.md.
     lintSurface: results.lintSurface ?? EMPTY_LINT_SURFACE,
     mergeBase: scope.mergeBase,
@@ -320,7 +320,7 @@ export function buildSummary(
 
 /**
  * Fail closed when the active Node major does not match `.nvmrc` / an exact
- * `engines.node` pin (A-1702, ported from the A-1698 consumer patch). Stops
+ * `engines.node` pin (R-1702, ported from the R-1698 consumer patch). Stops
  * `pnpm exec eslint` dying under the wrong Node and surfacing as an
  * unparseable `failedLinters` row with `introducedCount: 0`. A `>=` / `^` / `~`
  * engines range is not an exact-major pin and is ignored; a repo with neither
@@ -650,7 +650,7 @@ function main() {
 
   // Non-blocking notice: warn-severity findings the branch introduced are
   // reported but, by default, don't gate the ship — `pnpm lint` / CI exit 0 on
-  // warnings too (A-601). A consumer that wants them to block sets
+  // warnings too (R-601). A consumer that wants them to block sets
   // `blockOnWarnings: true` (which folds them into `introducedBlocking` above).
   if (!blockOnWarnings && introducedWarnings.length > 0) {
     console.warn(

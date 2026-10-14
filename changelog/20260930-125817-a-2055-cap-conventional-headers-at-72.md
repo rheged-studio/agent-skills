@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-2055
+  - R-2055
 stats:
   files_changed: 9
   loc_added: 84
@@ -26,7 +26,7 @@ version: 1.9.0
   line: `type`, optional scope, optional `!`, colon and space, then the subject)
   must be **≤ 72 characters**. If a natural header would overflow, rewrite it;
   do not wrap onto a second line to dodge the cap. Body wrapping is out of
-  scope ([A-1413](https://linear.app/rheged-studio/issue/A-1413)).
+  scope ([R-1413](https://linear.app/rheged-studio/issue/R-1413)).
 - **send-it (0.8.2 → 0.9.0).** The same cap applies to derived PR titles,
   delegated `/commit` subjects, and send-it's own `git commit -m` lines. `--title`
   stays verbatim but warns when it exceeds 72 characters.

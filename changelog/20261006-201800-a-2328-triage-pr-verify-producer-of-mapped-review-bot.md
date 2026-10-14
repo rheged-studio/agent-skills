@@ -6,7 +6,7 @@ branch: a-2328-triage-pr-verify-the-producer-of-a-mapped-review-bot-check
 category: feature
 breaking: false
 issues:
-  - A-2328
+  - R-2328
 merged_at: "2026-10-06T19:35:11Z"
 commit: c922758
 pr: 191
@@ -20,7 +20,7 @@ version: 1.10.0
 
 ## Added
 
-- **triage-pr 0.17.1 ([A-2328](https://linear.app/rheged-studio/issue/A-2328)).**
+- **triage-pr 0.17.1 ([R-2328](https://linear.app/rheged-studio/issue/R-2328)).**
   `reviewBotChecks` values may be a string check name (unchanged) or
   `{ "name": "…", "producer": "…" }`. When `producer` is set, settle matches
   `StatusContext.creator.login` or `CheckRun.checkSuite.app.slug` as well as the

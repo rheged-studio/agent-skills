@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-410
+  - R-410
 affected_packages:
   - triage-pr
 stats:

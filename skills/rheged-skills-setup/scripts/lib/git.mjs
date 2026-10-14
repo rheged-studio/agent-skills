@@ -1,7 +1,7 @@
-// Zero-dep git helpers for host-repo fact detection (A-409).
+// Zero-dep git helpers for host-repo fact detection (R-409).
 //
 // `detectBaseBranch` delegates to the canonical, vendored lib/base-branch.mjs
-// (ADR-0004 / A-534) — shared with the preflight bundle rather than hand-copied,
+// (ADR-0004 / R-534) — shared with the preflight bundle rather than hand-copied,
 // with `pnpm vendor:check` gating drift. Re-exported here (with this bundle's
 // own default) so callers keep importing it from `./git.mjs`.
 //
@@ -50,7 +50,7 @@ export function listBranchNames(root) {
       .filter(Boolean)
       // Strip only the ref namespace — `refs/heads/` for a local branch or
       // `refs/remotes/<remote>/` for a tracking ref — so an embedded slash in the
-      // branch name (a local `A-123/demo`) survives for key extraction (A-580).
+      // branch name (a local `R-123/demo`) survives for key extraction (R-580).
       // `%(refname)` (full ref) carries no `HEAD ->` decoration; the symbolic ref
       // collapses to a bare `HEAD`, which we drop.
       .map((name) => name.replace(/^refs\/(?:heads|remotes\/[^/]+)\//, ""))
@@ -64,7 +64,7 @@ export function listBranchNames(root) {
  * keeping the first (most recent) occurrence. Querying both `refs/heads` and
  * `refs/remotes` means a branch and its tracking ref collapse to one name after
  * the remote-prefix strip. Returns [] when git fails (e.g. no repo). The ordering
- * is what lets issue-key detection prefer the current key over historical (A-556).
+ * is what lets issue-key detection prefer the current key over historical (R-556).
  * @param {string} root
  * @returns {string[]}
  */
@@ -92,7 +92,7 @@ export function listBranchNamesByRecency(root) {
       .filter(Boolean)
       // Strip only the ref namespace (`refs/heads/` or `refs/remotes/<remote>/`)
       // so an embedded slash in the branch name survives for key extraction
-      // (A-580), then drop the bare `HEAD` the symbolic remote ref collapses to.
+      // (R-580), then drop the bare `HEAD` the symbolic remote ref collapses to.
       .map((name) => name.replace(/^refs\/(?:heads|remotes\/[^/]+)\//, ""))
       .filter((name) => name !== "HEAD")
       .filter((name) => {
@@ -111,7 +111,7 @@ export function listBranchNamesByRecency(root) {
  * the leading `<KEY>-<number>` segment (e.g. `asw-12-add-thing` → `ASW`,
  * `a-558-thing` → `A`). Uppercase-normalised, de-duplicated, sorted for stable
  * output. Accepts a **single-letter** key so a one-letter Linear team key (e.g.
- * `A`) is detected (A-556); `v1-release`-style branches are still excluded because
+ * `A`) is detected (R-556); `v1-release`-style branches are still excluded because
  * the digit follows the letter directly, with no `-` in between.
  * @param {string[]} branches
  * @returns {string[]}
@@ -133,7 +133,7 @@ export function parseIssueKeysFromBranches(branches) {
  * in recency order and returns the key(s) of the first branch that carries one, so
  * a repo whose Linear team was renamed (…→ASW→SK→A) yields the active key from a
  * recent branch rather than the union of every historical prefix on stale branches
- * (A-556). Returns [] when no branch carries a key.
+ * (R-556). Returns [] when no branch carries a key.
  * @param {string[]} branchesByRecency
  * @returns {string[]}
  */
@@ -150,7 +150,7 @@ export function currentIssueKeys(branchesByRecency) {
 
 /**
  * Convenience: detect the current issue key(s) straight from the repo's branch
- * list, preferring the most recently committed branch's prefix (A-556). Override
+ * list, preferring the most recently committed branch's prefix (R-556). Override
  * with `facts.issueKeys` when the recency heuristic is wrong (e.g. a brand-new repo
  * with no keyed branches yet, or one genuinely using several keys).
  * @param {string} root
@@ -179,7 +179,7 @@ export function parseClobberedConfigs(gitDiffOutput) {
 /**
  * Restore per-skill config.json files a `skills add --copy` re-vendor clobbered —
  * deleted, or overwritten with the neutral example — back to their tracked HEAD
- * content (A-706). agent-skills gitignores its own config.json (A-615) so the
+ * content (R-706). agent-skills gitignores its own config.json (R-615) so the
  * source bundle ships none; a --copy clean-replace therefore wipes the consumer's
  * REAL (tracked) values, and the reconcile that follows would silently regress
  * every no-detector key (linearTeamName, changelog.packageRoots, …). Scoped to

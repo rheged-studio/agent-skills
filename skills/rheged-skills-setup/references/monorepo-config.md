@@ -18,7 +18,7 @@ Detection sources and fallbacks: [`detectable-keys.md`](detectable-keys.md).
 
 - Detector finds no workspace → `affectedPackages: false`.
 - `packageRoots` stays the example placeholder `["apps", "packages", "services"]`
-  and is reported **`unchanged`**, not `needs-manual-input` (A-813). The
+  and is reported **`unchanged`**, not `needs-manual-input` (R-813). The
   placeholder is unused at runtime while the gate is off.
 - Leaving the placeholder (rather than writing `[]`) keeps the
   "ours equals base → infer" path open if the repo later gains a workspace.

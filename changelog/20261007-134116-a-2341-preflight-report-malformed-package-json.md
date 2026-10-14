@@ -11,7 +11,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-2341
+  - R-2341
 stats:
   files_changed: 5
   loc_added: 85
@@ -22,7 +22,7 @@ version: 1.12.0
 
 ## Fixed
 
-- **preflight 0.4.1 ([A-2341](https://linear.app/rheged-studio/issue/A-2341)).** The Node-major gate parsed the repo's
+- **preflight 0.4.1 ([R-2341](https://linear.app/rheged-studio/issue/R-2341)).** The Node-major gate parsed the repo's
   `package.json` with no guard, so invalid JSON or a top-level `null`
   escaped as an uncaught stack trace. preflight now prints
   `preflight: <path> contains invalid JSON` or

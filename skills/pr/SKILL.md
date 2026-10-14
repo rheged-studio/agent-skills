@@ -7,7 +7,7 @@ compatibility: >-
   (authenticated), via a temporary body file. No bundled script, no npm
   dependency, no config.
 metadata:
-  version: 0.1.0
+  version: 0.1.1
   author: Rob Easthope
   credits:
     - skill: pr
@@ -85,7 +85,7 @@ Standalone, derive them yourself. The Release line follows the highest-bumping
 Conventional Commit type on the branch: `feat` → minor, `fix`/`perf`/`revert` →
 patch, `!` or `BREAKING CHANGE:` → major, anything else →
 `no release (<type>-only)`. Related issues are the tracker identifiers (such as
-`A-123`) found in the branch name and commit messages.
+`R-123`) found in the branch name and commit messages.
 
 ## Sections
 

@@ -1,10 +1,10 @@
 // Render the reconcile report — both a human-readable summary and the JSON shape
-// Claude parses to drive the Linear-fact and per-key drift-opt-in steps (A-409).
+// Claude parses to drive the Linear-fact and per-key drift-opt-in steps (R-409).
 
 import { IGNORE_ENTRY } from "./gitignore.mjs";
 
 /**
- * Human-friendly one-liners for the .gitignore reconcile action (A-569).
+ * Human-friendly one-liners for the .gitignore reconcile action (R-569).
  */
 const GITIGNORE_LABEL = {
   added: `added ${IGNORE_ENTRY} to .gitignore`,
@@ -17,12 +17,12 @@ const GITIGNORE_LABEL = {
 
 const SKILL_CONFIG_IGNORE_LABEL = {
   clean: "no erroneous skill-config ignore rules",
-  stripped: "stripped skill-config ignore rules (A-812)",
-  "would-strip": "will strip skill-config ignore rules (A-812)",
+  stripped: "stripped skill-config ignore rules (R-812)",
+  "would-strip": "will strip skill-config ignore rules (R-812)",
 };
 
 /**
- * Human-friendly one-liners for the skills.lock write action (A-616).
+ * Human-friendly one-liners for the skills.lock write action (R-616).
  */
 const LOCK_LABEL = {
   unchanged: "skills.lock already up to date",
@@ -86,11 +86,11 @@ function byStatusThenKey(a, b) {
  * @param {SkillReport[]} skillReports
  * @param {boolean} wrote whether this was a --write run
  * @param {{ path: string, status: string } | null} [gitignore] the .gitignore
- *   reconcile result (A-569), or null when preflight is not installed
+ *   reconcile result (R-569), or null when preflight is not installed
  * @param {{ path: string, status: string, needsFacts: boolean } | null} [lock] the
- *   skills.lock write result (A-616), or null when no bundles are installed
+ *   skills.lock write result (R-616), or null when no bundles are installed
  * @param {{ path: string, status: string, removed?: string[] } | null} [skillConfigIgnore]
- *   strip of erroneous skill-config ignore rules (A-812)
+ *   strip of erroneous skill-config ignore rules (R-812)
  * @returns {object}
  */
 export function buildReport(
@@ -283,7 +283,7 @@ export function formatHuman(report) {
 /**
  * Build the read-only `--review` report: every installed skill's full current
  * config, each key annotated with its current value, its merge classification,
- * and a human description from references/detectable-keys.md (A-702). Unlike
+ * and a human description from references/detectable-keys.md (R-702). Unlike
  * buildReport this writes nothing and needs no gitignore/mode plumbing — it is a
  * complete snapshot of what each config currently holds.
  * @param {SkillReview[]} skillReviews

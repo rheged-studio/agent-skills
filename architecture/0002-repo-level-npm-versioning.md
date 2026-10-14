@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-06-01
-- **Tracking:** [A-364](https://linear.app/goose-and-hobbes/issue/A-364)
+- **Tracking:** [R-364](https://linear.app/rheged-studio/issue/R-364)
 - **Supersedes:** [ADR-0001](0001-skill-layout.md) Decision 1 (per-skill versioning via pnpm workspaces). ADR-0001 Decisions 2–4 still stand.
 - **Superseded by:** [ADR-0003](0003-release-please-versioning.md) — _mechanism only_: the Changesets engine (Decision 4 in full; the Changesets framing in Decisions 1–2) is replaced by release-please. This ADR's core decision — repo-level npm versioning, the root as the single published package, skills versioned out-of-band — **still stands**.
 
@@ -10,9 +10,9 @@
 
 ADR-0001 Decision 1 chose **per-skill versioning via pnpm workspaces**: each `skills/<name>/` would be its own Changesets-managed workspace package (`@rheged-studio/skill-<name>`), versioned independently, with the root `@rheged-studio/agent-skills` kept `private: true` and added to Changesets' `ignore` list. That decision was made (2026-05-27) on the premise that **the root is never published** — skills.sh consumes the Git tree directly and npm is not in the consumer path (ADR-0001 Decision 4).
 
-That premise no longer holds. [A-358](https://linear.app/goose-and-hobbes/issue/A-358) flipped the root to `private: false`, version `1.0.0`, and published it to npm as the public artifact that bundles every skill (`files: ["skills/"]`). The root is now the published tarball.
+That premise no longer holds. [R-358](https://linear.app/rheged-studio/issue/R-358) flipped the root to `private: false`, version `1.0.0`, and published it to npm as the public artifact that bundles every skill (`files: ["skills/"]`). The root is now the published tarball.
 
-Meanwhile the workspace plumbing Decision 1 needs was never laid: there is no `pnpm-workspace.yaml` and no `workspaces` field, so Changesets only ever discovers the root. A changeset that names a per-skill package points at something Changesets can't see — it **silently no-ops**, or makes `pnpm changeset status` **error**. This trap has bitten the repo repeatedly (`cleanup-repo`'s `asw-134` never bumped; the `changelog` and `linear-sync` ports, [A-351](https://linear.app/goose-and-hobbes/issue/A-351) / [A-352](https://linear.app/goose-and-hobbes/issue/A-352), worked around it by naming the root).
+Meanwhile the workspace plumbing Decision 1 needs was never laid: there is no `pnpm-workspace.yaml` and no `workspaces` field, so Changesets only ever discovers the root. A changeset that names a per-skill package points at something Changesets can't see — it **silently no-ops**, or makes `pnpm changeset status` **error**. This trap has bitten the repo repeatedly (`cleanup-repo`'s `asw-134` never bumped; the `changelog` and `linear-sync` ports, [R-351](https://linear.app/rheged-studio/issue/R-351) / [R-352](https://linear.app/rheged-studio/issue/R-352), worked around it by naming the root).
 
 Completing Decision 1 (add the workspace, `ignore` the root, version skills independently) would pull npm versioning _away_ from the repo level — the published root would freeze or stop being the bumped package — which is the opposite of what we want now that the root is the deliberate public artifact. So we resolve the tension the other way.
 

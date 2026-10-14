@@ -13,8 +13,8 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-598
-  - A-600
+  - R-598
+  - R-600
 stats:
   files_changed: 9
   loc_added: 355
@@ -25,7 +25,7 @@ stats:
 ## Changed
 
 - **Release-type is decided by category, not path
-  ([A-598](https://linear.app/rheged-studio/issue/A-598)).** send-it previously decided
+  ([R-598](https://linear.app/rheged-studio/issue/R-598)).** send-it previously decided
   whether a PR was release-triggering by whether the diff touched a `shippablePaths` prefix
   (or a publish-surface `package.json` key). It now reads the change's semantic category —
   the Conventional-Commit type of the commits it authored: `feat`/`fix`/`perf`, or any
@@ -35,17 +35,17 @@ stats:
   `category`, and `releaseTriggering` fields.
 
 - **`shippablePaths` / `shippableManifestKeys` are advisory
-  ([A-598](https://linear.app/rheged-studio/issue/A-598)).** They remain in `config.json`
+  ([R-598](https://linear.app/rheged-studio/issue/R-598)).** They remain in `config.json`
   as a documentation hint of the published surface (and an optional cross-check note), but no
   longer decide release-type.
 
 ## Removed
 
-- **The `changelogScope` knob ([A-600](https://linear.app/rheged-studio/issue/A-600)).**
+- **The `changelogScope` knob ([R-600](https://linear.app/rheged-studio/issue/R-600)).**
   send-it now authors a dated `changelog/` entry for **every** PR — the "record everything,
   filter later" model — gated only by the `changelog: true|false` master switch. Release notes
   filter the changelog to the version-stamped (release-triggering) entries at release time.
-  The `changelogScope: "all" | "shippable"` option (added under [A-576](https://linear.app/rheged-studio/issue/A-576)) is gone. ADR-0003 is
+  The `changelogScope: "all" | "shippable"` option (added under [R-576](https://linear.app/rheged-studio/issue/R-576)) is gone. ADR-0003 is
   amended to match.
 
 - The `send-it` bundle bumps to `0.5.0`.

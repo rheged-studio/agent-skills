@@ -1,4 +1,4 @@
-// Three-way reconcile for a skill's config.json (A-409).
+// Three-way reconcile for a skill's config.json (R-409).
 //
 // Per key we hold three values:
 //   base   — the placeholder from the skill's config.example.json (or undefined)
@@ -7,7 +7,7 @@
 //
 // The classifier decides, per key, whether to write the detected value, leave a
 // deliberate edit alone (drift), or flag a value the caller must supply. The
-// guiding rule (A-409): NEVER clobber a deliberate manual edit. Drift is kept by
+// guiding rule (R-409): NEVER clobber a deliberate manual edit. Drift is kept by
 // default and only overwritten when the caller opts in per key (acceptDrift).
 //
 // `classifyKey` and `mergeConfig` are pure — no filesystem, no git — so the whole
@@ -86,7 +86,7 @@ export function sameSet(a, b) {
 // keep the existing order on write to avoid churn).
 const SET_KEYS = new Set(["issueKeys", "reviewBots"]);
 
-// Removed from estate review-bot lists; strip on reconcile so legacy configs heal (A-2054).
+// Removed from estate review-bot lists; strip on reconcile so legacy configs heal (R-2054).
 const DEPRECATED_REVIEW_BOTS = new Set(["cursor"]);
 
 function normaliseReviewBotLogin(value) {
@@ -218,7 +218,7 @@ function resolveAffectedPackages(data, results) {
  * When `affectedPackages` is false, `packageRoots` is unused at runtime. Leaving
  * it as `needs-manual-input` (undetectable on a single-package host) is noise —
  * keep the example placeholder in place and report `unchanged` so operators are
- * not trained to fill monorepo knobs they do not need (A-813). Preserving the
+ * not trained to fill monorepo knobs they do not need (R-813). Preserving the
  * placeholder (rather than writing `[]`) keeps the "ours equals base → infer"
  * path open when the repo later gains a workspace.
  * @param {Record<string, KeyResult>} results
@@ -330,7 +330,7 @@ export function mergeConfig({
     data[key] = value;
   }
 
-  // A-813: monorepo-only keys must not flag needs-manual-input when the gate is off.
+  // R-813: monorepo-only keys must not flag needs-manual-input when the gate is off.
   silenceGatedPackageRoots(results, data);
 
   // Report `changed` from the net result, once, after all inferred + `--set`

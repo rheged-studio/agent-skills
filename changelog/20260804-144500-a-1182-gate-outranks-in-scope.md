@@ -11,7 +11,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-1182
+  - R-1182
 stats:
   files_changed: 3
   loc_added: 43
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Fixed
 
-- **Bucket precedence in Step 3 ([A-1182](https://linear.app/rheged-studio/issue/A-1182)).**
+- **Bucket precedence in Step 3 ([R-1182](https://linear.app/rheged-studio/issue/R-1182)).**
   The **In-scope** bullet told the agent to fix any lint failure reproducible on
   the branch head, and it is listed _before_ **Lint-surface gated**. A reader
   matching the buckets top-down could classify a lint-only-surface failure as

@@ -1,4 +1,4 @@
-// Workspace-layout detection for host-repo facts (A-409).
+// Workspace-layout detection for host-repo facts (R-409).
 //
 // `parseWorkspaceGlobs` mirrors the `pnpm-workspace.yaml` `packages:` reader in
 // the preflight bundle (skills/preflight/scripts/lib/scope.mjs) — hand-rolled, no
@@ -137,7 +137,7 @@ export function detectPackageRoots(root) {
   // answer is `[]` ("declared, none"). It must NOT fall through to the
   // package.json / default-dir guess, which would fabricate roots from whichever
   // apps/packages/services directories happen to exist — exactly the invented-root
-  // drift A-460 removed. The caller maps `[]` to couldn't-detect (keep existing
+  // drift R-460 removed. The caller maps `[]` to couldn't-detect (keep existing
   // config / flag for manual input).
   const pnpmFile = join(root, "pnpm-workspace.yaml");
   if (existsSync(pnpmFile)) {

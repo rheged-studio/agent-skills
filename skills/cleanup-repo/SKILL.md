@@ -15,7 +15,7 @@ compatibility: >-
   Linear MCP server; if it is unavailable, skip that step silently. The
   filesystem pass needs Node.js ≥22.
 metadata:
-  version: 0.5.0
+  version: 0.5.1
   author: Rob Easthope
 allowed-tools: Read, Bash(git:*), Bash(gh:*), Bash(node:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses
 ---
@@ -222,30 +222,30 @@ eyeball them:
 
 ```text
 ## Worktrees to Remove (3)
-- /path/.claude/worktrees/A-7-as-acquired (merged)
-- /path/.claude/worktrees/A-9-button-styling (squash-merged, PR #42)
+- /path/.claude/worktrees/R-7-as-acquired (merged)
+- /path/.claude/worktrees/R-9-button-styling (squash-merged, PR #42)
 - /path/.claude/worktrees/orphan-detached (detached HEAD)
 
 ## Worktrees Skipped — Uncommitted Changes (1)
-- /path/.claude/worktrees/A-12-wip (merged, but `git status` is non-empty;
+- /path/.claude/worktrees/R-12-wip (merged, but `git status` is non-empty;
   remove manually with `git worktree remove --force <path>`)
 
 ## Local Branches to Delete (3)
-- A-7-as-acquired (merged)
-- A-9-button-styling (squash-merged, PR #42 "Fix button styling")
+- R-7-as-acquired (merged)
+- R-9-button-styling (squash-merged, PR #42 "Fix button styling")
 - chore-update-deps (merged)
 
 ## Local Branches Skipped — Tip Ahead of Merged PR (1)
-- A-15-extra-tweaks (squash-merged PR #50, but local tip has commits added after
-  the merge; delete manually with `git branch -D A-15-extra-tweaks` if they're
+- R-15-extra-tweaks (squash-merged PR #50, but local tip has commits added after
+  the merge; delete manually with `git branch -D R-15-extra-tweaks` if they're
   disposable)
 
 ## Remote Branches to Delete (2)
-- A-7-as-acquired
-- A-9-button-styling
+- R-7-as-acquired
+- R-9-button-styling
 
 ## Linear Issues Still Open (1)
-- A-9 "Button styling" — currently In Review (branch: A-9-button-styling)
+- R-9 "Button styling" — currently In Review (branch: R-9-button-styling)
 
 ## Empty Directories to Remove (1)
 - /path/.claude/worktrees   (predicted: empty once the worktrees above are removed)

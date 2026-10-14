@@ -45,7 +45,7 @@ import { readFileSync, realpathSync } from "node:fs";
 export const THREAD_MARKER = "<!-- triage-pr:thread-ack -->";
 export const SUMMARY_MARKER = "<!-- triage-pr:summary-ack -->";
 /**
- * Unattended Phase B disposition plan (upserted before apply; A-2013 / A-2014).
+ * Unattended Phase B disposition plan (upserted before apply; R-2013 / R-2014).
  */
 export const DISPOSITION_PLAN_MARKER = "<!-- triage-pr:disposition-plan -->";
 // Non-resolving marker written the moment a follow-up is filed (Step 8), before
@@ -75,7 +75,7 @@ const CANONICAL_DECISIONS = new Set([
 ]);
 
 /**
- * CLI aliases → canonical decision names (A-1542).
+ * CLI aliases → canonical decision names (R-1542).
  */
 const DECISION_ALIASES = {
   defer: "follow-up",
@@ -785,7 +785,7 @@ function selfTest() {
       reason: "Outdated: the helper was deleted in abc1234.",
       threadId: "T_outdated_reason",
     },
-    { decision: "follow-up", reference: "A-601", threadId: "T_follow_up" },
+    { decision: "follow-up", reference: "R-601", threadId: "T_follow_up" },
     { decision: "follow-up-pending", threadId: "T_follow_up_pending" },
     {
       comments: [
@@ -799,13 +799,13 @@ function selfTest() {
     },
     {
       decision: "defer",
-      reference: "A-602",
+      reference: "R-602",
       threadId: "T_defer_alias",
     },
     {
       decision: "follow-up",
       isHuman: true,
-      reference: "A-602",
+      reference: "R-602",
       threadId: "T_follow_up_human",
     },
     { decision: "accept", isHuman: true, sha: "deadbee", threadId: "T_human" },
@@ -836,7 +836,7 @@ function selfTest() {
       title: "Add retry wrapper",
     },
     {
-      reference: "A-411",
+      reference: "R-411",
       status: "out-of-scope",
       title: "Refactor fetch layer",
     },
@@ -888,7 +888,7 @@ function selfTest() {
       name: "follow-up thread → reply-resolve referencing the ticket",
       ok:
         byId.T_follow_up.kind === "reply-resolve" &&
-        byId.T_follow_up.body.includes("A-601") &&
+        byId.T_follow_up.body.includes("R-601") &&
         byId.T_follow_up.body.includes("follow-up issue") &&
         byId.T_follow_up.body.includes(THREAD_MARKER),
     },
@@ -896,7 +896,7 @@ function selfTest() {
       name: "defer alias → same as follow-up",
       ok:
         byId.T_defer_alias.kind === "reply-resolve" &&
-        byId.T_defer_alias.body.includes("A-602"),
+        byId.T_defer_alias.body.includes("R-602"),
     },
     {
       name: "human thread is never auto-actioned (follow-up)",

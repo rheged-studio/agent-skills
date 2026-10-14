@@ -160,7 +160,7 @@ const STICKY_MARKERS = [
 // the final edit opens with this header, e.g.
 //   **Claude finished @octocat's task in 5m 9s** —— [View job](…)
 // It carries none of the STICKY_MARKERS, so without this a clean Claude review (no
-// PR review, no threads) never settles an unmapped `claude` (A-2453). Anchored to
+// PR review, no threads) never settles an unmapped `claude` (R-2453). Anchored to
 // the start of the body so a finished body that quotes "Claude is working" further
 // down still counts, while an in-progress or errored comment never does.
 const CLAUDE_FINISHED_SUMMARY = /^\s*\*\*Claude finished @[^\s*]+?['’]s task\b/;
@@ -171,7 +171,7 @@ const CLAUDE_FINISHED_SUMMARY = /^\s*\*\*Claude finished @[^\s*]+?['’]s task\b
 //   > Currently processing new changes in this PR. This may take a few minutes…
 // Every state of that comment matches `auto-generated comment`, and on a re-review
 // the placeholder can still carry the previous walkthrough, so an in-progress
-// marker vetoes the finished reading whatever else the body matches (A-2755).
+// marker vetoes the finished reading whatever else the body matches (R-2755).
 const IN_PROGRESS_MARKERS = [
   /auto-generated comment: review in progress by coderabbit\.ai/i,
   /currently processing new changes in this pr\b/i,
@@ -541,7 +541,7 @@ function settleFromCheck(checkSpec, checkContexts, threshold) {
  * finished summary comment — a sticky-marker summary or claude-code-action's
  * "**Claude finished @…'s task**" tracking comment — created **or edited in
  * place** (`updatedAt`). A bare ack ("Claude Code is working…") never counts, nor
- * does CodeRabbit's "Currently processing" placeholder (A-2755).
+ * does CodeRabbit's "Currently processing" placeholder (R-2755).
  * @returns {{state: string, evidence: string}}
  */
 function settleFromActivity({
@@ -1490,7 +1490,7 @@ function selfTest() {
     ok: ids(normalised.unresolvedThreads).includes("T_norm"),
   });
 
-  // ---- settle on the current head since ready (A-2300) ----
+  // ---- settle on the current head since ready (C-674) ----
   // Timeline modelled on guyhepner/tempest#2896: CodeRabbit posts its walkthrough
   // and a "Review skipped: draft pull request" status while the PR is a draft,
   // then reviews only after the ready flip.
@@ -1582,7 +1582,7 @@ function selfTest() {
     ok: settleBotStateFromResult(editedInPlace, "coderabbitai") === "reported",
   });
 
-  // ---- claude-code-action finished summary on an unmapped claude (A-2453) ----
+  // ---- claude-code-action finished summary on an unmapped claude (R-2453) ----
   // The tracking comment is created as an in-progress ack, then edited in place
   // to the finished summary. On a clean review it is Claude's only activity.
   const CLAUDE_WORKING =
@@ -1690,7 +1690,7 @@ function selfTest() {
       )?.commentId === "IC_claude_new",
   });
 
-  // ---- CodeRabbit "Currently processing" placeholder on an unmapped coderabbitai (A-2755) ----
+  // ---- CodeRabbit "Currently processing" placeholder on an unmapped coderabbitai (R-2755) ----
   // The sticky comment is edited in place to an in-progress block minutes before
   // the review exists. It carries `auto-generated comment` (and, on a re-review,
   // the previous walkthrough), so only the in-progress veto keeps it unsettled.

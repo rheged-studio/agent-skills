@@ -6,7 +6,7 @@ branch: a-1542-rename-triage-pr-defer-language-to-follow-up-and-review
 category: feature
 breaking: false
 issues:
-  - A-1542
+  - R-1542
 merged_at: "2026-08-27T11:02:03Z"
 commit: c179186
 pr: 172
@@ -20,7 +20,7 @@ version: 1.5.0
 
 ## Changed
 
-- **Follow-up language across Phase B ([A-1542](https://linear.app/rheged-studio/issue/A-1542)).**
+- **Follow-up language across Phase B ([R-1542](https://linear.app/rheged-studio/issue/R-1542)).**
   Human-facing copy (envelope plan, Step 13 report, GitHub thread replies) now
   describes filing a **follow-up issue**, not deferring work. Disposition label
   `follow-up` replaces `defer`; `follow-up-pending` replaces `defer-pending`.

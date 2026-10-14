@@ -17,7 +17,7 @@ compatibility: >-
   dependency; the grouping logic is model-driven and this prose is the source of
   truth.
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   author: Rob Easthope
 allowed-tools: Read, Bash(git:*)
 ---
@@ -161,7 +161,7 @@ dodge the cap. Body and footer line length are out of scope here.
 
 `/commit` groups by **intent** (one commit per coherent change), not by component
 or package boundaries. Per-component atomic-commit splitting (attributing files to
-a package and cutting a commit per package) stays **parked** (A-374) — no estate
+a package and cutting a commit per package) stays **parked** (R-374) — no estate
 repo does per-component path attribution today. Revisit only if a published
 multi-package monorepo doing per-component versioning off squash enters the estate.
 

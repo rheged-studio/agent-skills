@@ -56,7 +56,7 @@ describe("deriveBump", () => {
   });
 
   it("takes the strongest type across all commits: a later feat wins over a lead fix", () => {
-    // A-387: the type signal is the strongest Conventional-Commit type across
+    // R-387: the type signal is the strongest Conventional-Commit type across
     // ALL commits, mirroring the all-commits breaking-change scan — not HEAD only.
     expect(
       deriveBump([
@@ -67,7 +67,7 @@ describe("deriveBump", () => {
   });
 
   it("is minor when the HEAD commit is a chore but an earlier commit is a feat", () => {
-    // A-387 acceptance criteria: HEAD chore + earlier feat → minor.
+    // R-387 acceptance criteria: HEAD chore + earlier feat → minor.
     expect(
       deriveBump([
         { body: "", subject: "chore: tidy" },
@@ -77,7 +77,7 @@ describe("deriveBump", () => {
   });
 
   it("is patch when the HEAD commit is a docs but an earlier commit is a fix", () => {
-    // A-387 acceptance criteria: HEAD docs + earlier fix → patch.
+    // R-387 acceptance criteria: HEAD docs + earlier fix → patch.
     expect(
       deriveBump([
         { body: "", subject: "docs: notes" },
@@ -162,7 +162,7 @@ describe("deriveType", () => {
   });
 });
 
-describe("deriveCategory (A-598 — release-type by semantic category, not path)", () => {
+describe("deriveCategory (R-598 — release-type by semantic category, not path)", () => {
   it("treats feat as a release with the feature category", () => {
     expect(deriveCategory([{ body: "", subject: "feat: add export" }])).toEqual(
       {
@@ -230,7 +230,7 @@ describe("deriveCategory (A-598 — release-type by semantic category, not path)
     ).toMatchObject({ breaking: true, releaseTriggering: true });
   });
 
-  it("takes the strongest type/category across all commits, not HEAD (A-387)", () => {
+  it("takes the strongest type/category across all commits, not HEAD (R-387)", () => {
     // HEAD chore + earlier feat → feature / releaseTriggering (acceptance criteria).
     expect(
       deriveCategory([
@@ -244,7 +244,7 @@ describe("deriveCategory (A-598 — release-type by semantic category, not path)
     });
   });
 
-  it("takes an earlier fix over a lead docs commit (A-387)", () => {
+  it("takes an earlier fix over a lead docs commit (R-387)", () => {
     // HEAD docs + earlier fix → fix / releaseTriggering (acceptance criteria).
     expect(
       deriveCategory([
@@ -258,7 +258,7 @@ describe("deriveCategory (A-598 — release-type by semantic category, not path)
     });
   });
 
-  it("takes an earlier perf over a lead chore commit (third release tier, A-387)", () => {
+  it("takes an earlier perf over a lead chore commit (third release tier, R-387)", () => {
     // HEAD chore + earlier perf → perf / releaseTriggering.
     expect(
       deriveCategory([
@@ -275,7 +275,7 @@ describe("deriveCategory (A-598 — release-type by semantic category, not path)
   it("promotes a later release type over a HEAD `constructor:` commit (no prototype collision)", () => {
     // significance() must guard against Object.prototype.constructor: without the
     // Object.hasOwn guard the HEAD `constructor:` pins the dominant type and the
-    // later feat is silently dropped — defeating the all-commits scan (A-387).
+    // later feat is silently dropped — defeating the all-commits scan (R-387).
     expect(
       deriveCategory([
         { body: "", subject: "constructor: x" },

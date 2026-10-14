@@ -41,7 +41,7 @@ export function classifyViolations(mergeBase, violations) {
  * warn-severity findings surfaced non-blockingly. ESLint `warn`-level findings
  * (severity 1) match `pnpm lint` / CI, which exit 0 on warnings — so by default
  * they are reported but do not gate. A consumer that wants warn-level findings
- * to block sets `blockOnWarnings: true` in `preflight.config.json` (A-601).
+ * to block sets `blockOnWarnings: true` in `preflight.config.json` (R-601).
  *
  * markdownlint/actionlint findings are always tagged `error` (those tools exit
  * non-zero on any finding, so CI blocks on them) and therefore always block.
@@ -86,7 +86,7 @@ export function parseEslintJson(eslintJson) {
     for (const message of result.messages ?? []) {
       // Drop severity 0 (off) only. Severity 1 (warn) is kept but tagged
       // `warning` so it can be surfaced non-blockingly by default — matching
-      // `pnpm lint` / CI, which exit 0 on warnings (A-601). Severity 2 is an
+      // `pnpm lint` / CI, which exit 0 on warnings (R-601). Severity 2 is an
       // error and always blocks.
       if (message.severity === 0 || !message.line) {
         continue;

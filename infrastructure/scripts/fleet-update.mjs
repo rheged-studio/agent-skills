@@ -1,37 +1,37 @@
 #!/usr/bin/env node
-// Fleet single-repo update pipeline (A-617).
+// Fleet single-repo update pipeline (R-617).
 //
-// The recurring push-update path a driver (A-713) calls once per consumer repo
+// The recurring push-update path a driver (R-713) calls once per consumer repo
 // to roll it onto the current shared skill bundles. Parameterised by ONE repo's
-// install profile (a JSON contract A-715's private manifest supplies) — this
+// install profile (a JSON contract R-715's private manifest supplies) — this
 // script holds NO repo list, so private repo names never surface in this public
 // repo's CI. It is NOT the onboarding wipe: bespoke-prototype removal stays the
 // separate, human-run `fleet-wipe.mjs` path.
 //
 // Per profile it runs, against the target consumer repo:
-//   1. wipe the vendored bundle dirs for the install set (A-741) — so the
+//   1. wipe the vendored bundle dirs for the install set (R-741) — so the
 //      `skills add --copy` that follows writes FRESH SKILL.md files. Some skills.sh
 //      CLI versions do an additive copy that doesn't overwrite an existing bundle,
 //      leaving the OLD version on disk; initialise then re-records that stale
 //      version and verify is behind forever. Wiping first makes the roll
 //      deterministic regardless of the CLI's copy semantics.
 //   2. skills add <github-url> --skill … --agent … --copy  (vendor the bundles)
-//   3. restore the per-skill config.json that --copy clobbers (A-706 — the real
-//      fix never shipped; agent-skills gitignores its own config.json (A-615), so
+//   3. restore the per-skill config.json that --copy clobbers (R-706 — the real
+//      fix never shipped; agent-skills gitignores its own config.json (R-615), so
 //      a --copy re-vendor deletes or overwrites the consumer's tracked configs),
 //      by `git checkout HEAD -- <config.json>` — else every no-detector key
 //      regresses on the next reconcile.
 //   4. initialise.mjs --write            (reconcile config + refresh skills.lock)
 //   5. check-updates.mjs verify          (assert the repo is now up to date —
 //      updatesAvailable === false; the idempotency primitive). Scoped to the
-//      install set (--skills) so the repo-internal scaffold-new-skill (A-729),
+//      install set (--skills) so the repo-internal scaffold-new-skill (R-729),
 //      present in every source checkout but in no consumer, isn't a perpetual
-//      `added` update that wedges the verify (A-741).
+//      `added` update that wedges the verify (R-741).
 //
 // Preview by default (matches fleet-wipe.mjs / vendor-sync.mjs); --apply mutates.
 // A preview skips the install + restore (skills.sh has no dry-run) and runs
 // initialise/check-updates read-only. CI runs --self-test here through
-// `run-self-tests.mjs` (A-2454), alongside the vitest companion
+// `run-self-tests.mjs` (R-2454), alongside the vitest companion
 // (infrastructure/tests/fleet-update.test.ts) that gates the pure core.
 //
 //   node infrastructure/scripts/fleet-update.mjs --profile ./acme.json           # preview (default)
@@ -77,7 +77,7 @@ export function loadFleetCatalogue() {
 
 const FLEET_CATALOGUE = loadFleetCatalogue();
 
-// Rheged install URL — skills.lock provenance (A-718). Matt packs use a second source.
+// Rheged install URL — skills.lock provenance (R-718). Matt packs use a second source.
 export const SOURCE_URL = rhegedSourceUrl(FLEET_CATALOGUE);
 
 // Rheged ship set from the estate catalogue (for --print-skills / check-updates scope).
@@ -197,7 +197,7 @@ export function parseProfile(json) {
  * otherwise the install defaults to `CANONICAL_SKILLS` (a `no-changelog` repo
  * gets that set minus `changelog`). It never returns `null`: a bare install with
  * no `--skill` flags would vendor the whole published set, pulling in the
- * repo-internal `scaffold-new-skill` (A-729), so the omitted-list case resolves
+ * repo-internal `scaffold-new-skill` (R-729), so the omitted-list case resolves
  * to the explicit canonical set instead.
  * @param {{ skills: string[] | undefined, repoType: string }} profile
  * @returns {string[]}
@@ -220,7 +220,7 @@ export function resolveFullInstallSkills(profile) {
  * boolean` existence probe. The apply guard refuses to touch a consumer when this
  * is non-empty: the wipe removes `<mirror>/<skill>` for every install-set skill
  * BEFORE re-vendoring, so a name absent upstream would delete the consumer's own
- * bundle with no way to restore it (A-757 — a repo-local skill wrongly listed in
+ * bundle with no way to restore it (R-757 — a repo-local skill wrongly listed in
  * the fleet manifest). Pure — the caller injects the probe, so the guard is
  * unit-testable without a filesystem.
  * @param {string[]} skills               the resolved install set
@@ -232,13 +232,13 @@ export function findMissingSourceSkills(skills, sourceHasSkill) {
 }
 
 /**
- * The skills the A-757 apply guard must probe in the source: the resolved
+ * The skills the R-757 apply guard must probe in the source: the resolved
  * install list minus the Matt catalogue names — i.e. everything that installs
  * from the Rheged source. That covers the catalogue's Rheged names in the
  * install set AND any profile-only name (a repo-local extra still listed in
  * `profile.skills`, outside the catalogue): it is passed to the Rheged
  * `skills add` and wiped, so it must be probed too, or the wipe would delete a
- * bundle the install cannot restore (A-1961). Matt catalogue names are excluded:
+ * bundle the install cannot restore (R-1961). Matt catalogue names are excluded:
  * they re-vendor from their own source and are verified after install, not
  * against this checkout. Pure — resolves names, touches no filesystem.
  * @param {{ skills: string[] | undefined, repoType: string }} profile
@@ -256,11 +256,11 @@ export function resolveSourceProbeSkills(profile) {
  * `add <SOURCE_URL> [--skill X]… [--agent Y]… --copy`. The install source is the
  * canonical GitHub URL, NOT the local checkout: skills.sh writes the source it was
  * given into the consumer's `skills-lock.json`, so a local path would commit an
- * absolute machine path + `sourceType: local` into every consumer (A-718). A URL
+ * absolute machine path + `sourceType: local` into every consumer (R-718). A URL
  * install resolves the default branch — right for the recurring roll-onto-latest
  * fan-out. `resolveSkills` always yields an explicit list (the canonical set when
  * the profile omits `skills`), so the install always names its `--skill`s and
- * never pulls the whole published set (A-729). Pure — constructs argv, spawns
+ * never pulls the whole published set (R-729). Pure — constructs argv, spawns
  * nothing.
  * @param {{ skills: string[] | undefined, agents: string[], repoType: string }} profile
  * @returns {string[]}
@@ -275,7 +275,7 @@ export function buildSkillsAddArgs(profile) {
 }
 
 /**
- * Per-source `skills add` argv for the estate catalogue (A-1904).
+ * Per-source `skills add` argv for the estate catalogue (R-1904).
  * @param {{ skills: string[] | undefined, agents: string[], repoType: string }} profile
  * @returns {string[][]}
  */
@@ -293,10 +293,10 @@ export function buildCatalogueInstallArgvs(profile) {
  * The vendored bundle dirs a re-vendor should remove before `skills add --copy`,
  * as `<mirror>/<skill>` relative paths (one per install skill × mirror). Removing
  * them first forces `--copy` to write fresh SKILL.md files even when the CLI's copy
- * is additive and would otherwise leave the OLD version on disk (A-741). Only the
+ * is additive and would otherwise leave the OLD version on disk (R-741). Only the
  * install set is targeted, so consumer-extra bundles outside the profile are left
  * untouched. Pure — joins paths, touches no filesystem; the caller skips absent
- * dirs and restores the config.json a wipe also removes (A-706, step 3).
+ * dirs and restores the config.json a wipe also removes (R-706, step 3).
  * @param {string[]} mirrors  relative skills-dir mirrors (CONSUMER_SKILL_DIRS)
  * @param {string[]} skills   the resolved install set
  * @returns {string[]}
@@ -307,7 +307,7 @@ export function resolveWipeTargets(mirrors, skills) {
 
 /**
  * The child environment for `skills add` — the base env plus `CLAUDECODE=1`, which
- * forces skills.sh's non-interactive install path (A-745). Without an agent env,
+ * forces skills.sh's non-interactive install path (R-745). Without an agent env,
  * `skills add` shows an interactive "Installation scope" prompt and, with no TTY to
  * answer it, vendors NOTHING — so an unattended roll (CI/cron) silently produces
  * empty bundles. It "worked" by hand only because Claude Code sets CLAUDECODE.
@@ -508,7 +508,7 @@ function runSkillsAdd(consumer, args) {
 
 /**
  * Remove the vendored bundle dirs for the install set so the `skills add --copy`
- * that follows writes fresh files (A-741). Skips dirs that don't exist yet (a
+ * that follows writes fresh files (R-741). Skips dirs that don't exist yet (a
  * first-ever install), and leaves consumer-extra bundles alone. The config.json a
  * wipe removes is restored right after the re-copy by restoreClobberedConfigs.
  */
@@ -541,7 +541,7 @@ function wipeVendoredBundles(consumer, skills) {
   }
 
   console.log(
-    `fleet-update: wiped ${removed.length} vendored bundle dir(s) before re-copy (A-741):`,
+    `fleet-update: wiped ${removed.length} vendored bundle dir(s) before re-copy (R-741):`,
   );
   for (const relativePath of removed.toSorted()) {
     console.log(`  ${relativePath}`);
@@ -568,7 +568,7 @@ function restoreClobberedConfigs(consumer) {
 
   run("git", ["checkout", "HEAD", "--", ...clobbered], consumer);
   console.log(
-    `fleet-update: restored ${clobbered.length} config.json from HEAD (A-706):`,
+    `fleet-update: restored ${clobbered.length} config.json from HEAD (R-706):`,
   );
   for (const path of clobbered) {
     console.log(`  ${path}`);
@@ -654,7 +654,7 @@ function runVerify(source, consumer, ref, { assert }, skills) {
   const lock = join(consumer, ".claude", "skills.lock");
   // Scope the diff to the install set so the repo-internal scaffold-new-skill isn't
   // a perpetual `added` update that fails verify on an otherwise up-to-date repo
-  // (A-741). `skills` is always the resolved list (never empty) from the caller.
+  // (R-741). `skills` is always the resolved list (never empty) from the caller.
   const skillsScope =
     skills && skills.length > 0 ? ["--skills", skills.join(",")] : [];
   const result = spawnCapture(
@@ -747,7 +747,7 @@ function main(argv) {
   // Emit the resolved install set (comma-separated) and exit — the fan-out
   // pre-flight (fanout-skills.yml) reads it to scope its check-updates probe to the
   // same skills the roll installs, so the repo-internal scaffold-new-skill doesn't
-  // read as a perpetual update (A-741). Needs only the profile, not a checkout.
+  // read as a perpetual update (R-741). Needs only the profile, not a checkout.
   if (options.printSkills) {
     console.log(resolveSkills(profile).join(","));
     return;
@@ -776,8 +776,8 @@ function main(argv) {
   const rhegedSkills = resolveSkills(profile);
   const installSkills = resolveFullInstallSkills(profile);
 
-  // Fail-safe (A-757): every Rheged install-set skill — catalogue names plus any
-  // profile-only extras (A-1961) — must exist in the source before we touch the
+  // Fail-safe (R-757): every Rheged install-set skill — catalogue names plus any
+  // profile-only extras (R-1961) — must exist in the source before we touch the
   // consumer. Matt packs are probed after install, not against this checkout.
   const missingFromSource = findMissingSourceSkills(
     resolveSourceProbeSkills(profile),
@@ -787,15 +787,15 @@ function main(argv) {
     fail(
       `install set names skill(s) absent from --source (${source}): ${missingFromSource.join(", ")}. ` +
         "Refusing to touch the consumer — a profile skill missing upstream would be wiped and could not be " +
-        "re-vendored (A-757). Remove it from the fleet manifest, or add it to agent-skills.",
+        "re-vendored (R-757). Remove it from the fleet manifest, or add it to agent-skills.",
       2,
     );
   }
 
   if (options.apply) {
     // Wipe the install set's vendored dirs BEFORE the --copy so fresh SKILL.md
-    // files land even if the CLI's copy is additive (A-741); the restore that
-    // follows brings back the config.json the wipe removed (A-706).
+    // files land even if the CLI's copy is additive (R-741); the restore that
+    // follows brings back the config.json the wipe removed (R-706).
     wipeVendoredBundles(consumer, installSkills);
     for (const addArgs of buildCatalogueInstallArgvs(profile)) {
       runSkillsAdd(consumer, addArgs);
@@ -839,7 +839,7 @@ function main(argv) {
   }
 
   console.log(
-    "fleet-update: would restore any config.json --copy clobbers (A-706).",
+    "fleet-update: would restore any config.json --copy clobbers (R-706).",
   );
   const installed = findConsumerSkillsDirectories(consumer);
   if (installed.length === 0) {
@@ -977,7 +977,7 @@ function selfTest() {
 
     // resolveWipeTargets — every mirror × (install set + retired bundles). The
     // expected counts derive from LEGACY_BUNDLE_NAMES, so retiring another
-    // bundle doesn't silently break these cases again (A-2454).
+    // bundle doesn't silently break these cases again (R-2454).
     const wipeTargets = resolveWipeTargets(
       [".claude/skills", ".agents/skills"],
       ["send-it", "commit"],
@@ -1009,7 +1009,7 @@ function selfTest() {
           ),
     });
 
-    // resolveSourceProbeSkills (A-1961) — profile-only Rheged extras are probed.
+    // resolveSourceProbeSkills (R-1961) — profile-only Rheged extras are probed.
     cases.push({
       name: "resolveSourceProbeSkills includes a profile-only skill outside the catalogue",
       ok: resolveSourceProbeSkills({
@@ -1025,7 +1025,7 @@ function selfTest() {
       }).includes("tdd"),
     });
 
-    // findMissingSourceSkills (A-757) — the apply guard's pure core.
+    // findMissingSourceSkills (R-757) — the apply guard's pure core.
     const present = new Set(["commit", "release-status", "send-it"]);
     cases.push({
       name: "findMissingSourceSkills flags a name absent from source",

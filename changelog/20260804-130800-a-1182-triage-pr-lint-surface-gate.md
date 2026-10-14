@@ -11,7 +11,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - A-1182
+  - R-1182
 stats:
   files_changed: 6
   loc_added: 251
@@ -22,7 +22,7 @@ version: 1.4.0
 
 ## Added
 
-- **Lint-surface gate (rule, not a knob — [A-1182](https://linear.app/rheged-studio/issue/A-1182)).**
+- **Lint-surface gate (rule, not a knob — [R-1182](https://linear.app/rheged-studio/issue/R-1182)).**
   A lint / format / static-analysis failure whose only available remedy is a
   **config change** or a new **ignore / disable directive** is now classified
   **gated** in Step 3 — beside in-scope and upstream — and the agent does not make

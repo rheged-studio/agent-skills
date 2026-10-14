@@ -1,5 +1,5 @@
 // Imports the helper directly (the distributed `.mjs`). Covers the pure
-// dogfood-config materialisation (A-615): mapping each
+// dogfood-config materialisation (R-615): mapping each
 // infrastructure/dogfood-config/<name>.json to skills/<name>/config.json, the
 // copy itself, and drift detection. The same assertions back the script's
 // `--self-test`; this wires them into CI.

@@ -8,7 +8,7 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-1351
+  - R-1351
 merged_at: "2026-08-11T13:06:13Z"
 commit: ebd3cc2
 pr: 160

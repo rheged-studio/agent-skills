@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-393
+  - R-393
 affected_packages:
   - infrastructure
 stats:
@@ -32,7 +32,7 @@ version: 1.2.0
   `lint-staged` entry, and a dedicated `📑 Markdown` CI job. The shared config
   keeps long-form prose and frontmatter-first changelog entries clean
   (MD013/MD033/MD040/MD041 disabled) while staying strict on structure.
-- Pairs with [SK-406](https://linear.app/goose-and-hobbes/issue/SK-406) (the `preflight` text-output parser fix): with the binary
+- Pairs with [R-406](https://linear.app/rheged-studio/issue/R-406) (the `preflight` text-output parser fix): with the binary
   now installed, the `send-it` → `preflight` markdown gate runs and attributes
   violations end-to-end in this repo.
 

@@ -1,5 +1,5 @@
 // Imports the BUNDLE CLI directly (the distributed `.mjs`). Covers the pure
-// argument/stdin helpers (A-465): flag parsing, the lenient acceptDrift coercion,
+// argument/stdin helpers (R-465): flag parsing, the lenient acceptDrift coercion,
 // and the per-skill drift-key resolution that keys off either the skill name or
 // its repo-relative config path. `main()` stays behind the isCliEntry() guard, so
 // importing here runs nothing.

@@ -11,7 +11,7 @@ co_authors: []
 category: chore
 breaking: false
 issues:
-  - A-1180
+  - R-1180
 stats:
   files_changed: 5
   loc_added: 31
@@ -26,4 +26,4 @@ version: 1.4.0
   `previewBump`, remove the self-serving vitest case, and update the JSDoc so the
   helper only documents `{ subject, body }` — the only shape
   `parseGitLog` / `fetchCommitsSinceLastTag` ever emit
-  ([A-1180](https://linear.app/rheged-studio/issue/A-1180)).
+  ([R-1180](https://linear.app/rheged-studio/issue/R-1180)).

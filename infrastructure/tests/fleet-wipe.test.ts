@@ -1,5 +1,5 @@
 // Imports the helper directly (the distributed `.mjs`). Covers the pure
-// wipe-detection (A-464): which target-repo files the fleet-wipe step would
+// wipe-detection (R-464): which target-repo files the fleet-wipe step would
 // remove (canonical command shims) versus only flag for manual review (skill
 // dirs sharing a canonical name). The same assertions back the script's
 // `--self-test`; this wires them into CI. Deletion (`--apply`) is exercised by

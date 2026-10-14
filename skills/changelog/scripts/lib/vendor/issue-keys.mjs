@@ -4,7 +4,7 @@
 // Canonical issue-key helpers — the single source of truth for deriving a
 // Linear issue-key regex from a branch name or prose. Vendored into the
 // changelog bundle; the script-less linear-sync / cleanup-repo / triage-pr /
-// send-it prose mirrors it. See ADR-0004 (A-534): bundles stay independently
+// send-it prose mirrors it. See ADR-0004 (R-534): bundles stay independently
 // installable, so `pnpm vendor:sync` copies this file into each consumer's
 // `scripts/lib/vendor/` rather than them importing across bundles.
 //
@@ -29,7 +29,7 @@ export function escapeRegex(source) {
  * the empty string before every `-<digits>` and inject bogus links (e.g. `-2`).
  * A single key needs no `(?:…)` wrapper — only wrap when there's an alternation,
  * because the naive join `\bA|B-\d+\b` parses as `\bA` *or* `B-\d+\b` (matching a
- * bare `A` and missing `A-7`).
+ * bare `A` and missing `R-7`).
  * @param {string[]} keys
  * @returns {RegExp | null}
  */
@@ -47,7 +47,7 @@ export function buildIssueRe(keys) {
  * Build the anchored `^(?:KEY|…)-\d+\b` matcher (no global flag) for reading a
  * branch name's **leading** issue ID. Branches are named `<id>-<slug>`, so only
  * the leading token is the branch's issue: a slug token such as `-c-2-` or
- * `-r-3-` must never resolve to an issue (A-2682). Same escaping, grouping and
+ * `-r-3-` must never resolve to an issue (R-2682). Same escaping, grouping and
  * empty-key rules as `buildIssueRe`; prose (changelog bodies, commit messages,
  * PR titles) keeps the unanchored `buildIssueRe`.
  * @param {string[]} keys

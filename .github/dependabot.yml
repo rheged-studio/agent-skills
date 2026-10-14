@@ -9,7 +9,7 @@ updates:
     # noise low and ensures the remaining SHA-pinned third-party `uses:` lines
     # (actions/checkout, actions/setup-node, pnpm/action-setup in the local
     # config/skills jobs) stay current. The shared-workflows callers now ride
-    # the floating `@v1` major tag (A-672 / A-662), so Dependabot no longer
+    # the floating `@v1` major tag (R-672 / R-662), so Dependabot no longer
     # SHA-bumps them — it would only surface a future major (`@v2`). Grouped PRs
     # land or revert atomically.
     groups:
@@ -33,7 +33,7 @@ updates:
     # — Conventional, and a no-release type under the release-please bump rules,
     # so a dependency bump never cuts a version on its own. Both prefixes are
     # set explicitly: `prefix` alone leaves development-dependency bumps on
-    # Dependabot's own default. See A-980 / A-823.
+    # Dependabot's own default. See R-980 / R-823.
     commit-message:
       prefix: "chore"
       prefix-development: "chore"

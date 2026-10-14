@@ -1,5 +1,5 @@
 // Imports the BUNDLE script directly (the distributed `.mjs`). Covers the pure
-// auto-fix command planner (A-465): run order, the root+scripts eslint merge,
+// auto-fix command planner (R-465): run order, the root+scripts eslint merge,
 // one `--filter`ed invocation per workspace with changes, and the markdownlint
 // tail. The actual spawning stays behind the CLI `main()` guard.
 import { planFixCommands } from "../../../skills/preflight/scripts/lint-fix.mjs";

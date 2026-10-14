@@ -22,7 +22,7 @@ compatibility: >-
   Clacks (`rheged-studio/clacks`)), with a publish-only `release.yml`
   gated on a version-vs-tag check.
 metadata:
-  version: 0.2.2
+  version: 0.2.3
   author: Rob Easthope
 allowed-tools: Read, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*)
 ---
@@ -44,7 +44,7 @@ doing. The two never call each other. This skill may reference `send-it` in pros
 (e.g. how `/send-it` composes a Conventional-Commit PR title from branch
 commits), but it never runs it. Version preview itself reads **commits since the
 last tag** (merge commits excluded) — the same per-commit signal release-please
-uses under multi-commit history (A-824) — not merged PR titles.
+uses under multi-commit history (R-824) — not merged PR titles.
 
 ## What it inspects
 

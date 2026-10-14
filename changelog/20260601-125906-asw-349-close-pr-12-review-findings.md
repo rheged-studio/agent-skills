@@ -1,5 +1,5 @@
 ---
-title: "Close post-merge review findings from the ASW-318 hardening"
+title: "Close post-merge review findings from the R-318 hardening"
 release_note: "Tidies four bot-review findings left open after PR #12 — cache keys, the yamllint PATH guard, a bats comment, and single-sourcing the actionlint version."
 version: "0.0.1"
 created_at: "2026-06-01T12:59:06Z"
@@ -12,7 +12,7 @@ author: "rob@acmeskunkworks.io"
 co_authors: []
 category: chore
 breaking: false
-issues: ["ASW-349"]
+issues: ["R-349"]
 stats:
   files_changed: 5
   loc_added: 38

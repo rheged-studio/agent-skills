@@ -10,7 +10,7 @@ description: >-
   repo layout changes. Also emits a
   committed `.claude/skills.lock` inventory of installed skill versions, and ensures
   the preflight skill's `.preflight-summary.json` scratch output is gitignored,
-  and strips erroneous consumer rules that gitignore skill `config.json` (A-812).
+  and strips erroneous consumer rules that gitignore skill `config.json` (R-812).
   Idempotent and safe to re-run: it reconciles drift rather than clobbering
   deliberate manual edits, presents a dry-run diff first, and only writes after
   confirmation — preserving each config's key order and formatting so a no-op run
@@ -25,7 +25,7 @@ compatibility: >-
   token check is optional. It uses `gh` when authenticated; otherwise it asks the
   operator to confirm the secret.
 metadata:
-  version: 0.15.2
+  version: 0.15.3
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(git:*), Bash(gh:*), Bash(npx:*), mcp__linear-server__list_teams, mcp__linear-server__get_team, mcp__linear-server__list_projects
 ---
@@ -78,7 +78,7 @@ one trace here is the `.gitignore` step below: when preflight is installed, its
 
 Two reconciles touch the host repo's root `.gitignore`:
 
-1. **Preflight scratch (A-569).** The `preflight` skill writes
+1. **Preflight scratch (R-569).** The `preflight` skill writes
    `.preflight-summary.json` to the repo root on every real run, so without an
    ignore rule it surfaces as an untracked change after a `/send-it` run. When
    `preflight` is installed, this skill ensures the host repo's root `.gitignore`
@@ -86,11 +86,11 @@ Two reconciles touch the host repo's root `.gitignore`:
    entry only when absent (creating `.gitignore` if there is none), and never
    reorders or removes existing lines for this entry.
 
-2. **Skill-config ignore strip (A-812).** Some consumers (notably repos spawned
-   from `npm-package-template` before the A-812 fix) incorrectly gitignore
+2. **Skill-config ignore strip (R-812).** Some consumers (notably repos spawned
+   from `npm-package-template` before the R-812 fix) incorrectly gitignore
    `.claude/skills/*/config.json` and `.agents/skills/*/config.json`. That pattern
    is correct only in the **agent-skills source** repo (`skills/*/config.json`,
-   A-615 — so `skills add --copy` never vendors ACME identity) and as a
+   R-615 — so `skills add --copy` never vendors ACME identity) and as a
    **template seed** guard. In a **consumer**, the resolved `config.json` **must
    be committed**. This skill strips those erroneous consumer patterns (and the
    accompanying comment block) so CI/fresh clones can load runnable config. It
@@ -137,7 +137,7 @@ node <skills-dir>/rheged-skills-setup/scripts/initialise.mjs --install --write
 Preview first with `--install` alone (no `--write`). The script fetches
 `infrastructure/skill-catalogue.json` from this repo (local path when dogfooding
 here, else the public GitHub raw URL), runs `npx skills add --copy` per source,
-restores clobbered `config.json` from HEAD (A-706), then reconciles. On the
+restores clobbered `config.json` from HEAD (R-706), then reconciles. On the
 **agent-skills source repo** it skips re-copying the Rheged tree and only vendors
 Matt packs into `.claude/skills/` and `.agents/skills/`.
 
@@ -166,7 +166,7 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    `mcp__linear-server__list_projects` for the **fallback catch-all** project
    (Rheged estate: `Follow-up issues` — not a per-repo home project; triage-pr
    files a follow-up as a sub-issue of the PR's linked issue, and uses the
-   catch-all only when the PR has none, A-2756), and the
+   catch-all only when the PR has none, R-2756), and the
    workspace slug from the team/organisation — otherwise ask the user. Collect
    these into a `facts` object. Also add the **lock provenance** here:
    `lockSource` (the source repo the skills were installed from — the
@@ -174,11 +174,11 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    the fleet convention, unless a tag/SHA was pinned). Skip either when an existing
    `.claude/skills.lock` already records it — its value is preserved.
 
-3. **Claude token check (A-670, A-1621).** Do this **before** the confirmation
+3. **Claude token check (R-670, R-1621).** Do this **before** the confirmation
    gate, so any ask lands in the gate rather than after the write. The shared
    Claude workflows (`reusable-claude.yml`, `reusable-claude-code-review.yml`)
    authenticate with the **`CLAUDE_CODE_OAUTH_TOKEN`** Actions secret, not
-   `ANTHROPIC_API_KEY`, and fail on an empty token (A-646).
+   `ANTHROPIC_API_KEY`, and fail on an empty token (R-646).
 
    First, **look for estate Claude callers**: grep `.github/workflows/*.yml` and
    `*.yaml` for `shared-workflows/.github/workflows/reusable-claude.yml` or
@@ -247,7 +247,7 @@ Planning entry point after install: `/grill-me` (Matt productivity pack). Run
    Since Claude Code 2.1.187 its workflow and secret steps are optional, so it can
    finish without writing a secret. It also tries to add Anthropic's boilerplate
    workflows, which collide with the estate callers. Whether the Claude GitHub App
-   is installed is a separate check (A-621 / A-636) that this probe doesn't make.
+   is installed is a separate check (R-621 / R-636) that this probe doesn't make.
 
 4. **Present the diff and confirm.** Show the human report (re-run without
    `--json`, or render the parsed JSON). Call out the `inferred` keys that will be
@@ -428,9 +428,9 @@ so a fleet orchestrator can check any repo without changing directory. See
   `config.json` is skipped (reported, never overwritten).
 - **The `.gitignore` edits are scoped.** Outside a skill's `config.json`, this skill
   touches the repo's root `.gitignore` to (1) append `.preflight-summary.json`
-  when missing (A-569 — never reordering or removing existing lines for that
+  when missing (R-569 — never reordering or removing existing lines for that
   entry) and (2) strip erroneous `.claude`/`.agents` skill-config ignore patterns
-  that would prevent consumers from committing resolved `config.json` (A-812).
+  that would prevent consumers from committing resolved `config.json` (R-812).
   It never touches the agent-skills source rule `skills/*/config.json`.
 - **The `skills.lock` write is deterministic and byte-stable.** The other file
   touched outside a `config.json` is `.claude/skills.lock`, fully regenerated with

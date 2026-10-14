@@ -17,7 +17,7 @@ It bundles uncommitted work into atomic commits, runs the change-gated lint
 `changelog/<ts>-<slug>.md` entry (via the
 [`changelog`](../../skills/changelog/SKILL.md) skill), composes a **Conventional
 Commits PR title** (CI + humans; feature PRs land as merge commits and
-release-please ranks landed commit subjects for the bump — A-1176), pushes the
+release-please ranks landed commit subjects for the bump — R-1176), pushes the
 branch, opens or updates a PR against `main`, and transitions linked Linear issues
 to **In Review** (via the [`linear-sync`](../../skills/linear-sync/SKILL.md) skill).
 
@@ -64,7 +64,7 @@ handles those. The only gate it runs is the change-gated `preflight` lint.
 - `--branch=<name>` — override the auto-derived branch name when on `main` with
   uncommitted changes.
 - `--issue=<ID>` — prefix the auto-derived slug with a Linear issue ID (e.g.
-  `--issue=ASW-7` → `asw-7-<slug>`, lower-cased). Ignored if `--branch` is given.
+  `--issue=R-7` → `asw-7-<slug>`, lower-cased). Ignored if `--branch` is given.
 - `--base=<branch>` — override the `main` base for this run (stacked PRs / non-`main`
   targets); applies to the fetch, the branch diff, and the PR base.
 - `--title="<conventional subject>"` — set the PR title verbatim instead of deriving

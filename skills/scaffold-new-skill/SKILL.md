@@ -14,7 +14,7 @@ license: MIT
 compatibility: >-
   Requires Node.js ≥22 for the bundled generator script. No network access.
 metadata:
-  version: 0.1.1
+  version: 0.1.2
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(pnpm:*)
 ---
@@ -23,7 +23,7 @@ allowed-tools: Read, Bash(node:*), Bash(pnpm:*)
 
 A meta-skill that generates a spec-compliant skeleton for a new `skills/<name>/`
 bundle. Every artefact it writes satisfies the same rules `pnpm validate:skills`
-enforces (ADR-0001, A-364), so a freshly scaffolded skill is valid the moment it
+enforces (ADR-0001, R-364), so a freshly scaffolded skill is valid the moment it
 lands — the boilerplate can no longer drift away from the contract by hand.
 
 ## Configuration
@@ -52,7 +52,7 @@ Given a kebab-case `--name=<name>`, the generator writes:
   from one template object, so their **key sets are identical by construction**
   (parity, not a thing to keep in sync by hand).
 - `skills/<name>/scripts/<name>.mjs` — a zero-dependency entry script pre-wired
-  to the standard `--help` / `--dry-run` / `--self-test` dispatch idiom (A-462),
+  to the standard `--help` / `--dry-run` / `--self-test` dispatch idiom (R-462),
   with a pure `run()` export and a `isCliEntry()` guard.
 - `skills/<name>/README.md` — an install + usage skeleton.
 - `tests/skills/<name>/<name>.test.ts` — a vitest stub that imports the entry

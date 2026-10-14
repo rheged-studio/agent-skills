@@ -1,6 +1,6 @@
 ---
 title: Dry-run/preview parity across the shared skills
-release_note: Closes the dry-run/preview gaps the SK-458 smoke pass surfaced so every shared skill has a consistent, truthful "preview, change nothing" path. linear-sync gains a read-only --dry-run that reports each issue's intended transition without writing; initialise-skills now infers triage-pr's promoteOnGreen/replyOnAccept defaults instead of flagging them needs-manual-input; preflight's --dry-run is now a true preview (every linter reports would-run and nothing — including .preflight-summary.json — is written); the changelog enrichment scripts (set-affected-packages, add-links) gain a --check/--dry-run no-write mode; and triage-pr's respond-threads gains --help plus documented --self-test.
+release_note: Closes the dry-run/preview gaps the R-458 smoke pass surfaced so every shared skill has a consistent, truthful "preview, change nothing" path. linear-sync gains a read-only --dry-run that reports each issue's intended transition without writing; initialise-skills now infers triage-pr's promoteOnGreen/replyOnAccept defaults instead of flagging them needs-manual-input; preflight's --dry-run is now a true preview (every linter reports would-run and nothing — including .preflight-summary.json — is written); the changelog enrichment scripts (set-affected-packages, add-links) gain a --check/--dry-run no-write mode; and triage-pr's respond-threads gains --help plus documented --self-test.
 created_at: '2026-06-26T20:44:58Z'
 merged_at: '2026-06-26T21:14:19Z'
 branch: sk-459-harden-skill-dry-runpreview-parity-ahead-of-estate-rollout
@@ -12,7 +12,7 @@ co_authors: []
 category: feature
 breaking: false
 issues:
-  - SK-459
+  - R-459
 affected_packages:
   - changelog
   - infrastructure
@@ -32,7 +32,7 @@ version: 1.2.0
 
 - **`linear-sync --dry-run`** — a read-only preview that resolves state IDs and each
   issue's current state, reports the intended transition (or skip reason) per issue,
-  and exits without any `save_issue` write. Closes the one true gap from the [SK-458](https://linear.app/goose-and-hobbes/issue/SK-458)
+  and exits without any `save_issue` write. Closes the one true gap from the [R-458](https://linear.app/rheged-studio/issue/R-458)
   pass (`linear-sync` previously had no safe preview).
 - **`initialise-skills` now infers triage-pr's boolean knobs.** New constant-default
   detectors give `promoteOnGreen` (`false`) and `replyOnAccept` (`true`) a detected

@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - A-540
+  - R-540
 stats:
   files_changed: 4
   loc_added: 139
@@ -23,7 +23,7 @@ version: 1.2.0
 
 ## Fixed
 
-- **`triage-pr` surfaces one sticky summary per review bot ([A-540](https://linear.app/rheged-studio/issue/A-540)).**
+- **`triage-pr` surfaces one sticky summary per review bot ([R-540](https://linear.app/rheged-studio/issue/R-540)).**
   `buildResult` filtered issue comments by `isBot` alone, so **every** review-bot
   issue comment — "I'll review", walkthrough chatter, command acknowledgements —
   landed in `aiSummaryComments` and was surfaced as "the headline review", inflating

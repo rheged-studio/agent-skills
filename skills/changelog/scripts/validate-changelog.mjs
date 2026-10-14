@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Validates the individual dated changelog entries under `changelog/`.
 //
-// The single authored changelog validator (A-369): this is the only copy —
+// The single authored changelog validator (R-369): this is the only copy —
 // the root `validate:changelog` script and the `changelog` skill both run it.
 // Ported from the former infrastructure/scripts/validate-changelog.ts (dropping
 // gray-matter for the bundle's vendored parser) and unified with the bundle's

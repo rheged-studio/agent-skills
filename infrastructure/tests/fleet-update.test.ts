@@ -1,7 +1,7 @@
 // Imports the helpers directly (the distributed `.mjs`). Covers the pure core of
-// the single-repo fleet update pipeline (A-617): profile parsing/validation,
+// the single-repo fleet update pipeline (R-617): profile parsing/validation,
 // skill-subset resolution, the `skills add` argv, the initialise stdin facts,
-// the config.json deletions --copy leaves behind (A-706), and the check-updates
+// the config.json deletions --copy leaves behind (R-706), and the check-updates
 // verify verdict. The same assertions back the script's `--self-test`; this
 // wires them into CI, since `run-self-tests.mjs` scans only skills/<name>/scripts
 // and not infrastructure/. The spawn pipeline (skills add / git / initialise /
@@ -85,7 +85,7 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
     expect(skills).toContain("send-it");
     expect(skills).toContain("triage-pr");
     // Never the whole published set: the repo-internal scaffold-new-skill must
-    // not be vendored into consumers (A-729).
+    // not be vendored into consumers (R-729).
     expect(skills).not.toContain("scaffold-new-skill");
   });
 
@@ -111,10 +111,10 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
       skills: undefined,
     });
     expect(args[0]).toBe("add");
-    // The install source is the canonical URL, never a local path (A-718).
+    // The install source is the canonical URL, never a local path (R-718).
     expect(args[1]).toBe(SOURCE_URL);
     // Defaults to explicit --skill pairs, never a bare install that would pull
-    // the whole published set incl. the repo-internal scaffold-new-skill (A-729).
+    // the whole published set incl. the repo-internal scaffold-new-skill (R-729).
     expect(args).toContain("--skill");
     expect(args).toContain("send-it");
     expect(args).not.toContain("scaffold-new-skill");
@@ -152,7 +152,7 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
     ]);
   });
 
-  it("skillsAddEnv sets CLAUDECODE=1 (non-interactive install, A-745) without mutating the base env", () => {
+  it("skillsAddEnv sets CLAUDECODE=1 (non-interactive install, R-745) without mutating the base env", () => {
     const base = { PATH: "/usr/bin" };
     const environment = skillsAddEnvironment(base);
     expect(environment.CLAUDECODE).toBe("1");
@@ -180,7 +180,7 @@ describe("resolveSkills + buildSkillsAddArgs", () => {
   });
 });
 
-describe("resolveSourceProbeSkills (A-757 / A-1961 apply guard)", () => {
+describe("resolveSourceProbeSkills (R-757 / R-1961 apply guard)", () => {
   it("probes the canonical Rheged set when the profile omits skills", () => {
     const probe = resolveSourceProbeSkills({
       repoType: "single",

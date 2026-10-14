@@ -12,7 +12,7 @@ co_authors: []
 category: fix
 breaking: false
 issues:
-  - SK-398
+  - R-398
 affected_packages:
   - infrastructure
 stats:
@@ -32,7 +32,7 @@ version: 1.2.0
   Publisher binding the package needs — repository `acme-skunkworks/agent-skills`,
   workflow `release.yml`, environment `npm-release`. npm masks an unauthorised
   write to an existing package as a 404, so the bare error never pointed at the
-  missing binding. This is the [ASW-174](https://linear.app/goose-and-hobbes/issue/ASW-174) learning applied to the `npm publish` call
+  missing binding. This is the [R-174](https://linear.app/rheged-studio/issue/R-174) learning applied to the `npm publish` call
   rather than the `npm view` probe. A generic (non-E404/E403) failure still aborts
   but deliberately does not misfire the hint.
 

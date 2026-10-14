@@ -48,7 +48,7 @@ fetcher (or comment) provides `url`.
 - **Source:** Claude · [thread](…)
 - **Finding:** Duplicated fetch-retry in three callers.
 - **Verify:** Real but non-blocking for this PR.
-- **Linear:** "Add retry backoff to fetch layer" → file as sub-issue of A-1541 (Agent Skills)
+- **Linear:** "Add retry backoff to fetch layer" → file as sub-issue of R-1541 (Agent Skills)
 
 ### [gated] eslint.config.mjs rule change
 - **Source:** … · [thread](…)
@@ -74,7 +74,7 @@ Phase B disposition plan (nothing applied yet):
   1. [accept] Fix null guard in src/api.ts:42 — …
   2. [decline] Suggested rewrite is YAGNI — …
   3. [follow-up] Extract retry helper — draft: "Add retry backoff to fetch layer"
-     → file as sub-issue of A-1541 (Agent Skills)
+     → file as sub-issue of R-1541 (Agent Skills)
   4. [gated] Would need `eslint.config.mjs` rule change — your call; prefer a
      change to @rheged-studio/eslint-config
   Bots still outstanding at wait end: coderabbitai (if any)
@@ -102,7 +102,7 @@ Apply this plan? [Y/n]
 
 The same contract applies to the slow-bot micro-gate (Proceed / Wait / Abort) in
 [`../SKILL.md`](../SKILL.md) Step 7, to Step 12 **re-envelopes**, and when `/send-it`
-chains into triage. Fleet rollout of this Questions pattern to other skills: A-1655.
+chains into triage. Fleet rollout of this Questions pattern to other skills: R-1655.
 
 ### 3. Interpret the answer
 

@@ -14,7 +14,7 @@
 # Version + integrity are pinned in infrastructure/requirements-yamllint.txt,
 # installed with `pip install --require-hashes` so pip refuses any artefact —
 # yamllint or a transitive dep (pathspec, PyYAML) — whose sha256 isn't listed
-# there (A-327). A bare `pip install yamllint==X` trusts whatever PyPI serves;
+# there (R-327). A bare `pip install yamllint==X` trusts whatever PyPI serves;
 # this does not. Regenerate the requirements file when bumping the version (see
 # its header); the ci.yml `yaml-lint` cache key is keyed on this file's hash, so
 # regenerating it busts the cache automatically — there's no separate version to
@@ -40,7 +40,7 @@ YAMLLINT_REQUIREMENTS="${YAMLLINT_REQUIREMENTS:-$SCRIPT_DIR/../requirements-yaml
 # Prepend $HOME/.local/bin BEFORE the guard so a cache-restored yamllint (under
 # ~/.local/bin from a previous run) is discoverable to `command -v`. Otherwise a
 # cache hit where ~/.local/bin isn't already on PATH falls through to a redundant
-# pip re-install. Mirrors ensure-bats.sh's PATH-before-check ordering (A-349).
+# pip re-install. Mirrors ensure-bats.sh's PATH-before-check ordering (R-349).
 export PATH="$HOME/.local/bin:$PATH"
 if [ -n "${GITHUB_PATH:-}" ]; then
   echo "$HOME/.local/bin" >> "$GITHUB_PATH"
