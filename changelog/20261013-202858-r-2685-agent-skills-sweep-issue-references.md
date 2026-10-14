@@ -2,10 +2,10 @@
 title: sweep Linear issue references to R and C keys
 release_note: ""
 created_at: "2026-10-13T20:28:58Z"
-merged_at: ""
+merged_at: "2026-10-14T08:05:50Z"
 branch: r-2685-agent-skills-sweep-issue-references
-pr: ""
-commit: ""
+pr: 212
+commit: 4c05d43
 author: rob@rheged.studio
 co_authors: []
 category: chore
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - R-2685
 stats:
-  loc_added: 0
-  loc_removed: 0
-  files_changed: 0
+  loc_added: 1007
+  loc_removed: 981
+  files_changed: 281
 version: ""
 ---
 
