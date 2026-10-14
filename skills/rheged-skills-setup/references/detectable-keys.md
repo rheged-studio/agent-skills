@@ -45,19 +45,18 @@ detector serves every skill that uses a key. A key found in a skill's
   send-it's `config.example.json` (the single-package template), so it is never
   _added_ by detection — only kept (`unknown-kept`) where a consumer already set
   it. Multi-bundle consumers add it by hand.
-- **`issueKeys` order does not count as drift.** Detected `["A"]` vs configured `["A"]`
+- **`issueKeys` order does not count as drift.** Detected `["R"]` vs configured `["R"]`
   compares with set semantics (order-insensitive); the existing order is preserved
   on write to avoid churn.
 - **`issueKeys` prefers the current key, not the historical union.** Detection reads
   the prefix of the most recently committed branch, so a repo whose Linear team was
-  renamed (…→ASW→SK→A) yields `["A"]` rather than every prefix on stale branches
+  renamed (…→ASW→SK→A→R) yields `["R"]` rather than every prefix on stale branches
   (R-556). Pass `facts.issueKeys` to override when the heuristic is wrong (e.g. a
   fresh repo with no keyed branches).
 - **`issueKeys` detection never unions keys — multi-key repos need `--set`.** A
-  repo carrying several teams' branches (e.g. `c-` Cadogan, `r-` Rheged and legacy
-  `a-` branches) still detects only the newest keyed branch's single key. Set the
+  repo carrying several teams' branches (e.g. `c-` Cadogan and `r-` Rheged branches) still detects only the newest keyed branch's single key. Set the
   full list explicitly, per skill that uses it, e.g.
-  `--set linear-sync.issueKeys='["R","A"]'` (and likewise `cleanup-repo`,
+  `--set linear-sync.issueKeys='["C","R"]'` (and likewise `cleanup-repo`,
   `triage-pr`, `changelog`), or pass it as `facts.issueKeys`. An existing
   multi-key value is not overwritten by a narrower detected one (it is reported as
   drift and kept), but a fresh install starts from the detected single key.

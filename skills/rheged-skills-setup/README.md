@@ -18,7 +18,7 @@ node skills/rheged-skills-setup/scripts/initialise.mjs --install --write
 
 ```bash
 node skills/rheged-skills-setup/scripts/initialise.mjs --dry-run
-echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","issueKeys":["A"]}}' \
+echo '{"facts":{"linearTeamName":"…","linearWorkspaceSlug":"…","issueKeys":["R"]}}' \
   | node skills/rheged-skills-setup/scripts/initialise.mjs --write
 ```
 
