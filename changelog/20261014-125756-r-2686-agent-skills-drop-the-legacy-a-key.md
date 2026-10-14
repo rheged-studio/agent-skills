@@ -1,11 +1,11 @@
 ---
 title: drop the legacy A issue key
-release_note: "The legacy A issue key is no longer accepted in the repo's own skill configs, and the skill docs now show R-only examples."
+release_note: The legacy A issue key is no longer accepted in the repo's own skill configs, and the skill docs now show R-only examples.
 created_at: "2026-10-14T12:57:56Z"
-merged_at: ""
+merged_at: "2026-10-14T13:00:22Z"
 branch: r-2686-agent-skills-drop-the-legacy-a-key
-pr:
-commit: ""
+pr: 214
+commit: 7dfd0f6
 author: rob@rheged.studio
 co_authors: []
 category: fix
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - R-2686
 stats:
-  loc_added:
-  loc_removed:
-  files_changed:
+  loc_added: 75
+  loc_removed: 47
+  files_changed: 22
 version: ""
 ---
 
