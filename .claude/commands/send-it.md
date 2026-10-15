@@ -64,7 +64,7 @@ handles those. The only gate it runs is the change-gated `preflight` lint.
 - `--branch=<name>` — override the auto-derived branch name when on `main` with
   uncommitted changes.
 - `--issue=<ID>` — prefix the auto-derived slug with a Linear issue ID (e.g.
-  `--issue=R-7` → `asw-7-<slug>`, lower-cased). Ignored if `--branch` is given.
+  `--issue=R-7` → `r-7-<slug>`, lower-cased). Ignored if `--branch` is given.
 - `--base=<branch>` — override the `main` base for this run (stacked PRs / non-`main`
   targets); applies to the fetch, the branch diff, and the PR base.
 - `--title="<conventional subject>"` — set the PR title verbatim instead of deriving
