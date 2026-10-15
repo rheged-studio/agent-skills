@@ -22,7 +22,7 @@ compatibility: >-
   silently; missing `triage-pr` warns and stops at the open PR (not a successful
   default run — install it).
 metadata:
-  version: 0.12.2
+  version: 0.12.3
   author: Rob Easthope
 allowed-tools: Write, Read, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(pnpm:*), Bash(node:*), Bash(npx:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects
 ---
@@ -176,7 +176,7 @@ unchanged from whatever directory the session is in.
      - **Branch name resolution (in order):**
        1. `--branch=<name>` — use as-is.
        2. `--issue=<ID>` — use `<ID>-<slug>` **lower-cased** (e.g.
-          `a-7-as-acquired`), matching Linear's `gitBranchName`.
+          `r-7-as-acquired`), matching Linear's `gitBranchName`.
        3. Otherwise — just `<slug>` (no `wip/` prefix).
      - If the chosen branch already exists locally or on `origin`, append `-2`,
        `-3`, … until unused.
@@ -693,7 +693,7 @@ runs **after** Step 10 so linked issues are already In Review before triage begi
 - `--branch=<name>` — override the auto-derived branch name when running on the base
   branch with uncommitted changes.
 - `--issue=<ID>` — prefix the auto-derived slug with a Linear issue ID (e.g.
-  `--issue=R-7` → `a-7-<slug>`, lower-cased). Ignored if `--branch` is given.
+  `--issue=R-7` → `r-7-<slug>`, lower-cased). Ignored if `--branch` is given.
 - `--base=<branch>` — override `config.json`'s `baseBranch` for this run. Applies
   everywhere the base is used: the `git fetch`, the branch diff
   (`origin/<base>...HEAD`), the PR `--base`, and the `BASE_REF=origin/<branch>` env
