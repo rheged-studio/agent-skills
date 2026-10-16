@@ -64,8 +64,8 @@ export function resolveSource(existingLock, facts) {
 
 /**
  * Resolve the `ref` the skills were installed from: supplied fact wins, else the
- * existing lock's value, else null (the SKILL.md orchestration defaults this to
- * `main` — the fleet convention — when prompting; the script stays explicit).
+ * existing lock's value, else null. `--install` supplies the catalogue's pinned
+ * Rheged ref through `facts.lockRef` (R-2871); there is no `main` fallback.
  * @param {{ ref?: unknown } | null} existingLock
  * @param {Record<string, unknown>} facts
  * @returns {string | null}
