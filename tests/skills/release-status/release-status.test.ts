@@ -206,6 +206,28 @@ describe("detectStalePending — the autorelease: pending stall", () => {
     ).toBe(true);
   });
 
+  it("shows an invalid PR number as ? rather than null", () => {
+    const result = detectStalePending({
+      labels: ["autorelease: pending"],
+      number: "42; rm -rf",
+    });
+    expect(result.pr).toBeNull();
+    expect(result.reason).toContain("PR #? ");
+    expect(result.reason).not.toContain("null");
+    const human = renderHuman(
+      buildReport({
+        commits: [],
+        lastMergedReleasePr: { labels: ["autorelease: pending"], number: -1 },
+        openReleasePr: null,
+        repo: "a/b",
+        tags: [],
+        version: "1.0.0",
+      }),
+    );
+    expect(human).toContain("gh pr edit <number>");
+    expect(human).not.toContain("null");
+  });
+
   it("is not detected when there is no merged release PR", () => {
     const result = detectStalePending(null);
     expect(result.detected).toBe(false);
@@ -338,6 +360,7 @@ describe("structured output — no raw title or body text (R-2875)", () => {
       "https://github.com/a/b/pull/4",
     );
     expect(safePrUrl("https://github.com/a/b/pull/4 rm -rf")).toBeNull();
+    expect(safePrUrl("https://evil.example/a/b/pull/1")).toBeNull();
     expect(safePrUrl("http://github.com/a/b/pull/4")).toBeNull();
   });
 

@@ -102,7 +102,7 @@ const SAFE_TYPE = /^[a-z]{1,20}$/;
 const SAFE_SCOPE = /^[A-Za-z0-9][\w./-]{0,39}$/;
 const SAFE_HASH = /^[0-9a-f]{7,64}$/;
 const SAFE_STATE = /^[a-z_]{1,32}$/;
-const SAFE_PR_URL = /^https:\/\/[\w.-]+\/[\w.-]+\/[\w.-]+\/pull\/\d+$/;
+const SAFE_PR_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+$/;
 const SAFE_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]{1,40})?$/;
 const RELEASE_TITLE_VERSION =
   /\brelease (?:[\w@/.-]+ )?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]{1,40})?)$/;
@@ -173,7 +173,8 @@ function safeNumber(value) {
 }
 
 /**
- * Keep a URL only when it has the shape of a GitHub pull-request URL.
+ * Keep a URL only when it has the shape of a github.com pull-request URL
+ * (`https://github.com/<owner>/<repo>/pull/<n>`); anything else becomes null.
  */
 export function safePrUrl(url) {
   const text = String(url ?? "");
@@ -335,13 +336,14 @@ export function detectStalePending(
   );
   const detected = labels.includes(label);
   const number = safeNumber(lastMergedReleasePr.number);
+  const shown = number ?? "?";
   return {
     detected,
     label,
     pr: number,
     reason: detected
-      ? `merged release PR #${number} still carries "${label}" — release-please will abort the next release`
-      : `last merged release PR #${number} is clear of "${label}"`,
+      ? `merged release PR #${shown} still carries "${label}" — release-please will abort the next release`
+      : `last merged release PR #${shown} is clear of "${label}"`,
   };
 }
 
@@ -723,7 +725,7 @@ export function renderHuman(report, config = DEFAULTS) {
     lines.push(`  STALL DETECTED — ${report.stalePending.reason}`);
     lines.push(
       `  Remediation: remove the "${report.stalePending.label}" label from merged release PR ` +
-        `#${report.stalePending.pr} (gh pr edit ${report.stalePending.pr} --remove-label "${report.stalePending.label}"), ` +
+        `#${report.stalePending.pr ?? "?"} (gh pr edit ${report.stalePending.pr ?? "<number>"} --remove-label "${report.stalePending.label}"), ` +
         "then re-run the orchestrator (or wait for its next cron tick).",
     );
   } else {

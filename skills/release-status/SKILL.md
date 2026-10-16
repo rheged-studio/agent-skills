@@ -134,7 +134,7 @@ the human report nor `--json` carries a raw title, body or label name:
   "releasePr": {
     // null when no release PR is open
     "number": 217,
-    "url": "https://github.com/owner/name/pull/217", // null unless a PR URL
+    "url": "https://github.com/owner/name/pull/217", // null unless a github.com PR URL
     "version": "1.14.0", // parsed from the release-please title; null if unrecognised
     "requiredCheck": { "name": "GO/NO GO", "found": true, "state": "success" },
   },
