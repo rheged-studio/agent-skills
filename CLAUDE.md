@@ -68,7 +68,7 @@ Common invocations:
 
 ```bash
 /send-it                              # commit + changelog + PR title + push + draft PR + triage chain
-/send-it --issue=R-132              # same, plus prefix the auto-branch with a-132-
+/send-it --issue=R-132              # same, plus prefix the auto-branch with r-132-
 /send-it --ready                      # open the PR ready-for-review (not draft)
 /send-it --worktree=<branch-or-path>  # cd into a worktree first, then run
 /send-it --base=<branch>              # target a non-main base (stacked PRs)
