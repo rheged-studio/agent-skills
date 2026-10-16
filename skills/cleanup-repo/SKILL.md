@@ -148,6 +148,9 @@ Skill-specific safeguards:
 - A branch name is only ever used as a git ref and matched against the strict,
   anchored issue-ID regex from [Configuration](#configuration); nothing else in
   it is interpreted. A name that doesn't match resolves to no issue.
+- Pass branch names and worktree paths to `git` and `gh` as separate,
+  single-quoted arguments. Never interpolate one raw into shell command text: a
+  valid ref such as `$(id)` would otherwise run as a command substitution.
 - `gh pr list` requests `--json number,headRefOid` only. Never add `title`,
   `body` or other free-text fields.
 - `mcp__linear-server__get_issue` is always called with

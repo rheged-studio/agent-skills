@@ -27,7 +27,7 @@ stats:
 ## Added
 
 - **A "Scope and safeguards" section** listing the skill's delete commands, its per-pass confirmation gates, the `--dry-run` preview, and everything it never deletes.
-- **An "Untrusted input" section** naming the remaining ingestion points (branch names, working-tree paths, Linear team and state names) and how each is handled as data, never instructions.
+- **An "Untrusted input" section** naming the remaining ingestion points (branch names, working-tree paths, Linear team and state names) and how each is handled as data, never instructions — including passing branch names and paths to `git` and `gh` as quoted arguments, never raw shell text.
 
 ## Changed
 
