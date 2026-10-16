@@ -20,6 +20,11 @@
 // against the spec; this guard adds the ACME-specific package.json + version
 // parity rules it doesn't cover.
 //
+// It also checks the shared `## Untrusted input` SKILL.md convention (R-2870,
+// docs/skill-conventions.md): a SKILL.md that names a known ingestion command
+// must carry that section. That check is warn-only for now (see
+// UNTRUSTED_INPUT_SEVERITY).
+//
 // The pure `validateSkill(...)` returns an array of error strings (empty means
 // valid), so it's trivially unit-testable; main() walks the directory.
 
@@ -119,6 +124,102 @@ export function validateSkill(
   }
 
   return errors;
+}
+
+/**
+ * Commands and tools that pull outsider-authored text (PR bodies, review threads,
+ * CI logs, commit messages, Linear issue fields) into the agent's context. A
+ * SKILL.md that names any of these must carry the `## Untrusted input` section
+ * (R-2870 — see docs/skill-conventions.md). Add new ingestion commands here.
+ */
+export const UNTRUSTED_INPUT_INGESTION_COMMANDS: readonly string[] = [
+  "gh pr view",
+  "gh pr list",
+  "gh run view --log",
+  "git log",
+  "git diff",
+  "mcp__linear-server__get_issue",
+];
+
+/**
+ * How main() treats a missing `## Untrusted input` section. It is `"warn"` while
+ * the per-skill rollout (the sub-issues of R-2869) lands in any order; flip it to
+ * `"error"` once every flagged skill carries the section, and the same findings
+ * will fail the build (R-2880).
+ */
+export type UntrustedInputSeverity = "error" | "warn";
+export const UNTRUSTED_INPUT_SEVERITY: UntrustedInputSeverity = "warn";
+
+const UNTRUSTED_INPUT_HEADING_RE = /^##[ \t]+Untrusted input[ \t]*$/im;
+
+function escapeRegExp(text: string): string {
+  return text.replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`);
+}
+
+/**
+ * The ingestion commands a SKILL.md names, in
+ * `UNTRUSTED_INPUT_INGESTION_COMMANDS` order.
+ */
+export function ingestionCommandsIn(skillRaw: string): string[] {
+  return UNTRUSTED_INPUT_INGESTION_COMMANDS.filter((command) =>
+    ingestionPattern(command).test(skillRaw),
+  );
+}
+
+/**
+ * The regex for one ingestion command. The leading edge rejects a longer word
+ * (`legit log`); the trailing edge rejects a longer word (`git logger`) but
+ * keeps flags and sub-forms (`git log --oneline`, `git diff-tree`). A command
+ * that ends in a flag (`gh run view --log`) also matches with arguments before
+ * the flag on the same line (`gh run view <run-id> --log-failed`).
+ */
+function ingestionPattern(command: string): RegExp {
+  const flagAt = command.indexOf(" --");
+  const body =
+    flagAt === -1
+      ? escapeRegExp(command)
+      : `${escapeRegExp(command.slice(0, flagAt))}[^\\n]*?[ \\t]${escapeRegExp(command.slice(flagAt + 1))}`;
+  return new RegExp(String.raw`(?<![\w-])${body}(?![A-Za-z0-9_])`);
+}
+
+/**
+ * Check one SKILL.md against the `## Untrusted input` convention (R-2870).
+ * Returns one finding when the skill names an ingestion command but has no such
+ * section; empty when it complies or names none. The caller picks the severity
+ * — see `UNTRUSTED_INPUT_SEVERITY`.
+ */
+export function untrustedInputFindings(
+  directory: string,
+  skillRaw: null | string,
+): string[] {
+  if (skillRaw === null) {
+    return [];
+  }
+
+  const commands = ingestionCommandsIn(skillRaw);
+  if (commands.length === 0 || UNTRUSTED_INPUT_HEADING_RE.test(skillRaw)) {
+    return [];
+  }
+
+  const named = commands.map((command) => `\`${command}\``).join(", ");
+  return [
+    `${directory}: SKILL.md names ${named} but has no "## Untrusted input" section (see docs/skill-conventions.md)`,
+  ];
+}
+
+/**
+ * Route one SKILL.md's untrusted-input findings to errors or warnings by
+ * `severity` (default `UNTRUSTED_INPUT_SEVERITY`). Warnings never fail the run.
+ */
+export function classifyUntrustedInput(
+  directory: string,
+  skillRaw: null | string,
+  severity: UntrustedInputSeverity = UNTRUSTED_INPUT_SEVERITY,
+): { errors: string[]; warnings: string[] } {
+  const findings = untrustedInputFindings(directory, skillRaw);
+  return severity === "error"
+    ? { errors: findings, warnings: [] }
+    : { errors: [], warnings: findings };
 }
 
 /**
@@ -289,13 +390,15 @@ function readOrNull(path: string): null | string {
 function main(): void {
   const directories = listSkillDirectories(SKILLS_DIR);
   const errors: string[] = [];
+  const warnings: string[] = [];
   for (const directory of directories) {
     const base = join(SKILLS_DIR, directory);
+    const skillRaw = readOrNull(join(base, "SKILL.md"));
     errors.push(
       ...validateSkill(
         directory,
         readOrNull(join(base, "package.json")),
-        readOrNull(join(base, "SKILL.md")),
+        skillRaw,
       ),
       ...configKeyParityErrors(
         directory,
@@ -303,6 +406,18 @@ function main(): void {
         readOrNull(join(base, "config.example.json")),
       ),
     );
+    const untrusted = classifyUntrustedInput(directory, skillRaw);
+    errors.push(...untrusted.errors);
+    warnings.push(...untrusted.warnings);
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`Skill validation produced ${warnings.length} warning(s):\n`);
+    for (const message of warnings) {
+      console.warn(`  - ${message}`);
+    }
+
+    console.warn("");
   }
 
   if (errors.length > 0) {
@@ -314,9 +429,12 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(
-    `Skill validation passed (${directories.length} skill${directories.length === 1 ? "" : "s"} checked).`,
-  );
+  const skillCount = `${directories.length} skill${directories.length === 1 ? "" : "s"} checked`;
+  const warningCount =
+    warnings.length === 0
+      ? ""
+      : `, ${warnings.length} warning${warnings.length === 1 ? "" : "s"}`;
+  console.log(`Skill validation passed (${skillCount}${warningCount}).`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

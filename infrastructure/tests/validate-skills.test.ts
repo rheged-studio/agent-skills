@@ -1,5 +1,10 @@
 import {
+  classifyUntrustedInput,
   configKeyParityErrors,
+  ingestionCommandsIn,
+  UNTRUSTED_INPUT_INGESTION_COMMANDS,
+  UNTRUSTED_INPUT_SEVERITY,
+  untrustedInputFindings,
   validateSkill,
 } from "../scripts/validate-skills.js";
 import { describe, expect, it } from "vitest";
@@ -105,6 +110,100 @@ describe("validateSkill", () => {
     expect(
       errors.some((error) => error.includes("metadata.version is missing")),
     ).toBe(true);
+  });
+});
+
+// R-2870: the shared `## Untrusted input` convention (docs/skill-conventions.md).
+function skill(body: string): string {
+  return `---\nname: pr\nmetadata:\n  version: 0.1.0\n---\n\n# pr\n\n${body}\n`;
+}
+
+describe("untrustedInputFindings", () => {
+  const SECTION =
+    "## Untrusted input\n\nThis skill reads text that people outside this project may have written.";
+
+  it("passes a skill that names no ingestion command", () => {
+    expect(untrustedInputFindings("pr", skill("Run `pnpm test`."))).toEqual([]);
+  });
+
+  it("flags each known ingestion command when the section is missing", () => {
+    for (const command of UNTRUSTED_INPUT_INGESTION_COMMANDS) {
+      const findings = untrustedInputFindings(
+        "pr",
+        skill(`Run \`${command}\` first.`),
+      );
+      expect(findings).toHaveLength(1);
+      expect(findings[0]).toContain(`\`${command}\``);
+      expect(findings[0]).toContain("## Untrusted input");
+    }
+  });
+
+  it("lists every matched command in one finding", () => {
+    const findings = untrustedInputFindings(
+      "pr",
+      skill("Run `gh pr view --json body` and `git log --oneline`."),
+    );
+    expect(findings).toEqual([
+      'pr: SKILL.md names `gh pr view`, `git log` but has no "## Untrusted input" section (see docs/skill-conventions.md)',
+    ]);
+  });
+
+  it("passes when the section is present", () => {
+    expect(
+      untrustedInputFindings(
+        "pr",
+        skill(`${SECTION}\n\nRun \`gh pr view --json body\`.`),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not accept the heading at the wrong level or with other text", () => {
+    for (const heading of [
+      "### Untrusted input",
+      "# Untrusted input",
+      "## Untrusted inputs",
+      "Untrusted input",
+    ]) {
+      expect(
+        untrustedInputFindings("pr", skill(`${heading}\n\nRun \`git diff\`.`)),
+      ).toHaveLength(1);
+    }
+  });
+
+  it("keeps flags and sub-forms but ignores longer words", () => {
+    expect(ingestionCommandsIn("gh run view --log-failed")).toEqual([
+      "gh run view --log",
+    ]);
+    expect(ingestionCommandsIn("gh run view <run-id> --log-failed")).toEqual([
+      "gh run view --log",
+    ]);
+    // `--log` on a later line is a different command, not a log read.
+    expect(ingestionCommandsIn("gh run view 1\n--log")).toEqual([]);
+    expect(ingestionCommandsIn("gh run view 1 --json status")).toEqual([]);
+    expect(ingestionCommandsIn("git diff-tree HEAD")).toEqual(["git diff"]);
+    expect(ingestionCommandsIn("legit log")).toEqual([]);
+    expect(ingestionCommandsIn("git logger")).toEqual([]);
+  });
+
+  it("is exempt when SKILL.md is missing (validateSkill reports that)", () => {
+    expect(untrustedInputFindings("pr", null)).toEqual([]);
+  });
+});
+
+describe("classifyUntrustedInput", () => {
+  const missing = "---\nname: pr\n---\n\nRun `gh pr list`.\n";
+
+  it("is warn-only by default, so a missing section never fails the run", () => {
+    expect(UNTRUSTED_INPUT_SEVERITY).toBe("warn");
+    const result = classifyUntrustedInput("pr", missing);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it("routes the same findings to errors once switched to error", () => {
+    const result = classifyUntrustedInput("pr", missing, "error");
+    expect(result.warnings).toEqual([]);
+    expect(result.errors).toHaveLength(1);
   });
 });
 
