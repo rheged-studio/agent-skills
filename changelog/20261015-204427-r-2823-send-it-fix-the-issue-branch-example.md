@@ -17,7 +17,7 @@ stats:
 
 ## Fixed
 
-- **The `--issue` branch examples in send-it now lower-case R-7 to `r-7-` ([R-2823](https://linear.app/rheged-studio/issue/R-2823)).** The flag reference said `--issue=R-7` gives `a-7-<slug>`, which contradicted the lower-casing rule it was meant to show. It was left over from the A → R team-key rename. The Step 1 example `a-7-as-acquired` is now `r-7-as-acquired` to match, and so is the repo's own `/send-it` shim, which still said `asw-7-<slug>`.
+- **The `--issue` branch examples in send-it now lower-case `R-7` to `r-7-` ([R-2823](https://linear.app/rheged-studio/issue/R-2823)).** The flag reference said `--issue=R-7` gives `a-7-<slug>`, which contradicted the lower-casing rule it was meant to show. It was left over from the A → R team-key rename. The Step 1 example `a-7-as-acquired` is now `r-7-as-acquired` to match, and so is the repo's own `/send-it` shim, which still said `asw-7-<slug>`.
 
 ## Changed
 
