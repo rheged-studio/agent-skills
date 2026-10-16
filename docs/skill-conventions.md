@@ -104,7 +104,8 @@ For each `skills/<name>/SKILL.md` it:
    also matches with arguments before the flag on the same line
    (`gh run view <run-id> --log-failed`).
 2. If it finds one, checks the file for a `## Untrusted input` heading (exactly
-   that text, at level two).
+   that text, at level two). A heading inside a fenced code block, such as a
+   quoted copy of the template, does not count.
 3. Reports each skill that names an ingestion command but has no section,
    listing the commands it matched.
 

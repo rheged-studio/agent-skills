@@ -150,7 +150,37 @@ export const UNTRUSTED_INPUT_INGESTION_COMMANDS: readonly string[] = [
 export type UntrustedInputSeverity = "error" | "warn";
 export const UNTRUSTED_INPUT_SEVERITY: UntrustedInputSeverity = "warn";
 
-const UNTRUSTED_INPUT_HEADING_RE = /^##[ \t]+Untrusted input[ \t]*$/im;
+const UNTRUSTED_INPUT_HEADING_RE = /^##[ \t]+Untrusted input[ \t]*$/;
+const FENCE_RE = /^ {0,3}(`{3,}|~{3,})/;
+
+/**
+ * Whether a SKILL.md has a real `## Untrusted input` heading — one outside any
+ * fenced code block, so a quoted template example doesn't count as the section.
+ */
+export function hasUntrustedInputHeading(skillRaw: string): boolean {
+  let fence: null | string = null;
+  for (const line of skillRaw.split(/\r?\n/)) {
+    const marker = FENCE_RE.exec(line)?.[1];
+    if (fence === null) {
+      if (marker !== undefined) {
+        fence = marker;
+      } else if (UNTRUSTED_INPUT_HEADING_RE.test(line)) {
+        return true;
+      }
+    } else if (
+      marker !== undefined &&
+      marker[0] === fence[0] &&
+      marker.length >= fence.length &&
+      line.trim() === marker
+    ) {
+      // A closing fence uses the same character, at least as long, alone on
+      // its line (CommonMark).
+      fence = null;
+    }
+  }
+
+  return false;
+}
 
 function escapeRegExp(text: string): string {
   return text.replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`);
@@ -197,7 +227,7 @@ export function untrustedInputFindings(
   }
 
   const commands = ingestionCommandsIn(skillRaw);
-  if (commands.length === 0 || UNTRUSTED_INPUT_HEADING_RE.test(skillRaw)) {
+  if (commands.length === 0 || hasUntrustedInputHeading(skillRaw)) {
     return [];
   }
 

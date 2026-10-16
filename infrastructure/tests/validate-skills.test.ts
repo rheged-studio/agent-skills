@@ -1,6 +1,7 @@
 import {
   classifyUntrustedInput,
   configKeyParityErrors,
+  hasUntrustedInputHeading,
   ingestionCommandsIn,
   UNTRUSTED_INPUT_INGESTION_COMMANDS,
   UNTRUSTED_INPUT_SEVERITY,
@@ -168,6 +169,27 @@ describe("untrustedInputFindings", () => {
         untrustedInputFindings("pr", skill(`${heading}\n\nRun \`git diff\`.`)),
       ).toHaveLength(1);
     }
+  });
+
+  it("does not count a heading inside a fenced example as the section", () => {
+    for (const fence of ["```", "~~~", "````"]) {
+      const body = `Run \`gh pr view\`.\n\n${fence}markdown\n## Untrusted input\n${fence}\n`;
+      expect(untrustedInputFindings("pr", skill(body))).toHaveLength(1);
+      expect(hasUntrustedInputHeading(body)).toBe(false);
+    }
+  });
+
+  it("finds a real heading after a closed fence, but not before it closes", () => {
+    expect(
+      hasUntrustedInputHeading("```\ncode\n```\n\n## Untrusted input\n"),
+    ).toBe(true);
+    // A shorter or different-character marker does not close the fence.
+    expect(
+      hasUntrustedInputHeading("````\n```\n## Untrusted input\n````\n"),
+    ).toBe(false);
+    expect(
+      hasUntrustedInputHeading("```\n~~~\n## Untrusted input\n```\n"),
+    ).toBe(false);
   });
 
   it("keeps flags and sub-forms but ignores longer words", () => {
