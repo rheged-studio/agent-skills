@@ -40,7 +40,9 @@ branches start with, or branch issue-IDs won't match, and set
 ## What it does
 
 Extracts the branch's **leading** issue ID (from `issueKeys`; slug tokens such as
-`-c-2-` never match), reads the issue with `get_issue`, resolves the target
+`-c-2-` never match), reads only the issue's team and current state with
+`get_issue` (`fields: ["id", "status", "statusType", "team"]` — never the
+title, description or comments), resolves the target
 state's live ID for **that issue's team** (cached per team), and applies the
 target transition idempotently — skipping any issue already at or past it. The
 default standalone target is **In Progress** (the start-of-work transition).
