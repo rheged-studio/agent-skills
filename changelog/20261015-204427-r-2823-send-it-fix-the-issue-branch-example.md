@@ -2,10 +2,10 @@
 title: fix the send-it --issue branch example
 release_note: The send-it docs now show --issue=R-7 producing an r-7- branch, not a-7-.
 created_at: "2026-10-15T20:44:27Z"
-merged_at:
+merged_at: "2026-10-16T08:16:41Z"
 branch: r-2823-send-it-fix-the-issue-example-that-lower-cases-r-7-to-a-7
-pr:
-commit:
+pr: 216
+commit: 0ab29af
 author: rob@rheged.studio
 co_authors: []
 category: fix
@@ -13,6 +13,9 @@ breaking: false
 issues:
   - R-2823
 stats:
+  loc_added: 30
+  loc_removed: 6
+  files_changed: 5
 ---
 
 ## Fixed
