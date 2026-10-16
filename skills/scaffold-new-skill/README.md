@@ -46,7 +46,11 @@ node skills/scaffold-new-skill/scripts/scaffold.mjs --name=my-new-skill
 
 This writes `skills/my-new-skill/` (`SKILL.md`, `package.json`,
 `config.json` + `config.example.json`, `scripts/my-new-skill.mjs`, `README.md`)
-plus a `tests/skills/my-new-skill/my-new-skill.test.ts` stub. The generator
+plus a `tests/skills/my-new-skill/my-new-skill.test.ts` stub. The `SKILL.md`
+includes the shared `## Untrusted input` section described in the
+[skill conventions](https://github.com/rheged-studio/agent-skills/blob/main/docs/skill-conventions.md);
+fill in its ingestion points, or delete it if the skill reads no
+outsider-authored text. The generator
 refuses to overwrite a `skills/<name>/` that already has content.
 
 Flags:
