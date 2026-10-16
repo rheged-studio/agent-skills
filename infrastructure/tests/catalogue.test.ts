@@ -1,14 +1,24 @@
 import {
+  buildPinnedSkillsCliArgv,
   buildSkillsAddArgsForSource,
+  isCommitSha,
+  isPinnedRef,
+  isReleaseTag,
   parseCatalogue,
+  pinnedSourceUrl,
   resolveInstallSkills,
   resolveInstallSources,
   resolveRhegedSkills,
   resolveWipeTargetsWithLegacy,
+  rhegedSourceRef,
+  selectInstallSources,
+  SKILLS_CLI_VERSION,
 } from "../../skills/rheged-skills-setup/scripts/lib/catalogue.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+
+const SHA = "0123456789abcdef0123456789abcdef01234567";
 
 const catalogueJson = readFileSync(
   join(import.meta.dirname, "..", "skill-catalogue.json"),
@@ -84,6 +94,144 @@ describe("buildSkillsAddArgsForSource", () => {
     expect(args[0]).toBe("add");
     expect(args).toContain("--copy");
     expect(args.filter((a) => a === "--agent")).toHaveLength(2);
+  });
+
+  it("passes a pinned ref through as a /tree/<ref> URL (R-2871)", () => {
+    const args = buildSkillsAddArgsForSource(
+      "https://github.com/example/repo",
+      ["send-it", "commit"],
+      ["claude-code"],
+      SHA,
+    );
+    expect(args).toEqual([
+      "add",
+      `https://github.com/example/repo/tree/${SHA}`,
+      "--skill",
+      "send-it",
+      "--skill",
+      "commit",
+      "--agent",
+      "claude-code",
+      "--copy",
+    ]);
+  });
+
+  it("refuses an unpinned ref", () => {
+    expect(() =>
+      buildSkillsAddArgsForSource(
+        "https://github.com/example/repo",
+        ["send-it"],
+        ["claude-code"],
+        "main",
+      ),
+    ).toThrow(/unpinned ref/);
+  });
+});
+
+describe("pinnedSourceUrl", () => {
+  it("strips a trailing slash and .git before appending /tree/<ref>", () => {
+    expect(
+      pinnedSourceUrl("https://github.com/example/repo.git/", "v1.2.3"),
+    ).toBe("https://github.com/example/repo/tree/v1.2.3");
+  });
+
+  it("returns the bare repo URL when no ref is given", () => {
+    expect(pinnedSourceUrl("https://github.com/example/repo")).toBe(
+      "https://github.com/example/repo",
+    );
+  });
+});
+
+describe("buildPinnedSkillsCliArgv", () => {
+  it("runs the exact pinned skills CLI version with --yes (R-2871)", () => {
+    expect(SKILLS_CLI_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(buildPinnedSkillsCliArgv(["add", "x"])).toEqual([
+      "--yes",
+      `skills@${SKILLS_CLI_VERSION}`,
+      "add",
+      "x",
+    ]);
+  });
+});
+
+describe("pinned refs and third-party sources (R-2871)", () => {
+  const catalogue = parseCatalogue(catalogueJson);
+
+  it("pins every tracked source to a SHA or release tag", () => {
+    for (const source of catalogue.sources) {
+      expect(isPinnedRef(source.ref)).toBe(true);
+    }
+  });
+
+  it("marks only matt-pocock as third-party", () => {
+    expect(
+      catalogue.sources
+        .filter((source) => source.thirdParty)
+        .map((source) => source.id),
+    ).toEqual(["matt-pocock"]);
+  });
+
+  it("rejects a source without a ref", () => {
+    const bad = JSON.parse(catalogueJson);
+    delete bad.sources[0].ref;
+    expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
+  });
+
+  it("rejects a branch name as a ref", () => {
+    const bad = JSON.parse(catalogueJson);
+    bad.sources[0].ref = "main";
+    expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
+  });
+
+  it("rejects a non-boolean thirdParty", () => {
+    const bad = JSON.parse(catalogueJson);
+    bad.sources[1].thirdParty = "yes";
+    expect(() => parseCatalogue(bad)).toThrow(/thirdParty must be boolean/);
+  });
+
+  it("rejects a non-GitHub repo URL", () => {
+    const bad = JSON.parse(catalogueJson);
+    bad.sources[1].url = "https://example.com/skills";
+    expect(() => parseCatalogue(bad)).toThrow(/github\.com/);
+  });
+
+  it("recognises SHAs and release tags", () => {
+    expect(isCommitSha(SHA)).toBe(true);
+    expect(isCommitSha("abc123")).toBe(false);
+    expect(isReleaseTag("v1.13.2")).toBe(true);
+    expect(isReleaseTag("1.13.2")).toBe(false);
+    expect(isPinnedRef("main")).toBe(false);
+  });
+
+  it("reports the pinned rheged ref for lock provenance", () => {
+    expect(rhegedSourceRef(catalogue)).toMatch(/^v\d+\.\d+\.\d+$/);
+  });
+});
+
+describe("selectInstallSources", () => {
+  const catalogue = parseCatalogue(catalogueJson);
+  const sources = resolveInstallSources(catalogue, {
+    isAgentSkillsSourceRepo: false,
+    profile: {},
+  });
+
+  it("skips third-party sources by default", () => {
+    const { install, skippedThirdParty } = selectInstallSources(sources);
+    expect(install.map((source) => source.id)).toEqual(["rheged"]);
+    expect(skippedThirdParty.map((source) => source.id)).toEqual([
+      "matt-pocock",
+    ]);
+  });
+
+  it("installs third-party sources with includeThirdParty", () => {
+    const { install, skippedThirdParty } = selectInstallSources(sources, {
+      includeThirdParty: true,
+    });
+    expect(install.map((source) => source.id)).toEqual([
+      "rheged",
+      "matt-pocock",
+    ]);
+    expect(skippedThirdParty).toEqual([]);
   });
 });
 

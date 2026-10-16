@@ -73,6 +73,7 @@ export function parseArgs(argv) {
   const options = {
     agents: [],
     catalogue: undefined,
+    includeThirdParty: false,
     install: false,
     json: false,
     repoRoot: process.cwd(),
@@ -105,6 +106,10 @@ export function parseArgs(argv) {
       options.skillsDir = requireValue(argument, argv[++index]);
     } else if (argument === "--install") {
       options.install = true;
+    } else if (argument === "--include-third-party") {
+      // Opt in to catalogue sources marked thirdParty (R-2871). Validated
+      // against --install in main(), so flag order doesn't matter.
+      options.includeThirdParty = true;
     } else if (argument === "--catalogue") {
       options.catalogue = requireValue(argument, argv[++index]);
     } else if (argument === "--agent") {
@@ -223,7 +228,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log(
-      "Usage: node scripts/initialise.mjs [--dry-run|--write|--review|--install] [--json] [--catalogue <url-or-path>] [--agent <name>]... [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]",
+      "Usage: node scripts/initialise.mjs [--dry-run|--write|--review|--install] [--include-third-party] [--json] [--catalogue <url-or-path>] [--agent <name>]... [--set <skill>.<key>=<value>]... [--repo-root <p>] [--skills-dir <p>]",
     );
     return;
   }
@@ -244,6 +249,13 @@ async function main() {
     process.exit(2);
   }
 
+  if (!options.install && (options.includeThirdParty || options.catalogue)) {
+    console.error(
+      `${CLI_NAME}: --include-third-party and --catalogue only apply with --install`,
+    );
+    process.exit(2);
+  }
+
   const { acceptDrift, facts } = readStdinPayload();
 
   if (options.install) {
@@ -251,6 +263,7 @@ async function main() {
       agents: options.agents,
       cataloguePath: options.catalogue,
       dryRun: !options.write,
+      includeThirdParty: options.includeThirdParty,
       profile: { repoType: "single" },
       repoRoot: options.repoRoot,
     });
@@ -258,8 +271,10 @@ async function main() {
       facts.lockSource = installResult.lockSource;
     }
 
-    if (!facts.lockRef) {
-      facts.lockRef = "main";
+    // Default to the catalogue's pinned Rheged ref, not `main` (R-2871): the
+    // lock then records the immutable ref the bundles were installed from.
+    if (!facts.lockRef && installResult.lockRef) {
+      facts.lockRef = installResult.lockRef;
     }
 
     if (!options.write) {

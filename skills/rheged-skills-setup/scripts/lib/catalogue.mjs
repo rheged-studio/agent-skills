@@ -1,8 +1,51 @@
 // Estate skill catalogue — parse, resolve install sets, and build skills.sh argv (R-1904).
 // Pure functions only; fleet-update and rheged-skills-setup import this module.
 
-export const DEFAULT_CATALOGUE_URL =
-  "https://raw.githubusercontent.com/rheged-studio/agent-skills/main/infrastructure/skill-catalogue.json";
+/**
+ * The exact `skills` CLI version `--install` runs (R-2871). A bare `npx skills`
+ * resolves `latest` at run time, so a new upstream release could change what
+ * runs without a change here. Bump deliberately: review the release, update this
+ * constant, and bump the bundle version.
+ */
+export const SKILLS_CLI_VERSION = "1.7.2";
+
+/**
+ * A pinned ref is either a full 40-hex commit SHA or a release tag
+ * (`v<major>.<minor>.<patch>`, optional pre-release suffix). Branch names such
+ * as `main` are rejected: they move, so they can't pin a trust chain (R-2871).
+ */
+const COMMIT_SHA_PATTERN = /^[0-9a-f]{40}$/;
+const RELEASE_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+
+/**
+ * Catalogue sources must be plain GitHub repo URLs, so the pinned ref can be
+ * passed as a `/tree/<ref>` URL the skills CLI parses (R-2871).
+ */
+const GITHUB_REPO_URL_PATTERN = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/;
+
+/**
+ * @param {unknown} ref
+ * @returns {boolean}
+ */
+export function isCommitSha(ref) {
+  return typeof ref === "string" && COMMIT_SHA_PATTERN.test(ref);
+}
+
+/**
+ * @param {unknown} ref
+ * @returns {boolean}
+ */
+export function isReleaseTag(ref) {
+  return typeof ref === "string" && RELEASE_TAG_PATTERN.test(ref);
+}
+
+/**
+ * @param {unknown} ref
+ * @returns {boolean}
+ */
+export function isPinnedRef(ref) {
+  return isCommitSha(ref) || isReleaseTag(ref);
+}
 
 export const RHEGED_AGENT_SKILLS_PACKAGE = "@rheged-studio/agent-skills";
 
@@ -23,7 +66,7 @@ export const LEGACY_COMMAND_SHIM_NAMES = ["initialise-skills"];
 
 /**
  * @param {string | object} json
- * @returns {{ version: number, sources: Array<{ id: string, url: string, skills: string[], skipWhenSourceRepo?: boolean }> }}
+ * @returns {{ version: number, sources: Array<{ id: string, url: string, ref: string, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }> }}
  */
 export function parseCatalogue(json) {
   let catalogue = json;
@@ -50,7 +93,7 @@ export function parseCatalogue(json) {
   }
 
   const seenSkills = new Set();
-  /** @type {Array<{ id: string, url: string, skills: string[], skipWhenSourceRepo?: boolean }>} */
+  /** @type {Array<{ id: string, url: string, ref: string, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }>} */
   const sources = [];
   for (const entry of catalogue.sources) {
     if (!entry || typeof entry !== "object") {
@@ -63,6 +106,27 @@ export function parseCatalogue(json) {
 
     if (typeof entry.url !== "string" || !entry.url.trim()) {
       throw new Error(`catalogue source '${entry.id}' needs a non-empty 'url'`);
+    }
+
+    if (!GITHUB_REPO_URL_PATTERN.test(entry.url.trim())) {
+      throw new Error(
+        `catalogue source '${entry.id}' url must be https://github.com/<owner>/<repo> (got ${JSON.stringify(entry.url)})`,
+      );
+    }
+
+    if (!isPinnedRef(entry.ref)) {
+      throw new Error(
+        `catalogue source '${entry.id}' needs a pinned 'ref': a full 40-hex commit SHA or a v<major>.<minor>.<patch> tag (got ${JSON.stringify(entry.ref)})`,
+      );
+    }
+
+    if (
+      entry.thirdParty !== undefined &&
+      typeof entry.thirdParty !== "boolean"
+    ) {
+      throw new Error(
+        `catalogue source '${entry.id}' thirdParty must be boolean`,
+      );
     }
 
     if (!isStringArray(entry.skills) || entry.skills.length === 0) {
@@ -92,8 +156,10 @@ export function parseCatalogue(json) {
 
     sources.push({
       id: entry.id.trim(),
+      ref: entry.ref,
       skills: [...entry.skills],
       skipWhenSourceRepo: entry.skipWhenSourceRepo === true,
+      thirdParty: entry.thirdParty === true,
       url: entry.url.trim(),
     });
   }
@@ -189,9 +255,11 @@ export function resolveInstallSkills(profile, catalogue) {
 
 /**
  * Sources to run `skills add` for, honouring skipWhenSourceRepo on the agent-skills checkout.
- * @param {{ sources: Array<{ id: string, url: string, skills: string[], skipWhenSourceRepo?: boolean }> }} catalogue
+ * Returns every source, third-party ones included; {@link selectInstallSources}
+ * applies the `--include-third-party` opt-in on top.
+ * @param {{ sources: Array<{ id: string, url: string, ref?: string, skills: string[], skipWhenSourceRepo?: boolean, thirdParty?: boolean }> }} catalogue
  * @param {{ isAgentSkillsSourceRepo?: boolean, profile?: { repoType?: string, skills?: string[] } }} options
- * @returns {Array<{ id: string, url: string, skills: string[] }>}
+ * @returns {Array<{ id: string, url: string, ref: string | undefined, skills: string[], thirdParty: boolean }>}
  */
 export function resolveInstallSources(catalogue, options = {}) {
   const { isAgentSkillsSourceRepo = false, profile = {} } = options;
@@ -207,17 +275,47 @@ export function resolveInstallSources(catalogue, options = {}) {
       return true;
     })
     .map((source) => {
+      let skills = [...source.skills];
       if (source.id === "rheged") {
-        return { id: source.id, skills: rheged, url: source.url };
+        skills = rheged;
+      } else if (source.id === "matt-pocock") {
+        skills = matt;
       }
 
-      if (source.id === "matt-pocock") {
-        return { id: source.id, skills: matt, url: source.url };
-      }
-
-      return { id: source.id, skills: [...source.skills], url: source.url };
+      return {
+        id: source.id,
+        ref: source.ref,
+        skills,
+        thirdParty: source.thirdParty === true,
+        url: source.url,
+      };
     })
     .filter((source) => source.skills.length > 0);
+}
+
+/**
+ * Apply the third-party opt-in (R-2871). First-party sources always install.
+ * Sources marked `thirdParty: true` install only when `includeThirdParty` is
+ * set; otherwise they come back in `skippedThirdParty`, so the dry-run can list
+ * them as skipped.
+ * @template {{ thirdParty?: boolean }} T
+ * @param {T[]} sources
+ * @param {{ includeThirdParty?: boolean }} [options]
+ * @returns {{ install: T[], skippedThirdParty: T[] }}
+ */
+export function selectInstallSources(sources, options = {}) {
+  const includeThirdParty = options.includeThirdParty === true;
+  const install = [];
+  const skippedThirdParty = [];
+  for (const source of sources) {
+    if (source.thirdParty && !includeThirdParty) {
+      skippedThirdParty.push(source);
+    } else {
+      install.push(source);
+    }
+  }
+
+  return { install, skippedThirdParty };
 }
 
 /**
@@ -231,16 +329,74 @@ export function rhegedSourceUrl(catalogue) {
 }
 
 /**
- * `npx skills` argv tail for one source: `add <url> [--skill X]… [--agent Y]… --copy`.
+ * Pinned Rheged ref for lock provenance, and so the default `lockRef` (R-2871).
+ * @param {{ sources: Array<{ id: string, ref?: string }> }} catalogue
+ * @returns {string | undefined}
+ */
+export function rhegedSourceRef(catalogue) {
+  const rheged = catalogue.sources.find((entry) => entry.id === "rheged");
+  return rheged ? rheged.ref : catalogue.sources[0].ref;
+}
+
+/**
+ * The install URL for a pinned source: `https://github.com/<owner>/<repo>/tree/<ref>`.
+ * skills 1.7.2 parses a `/tree/<ref>` URL with no subpath into `{ url, ref }`,
+ * clones with `--branch <ref>`, and falls back to a fetch by SHA for a commit
+ * SHA (R-2871). With no ref, the bare repo URL is returned (default branch).
+ * @param {string} url
+ * @param {string} [ref]
+ * @returns {string}
+ */
+export function pinnedSourceUrl(url, ref) {
+  const base = url.replace(/\/+$/, "").replace(/\.git$/, "");
+  if (ref === undefined) {
+    return base;
+  }
+
+  if (!isPinnedRef(ref)) {
+    throw new Error(
+      `refusing to install ${base} at unpinned ref ${JSON.stringify(ref)}`,
+    );
+  }
+
+  return `${base}/tree/${ref}`;
+}
+
+/**
+ * `npx skills` argv tail for one source:
+ * `add <url>[/tree/<ref>] [--skill X]… [--agent Y]… --copy`. The optional `ref`
+ * pins the source (R-2871); a caller that omits it installs the default branch.
  * @param {string} url
  * @param {string[]} skills
  * @param {string[]} agents
+ * @param {string} [ref]
  * @returns {string[]}
  */
-export function buildSkillsAddArgsForSource(url, skills, agents) {
+export function buildSkillsAddArgsForSource(url, skills, agents, ref) {
   const skillFlags = skills.flatMap((skill) => ["--skill", skill]);
   const agentFlags = agents.flatMap((agent) => ["--agent", agent]);
-  return ["add", url, ...skillFlags, ...agentFlags, "--copy"];
+  return [
+    "add",
+    pinnedSourceUrl(url, ref),
+    ...skillFlags,
+    ...agentFlags,
+    "--copy",
+  ];
+}
+
+/**
+ * Full `npx` argv for a pinned skills CLI run:
+ * `--yes skills@<SKILLS_CLI_VERSION> …`. `--yes` skips npx's install prompt, and
+ * the exact version stops npx resolving `latest` at run time (R-2871).
+ * @param {string[]} skillsArgs
+ * @param {string} [version]
+ * @returns {string[]}
+ */
+export function buildPinnedSkillsCliArgv(
+  skillsArgs,
+  version = SKILLS_CLI_VERSION,
+) {
+  return ["--yes", `skills@${version}`, ...skillsArgs];
 }
 
 /**
