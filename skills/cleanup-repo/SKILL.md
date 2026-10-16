@@ -149,8 +149,11 @@ Skill-specific safeguards:
   anchored issue-ID regex from [Configuration](#configuration); nothing else in
   it is interpreted. A name that doesn't match resolves to no issue.
 - Pass branch names and worktree paths to `git` and `gh` as separate,
-  single-quoted arguments. Never interpolate one raw into shell command text: a
-  valid ref such as `$(id)` would otherwise run as a command substitution.
+  single-quoted arguments, escaping every embedded single quote as `'\''` before
+  wrapping. Git ref names may contain `'`, `;`, `$`, backticks and parentheses,
+  so never interpolate one raw into shell command text: a valid ref such as
+  `$(id)` would run as a command substitution, and one with an unescaped `'`
+  would break out of the quoting.
 - `gh pr list` requests `--json number,headRefOid` only. Never add `title`,
   `body` or other free-text fields.
 - `mcp__linear-server__get_issue` is always called with
