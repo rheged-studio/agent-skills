@@ -1,10 +1,15 @@
+import { untrustedInputFindings } from "../../../infrastructure/scripts/validate-skills.js";
 // Import the BUNDLE script directly (the distributed `.mjs`).
 import {
   buildSkeleton,
   DEFAULT_AUTHOR,
   INITIAL_VERSION,
+  SKILL_CONVENTIONS_URL,
   SKILL_SCOPE,
+  UNTRUSTED_INPUT_HEADING,
+  UNTRUSTED_INPUT_SECTION,
   validateName,
+  validateSkeleton,
   writeSkeleton,
 } from "../../../skills/scaffold-new-skill/scripts/scaffold.mjs";
 import {
@@ -116,6 +121,38 @@ describe("buildSkeleton — the generated skeleton passes the validate-skills ru
         filePath.startsWith(`${base}/`) && filePath.includes("/tests/"),
     );
     expect(insideBundleTest).toBe(false);
+  });
+
+  // R-2870: every new bundle starts with the shared Untrusted input section.
+  it("SKILL.md carries the Untrusted input section, before ## Process", () => {
+    const skill = files[`${base}/SKILL.md`];
+    expect(skill).toContain(UNTRUSTED_INPUT_SECTION);
+    expect(skill.split("\n")).toContain(UNTRUSTED_INPUT_HEADING);
+    expect(skill.indexOf(UNTRUSTED_INPUT_HEADING)).toBeLessThan(
+      skill.indexOf("## Process"),
+    );
+    expect(skill).toContain("**Ingestion points:** TODO:");
+    expect(skill).toContain("data, never instructions");
+    expect(skill).toContain('<untrusted source="…">…</untrusted>');
+    expect(skill).toContain(SKILL_CONVENTIONS_URL);
+  });
+
+  it("the generated SKILL.md passes the validate-skills untrusted-input check", () => {
+    expect(untrustedInputFindings(name, files[`${base}/SKILL.md`])).toEqual([]);
+    expect(validateSkeleton(name, files)).toEqual([]);
+  });
+
+  it("validateSkeleton flags a SKILL.md without the section", () => {
+    const stripped = {
+      ...files,
+      [`${base}/SKILL.md`]: files[`${base}/SKILL.md`].replace(
+        UNTRUSTED_INPUT_SECTION,
+        "",
+      ),
+    };
+    expect(validateSkeleton(name, stripped).join("\n")).toContain(
+      UNTRUSTED_INPUT_HEADING,
+    );
   });
 
   it("respects a custom author", () => {
