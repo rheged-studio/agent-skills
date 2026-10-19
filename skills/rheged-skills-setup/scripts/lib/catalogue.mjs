@@ -24,6 +24,13 @@ const RELEASE_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const GITHUB_REPO_URL_PATTERN = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/;
 
 /**
+ * Sources under this org are first-party. Any other source must be marked
+ * `thirdParty: true`, so a `--catalogue` override can't skip the
+ * `--include-third-party` opt-in by leaving the flag off (R-2871).
+ */
+export const FIRST_PARTY_URL_PREFIX = "https://github.com/rheged-studio/";
+
+/**
  * @param {unknown} ref
  * @returns {boolean}
  */
@@ -120,6 +127,15 @@ export function parseCatalogue(json) {
     ) {
       throw new Error(
         `catalogue source '${entry.id}' thirdParty must be boolean`,
+      );
+    }
+
+    if (
+      !entry.url.trim().startsWith(FIRST_PARTY_URL_PREFIX) &&
+      entry.thirdParty !== true
+    ) {
+      throw new Error(
+        `catalogue source '${entry.id}' (${entry.url.trim()}) is outside rheged-studio, so it must set "thirdParty": true`,
       );
     }
 

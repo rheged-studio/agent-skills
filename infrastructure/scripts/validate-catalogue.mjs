@@ -17,6 +17,7 @@
 
 import {
   allCatalogueSkillNames,
+  FIRST_PARTY_URL_PREFIX,
   isCommitSha,
   isReleaseTag,
   parseCatalogue,
@@ -33,7 +34,6 @@ const CATALOGUE_PATH = join(
 );
 export const VENDORED_CATALOGUE_RELATIVE =
   "skills/rheged-skills-setup/assets/skill-catalogue.json";
-const FIRST_PARTY_URL_PREFIX = "https://github.com/rheged-studio/";
 
 /**
  * @param {string} value  `1.2.3` or `v1.2.3[-pre]`

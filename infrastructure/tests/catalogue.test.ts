@@ -216,6 +216,14 @@ describe("pinned refs and third-party sources (R-2871)", () => {
     expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
   });
 
+  it("rejects an unmarked source outside rheged-studio", () => {
+    const bad = JSON.parse(catalogueJson);
+    delete bad.sources[1].thirdParty;
+    expect(() => parseCatalogue(bad)).toThrow(/"thirdParty": true/);
+    bad.sources[1].thirdParty = false;
+    expect(() => parseCatalogue(bad)).toThrow(/"thirdParty": true/);
+  });
+
   it("rejects a non-boolean thirdParty", () => {
     const bad = JSON.parse(catalogueJson);
     bad.sources[1].thirdParty = "yes";

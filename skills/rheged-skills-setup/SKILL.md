@@ -488,8 +488,9 @@ The scripts parse these inputs structurally (JSON fields, the `packages:` list
 of `pnpm-workspace.yaml`, git porcelain) and never evaluate them. A reconcile
 writes only keys that exist in the skill's `config.example.json`, and a `--set`
 value must also match the type of that key's placeholder. The catalogue is
-parsed strictly: GitHub repo URLs only, a pinned `ref` per first-party source, and no
-duplicate skill names. A free-text value such as a package name or a Linear team
+parsed strictly: GitHub repo URLs only, a pinned `ref` per first-party source,
+`thirdParty: true` on every source outside `rheged-studio` (so an override can't
+skip the opt-in), and no duplicate skill names. A free-text value such as a package name or a Linear team
 name is written only to its own config key. It never becomes a command, a URL to
 fetch, or a new install source.
 
