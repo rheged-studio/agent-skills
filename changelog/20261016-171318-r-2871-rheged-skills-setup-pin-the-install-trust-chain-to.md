@@ -1,6 +1,6 @@
 ---
 title: pin the rheged-skills-setup --install trust chain
-release_note: rheged-skills-setup --install now runs a pinned skills CLI, reads its catalogue from the bundle, installs every source at a pinned ref, and installs the Matt Pocock packs only with --include-third-party.
+release_note: rheged-skills-setup --install now runs a pinned skills CLI, reads its catalogue from the bundle, installs the Rheged skills at a pinned release tag, and installs the Matt Pocock packs only with --include-third-party.
 created_at: "2026-10-16T17:13:18Z"
 merged_at:
 branch: r-2871-rheged-skills-setup-pin-the-install-trust-chain-to-clear
@@ -26,7 +26,7 @@ version:
 
 ## Changed
 
-- **`--install` pins its whole trust chain.** It runs `npx --yes skills@1.7.2`, held in one `SKILLS_CLI_VERSION` constant, instead of whatever `latest` resolves to. It reads the catalogue from a copy vendored in the bundle (`assets/skill-catalogue.json`) instead of fetching it from `main`. Each catalogue source now carries a pinned `ref`, passed to the CLI as a `/tree/<ref>` URL: the `v1.13.2` release tag for the Rheged source and a full commit SHA for `mattpocock/skills`. The catalogue parser refuses a source with no ref or a branch-name ref.
+- **`--install` pins its whole trust chain.** It runs `npx --yes skills@1.7.2`, held in one `SKILLS_CLI_VERSION` constant, instead of whatever `latest` resolves to. It reads the catalogue from a copy vendored in the bundle (`assets/skill-catalogue.json`) instead of fetching it from `main`. The Rheged source now carries a pinned `ref` (the `v1.13.2` release tag), passed to the CLI as a `/tree/<ref>` URL. `mattpocock/skills` carries no `ref` and keeps tracking its default branch, so its packs follow upstream with no catalogue edit. The catalogue parser refuses a first-party source with no ref, and any branch-name ref.
 - **The `.claude/skills.lock` `ref` defaults to the pinned Rheged ref, not `main`.**
-- **`validate-catalogue.mjs` checks the pins.** It requires `thirdParty: true` and a commit SHA on any source outside `rheged-studio`. The Rheged tag must not be newer than the root release, and the vendored catalogue copy must match `infrastructure/skill-catalogue.json` byte for byte.
+- **`validate-catalogue.mjs` checks the pins.** It requires `thirdParty: true` on any source outside `rheged-studio`, and a full commit SHA if such a source sets a `ref`. The Rheged tag must not be newer than the root release, and the vendored catalogue copy must match `infrastructure/skill-catalogue.json` byte for byte.
 - **rheged-skills-setup minor-bumped to 0.16.0.**
