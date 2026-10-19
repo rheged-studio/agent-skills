@@ -54,6 +54,8 @@ describe("validateCatalogue (R-2871)", () => {
   it("rejects thirdParty on a rheged-studio source", () => {
     const value = catalogue();
     (value.sources[0] as { thirdParty?: boolean }).thirdParty = true;
+    // A SHA, so the parser's third-party ref rule doesn't fire first.
+    value.sources[0].ref = SHA;
     expect(errorsFor(value).join("\n")).toMatch(/marked thirdParty/);
   });
 

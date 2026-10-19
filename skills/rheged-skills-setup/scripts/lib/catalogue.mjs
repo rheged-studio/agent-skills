@@ -124,10 +124,16 @@ export function parseCatalogue(json) {
     }
 
     // A third-party source may omit `ref` to track its default branch: it is
-    // opt-in, and its upstream moves outside our control. First-party sources
-    // must pin. Any ref that is set must be immutable (R-2871).
-    const refOptional = entry.thirdParty === true && entry.ref === undefined;
-    if (!refOptional && !isPinnedRef(entry.ref)) {
+    // opt-in, and its upstream moves outside our control. If it does pin, the
+    // ref must be a full commit SHA, since a third party can move its own tags.
+    // First-party sources must pin a SHA or a release tag (R-2871).
+    if (entry.thirdParty === true) {
+      if (entry.ref !== undefined && !isCommitSha(entry.ref)) {
+        throw new Error(
+          `third-party catalogue source '${entry.id}' 'ref' must be a full 40-hex commit SHA or omitted (got ${JSON.stringify(entry.ref)})`,
+        );
+      }
+    } else if (!isPinnedRef(entry.ref)) {
       throw new Error(
         `catalogue source '${entry.id}' needs a pinned 'ref': a full 40-hex commit SHA or a v<major>.<minor>.<patch> tag (got ${JSON.stringify(entry.ref)})`,
       );

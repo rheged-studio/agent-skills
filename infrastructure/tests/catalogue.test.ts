@@ -195,7 +195,19 @@ describe("pinned refs and third-party sources (R-2871)", () => {
   it("rejects a branch name even on a third-party source", () => {
     const bad = JSON.parse(catalogueJson);
     bad.sources[1].ref = "main";
-    expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
+    expect(() => parseCatalogue(bad)).toThrow(/40-hex commit SHA or omitted/);
+  });
+
+  it("rejects a release tag on a third-party source", () => {
+    const bad = JSON.parse(catalogueJson);
+    bad.sources[1].ref = "v1.2.3";
+    expect(() => parseCatalogue(bad)).toThrow(/40-hex commit SHA or omitted/);
+  });
+
+  it("accepts a commit SHA on a third-party source", () => {
+    const value = JSON.parse(catalogueJson);
+    value.sources[1].ref = SHA;
+    expect(parseCatalogue(value).sources[1].ref).toBe(SHA);
   });
 
   it("rejects a branch name as a ref", () => {
