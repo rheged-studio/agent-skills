@@ -157,10 +157,19 @@ describe("buildPinnedSkillsCliArgv", () => {
 describe("pinned refs and third-party sources (R-2871)", () => {
   const catalogue = parseCatalogue(catalogueJson);
 
-  it("pins every tracked source to a SHA or release tag", () => {
-    for (const source of catalogue.sources) {
+  it("pins every first-party source to a SHA or release tag", () => {
+    for (const source of catalogue.sources.filter(
+      (entry) => !entry.thirdParty,
+    )) {
       expect(isPinnedRef(source.ref)).toBe(true);
     }
+  });
+
+  it("leaves matt-pocock unpinned, tracking its default branch", () => {
+    const matt = catalogue.sources.find(
+      (source) => source.id === "matt-pocock",
+    );
+    expect(matt?.ref).toBeUndefined();
   });
 
   it("marks only matt-pocock as third-party", () => {
@@ -171,9 +180,21 @@ describe("pinned refs and third-party sources (R-2871)", () => {
     ).toEqual(["matt-pocock"]);
   });
 
-  it("rejects a source without a ref", () => {
+  it("rejects a first-party source without a ref", () => {
     const bad = JSON.parse(catalogueJson);
     delete bad.sources[0].ref;
+    expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
+  });
+
+  it("accepts a third-party source without a ref", () => {
+    const value = JSON.parse(catalogueJson);
+    delete value.sources[1].ref;
+    expect(parseCatalogue(value).sources[1].ref).toBeUndefined();
+  });
+
+  it("rejects a branch name even on a third-party source", () => {
+    const bad = JSON.parse(catalogueJson);
+    bad.sources[1].ref = "main";
     expect(() => parseCatalogue(bad)).toThrow(/pinned 'ref'/);
   });
 

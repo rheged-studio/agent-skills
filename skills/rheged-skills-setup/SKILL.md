@@ -1,8 +1,8 @@
 ---
 name: rheged-skills-setup
 description: >-
-  Rheged skills setup — install the estate skill catalogue at pinned refs with
-  --install (Rheged ship set; Matt Pocock packs only with
+  Rheged skills setup — install the estate skill catalogue with --install
+  (Rheged ship set at a pinned release; Matt Pocock packs only with
   --include-third-party), then reconcile every installed skill's config.json
   with detected facts — base branch, monorepo package roots, changelog
   directory, Linear issue-key prefixes, review bots, protected branches — plus
@@ -152,12 +152,13 @@ What `--install` does:
    fetch is needed for it. In the source repo it is a byte-identical copy of
    `infrastructure/skill-catalogue.json`, and CI fails on drift.
    `--catalogue <url-or-path>` overrides it for advanced use; an override must
-   still pin every source.
-2. Runs `npx --yes skills@<SKILLS_CLI_VERSION> add <url>/tree/<ref> --skill …
+   still pin every first-party source.
+2. Runs `npx --yes skills@<SKILLS_CLI_VERSION> add <url>[/tree/<ref>] --skill …
    --copy` once per source. The CLI version is the exact `SKILLS_CLI_VERSION`
-   constant in `scripts/lib/catalogue.mjs`, and `<ref>` is the source's pinned
-   `ref`: a release tag for the Rheged source, a full commit SHA for third-party
-   sources.
+   constant in `scripts/lib/catalogue.mjs`. The Rheged source installs at its
+   pinned release tag. A third-party source with no `ref` (the Matt Pocock packs)
+   installs from its default branch, so it picks up upstream changes on each
+   `--install` with no catalogue edit.
 3. Restores clobbered `config.json` from HEAD (R-706), then reconciles.
 
 On the **agent-skills source repo** it skips re-copying the Rheged tree. Only an
@@ -169,10 +170,10 @@ behind: a release can't name its own tag. After each root release, set the
 `rheged` source's `ref` to the new `v<version>` tag in
 `infrastructure/skill-catalogue.json`, copy the file to
 `skills/rheged-skills-setup/assets/skill-catalogue.json`, and bump this bundle.
-To move a third-party source, review the upstream diff, then set its `ref` to the
-new full commit SHA (`git ls-remote <url> HEAD`). To move the CLI, review the
-release, then update `SKILLS_CLI_VERSION`. `pnpm validate:skills` checks the ref
-shapes, the third-party marking, and the vendored copy.
+To move the CLI, review the release, then update `SKILLS_CLI_VERSION`. The Matt
+Pocock source carries no `ref`, so it needs no bump. A third-party source may
+still pin a full commit SHA if one ever needs freezing. `pnpm validate:skills`
+checks the ref shapes, the third-party marking, and the vendored copy.
 
 With the Matt packs installed, the planning entry point is `/grill-me` (Matt
 productivity pack). Run `/setup-matt-pocock-skills` once if the pack requires it.
@@ -451,16 +452,17 @@ key shows as `set to <value> (was <old>)`.
   outside `--install`. A reconcile writes only each skill's `config.json`, the
   root `.gitignore` and `.claude/skills.lock`. The agent's optional Linear MCP
   lookups (step 2) and `gh secret list` probe (step 3) are read-only.
-- **`--install` is the only networked path, and it is pinned.** It reads the
-  catalogue from this bundle, not from a branch. It runs the `skills` CLI at the
-  exact `SKILLS_CLI_VERSION`, never `latest`. It installs each source at its
-  pinned `ref`: a release tag for the Rheged source, a full commit SHA for
-  third-party sources. The catalogue parser refuses a source with no ref or a
-  branch-name ref.
-- **Third-party sources need opt-in.** Sources outside `rheged-studio` are marked
-  `thirdParty: true` and install only with `--include-third-party`. Without it,
-  the dry-run lists them as skipped, and the pre-install wipe leaves their
-  bundles alone.
+- **`--install` is the only networked path.** It reads the catalogue from this
+  bundle, not from a branch. It runs the `skills` CLI at the exact
+  `SKILLS_CLI_VERSION`, never `latest`. First-party sources install at a pinned
+  release tag; the catalogue parser refuses a first-party source with no ref, and
+  any source with a branch-name ref.
+- **Third-party sources need opt-in, and track upstream.** Sources outside
+  `rheged-studio` are marked `thirdParty: true` and install only with
+  `--include-third-party`. Without it, the dry-run lists them as skipped, and
+  the pre-install wipe leaves their bundles alone. A third-party source with no
+  `ref` installs from its default branch, so opting in means trusting that
+  upstream's current state. Review the vendored diff before committing it.
 - **Dry-run first.** Every mode previews before it writes. Writes and installs
   need `--write`, after the operator confirms.
 
@@ -486,7 +488,7 @@ The scripts parse these inputs structurally (JSON fields, the `packages:` list
 of `pnpm-workspace.yaml`, git porcelain) and never evaluate them. A reconcile
 writes only keys that exist in the skill's `config.example.json`, and a `--set`
 value must also match the type of that key's placeholder. The catalogue is
-parsed strictly: GitHub repo URLs only, a pinned `ref` per source, and no
+parsed strictly: GitHub repo URLs only, a pinned `ref` per first-party source, and no
 duplicate skill names. A free-text value such as a package name or a Linear team
 name is written only to its own config key. It never becomes a command, a URL to
 fetch, or a new install source.

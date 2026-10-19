@@ -57,7 +57,13 @@ describe("validateCatalogue (R-2871)", () => {
     expect(errorsFor(value).join("\n")).toMatch(/marked thirdParty/);
   });
 
-  it("requires a commit SHA for a third-party source", () => {
+  it("lets a third-party source omit its ref and track upstream", () => {
+    const value = catalogue();
+    delete (value.sources[1] as { ref?: string }).ref;
+    expect(errorsFor(value)).toEqual([]);
+  });
+
+  it("requires a commit SHA when a third-party source does pin", () => {
     const value = catalogue();
     value.sources[1].ref = "v1.3.1";
     expect(errorsFor(value).join("\n")).toMatch(/40-hex commit SHA/);

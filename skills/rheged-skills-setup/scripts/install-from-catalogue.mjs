@@ -1,7 +1,8 @@
 // Catalogue install path (R-1904): vendor estate skills via skills.sh, restore configs, optional reconcile.
 // The trust chain is pinned (R-2871): the catalogue is read from the copy
-// vendored in this bundle, every source carries a pinned ref, the skills CLI
+// vendored in this bundle, first-party sources carry a pinned ref, the skills CLI
 // runs at an exact version, and third-party sources need --include-third-party.
+// A third-party source with no ref tracks its default branch.
 
 import {
   buildPinnedSkillsCliArgv,
@@ -74,7 +75,7 @@ export function isAgentSkillsSourceRepo(repoRoot) {
 /**
  * The catalogue text: the bundle's vendored copy by default (no network), or an
  * explicit `--catalogue <url-or-path>` override for advanced use. An override is
- * still parsed strictly, so every source in it must carry a pinned ref.
+ * still parsed strictly, so every first-party source in it must carry a pinned ref.
  * @param {string} repoRoot
  * @param {string | undefined} catalogueOverride
  * @param {string} [vendoredPath]

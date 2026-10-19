@@ -81,7 +81,7 @@ describe("planCatalogueInstall", () => {
     expect(plan.installSkills).not.toContain("grill-me");
   });
 
-  it("adds the pinned third-party source with includeThirdParty", () => {
+  it("adds the third-party source at its default branch with includeThirdParty", () => {
     const plan = planCatalogueInstall(catalogue, {
       agents: ["claude-code"],
       includeThirdParty: true,
@@ -91,9 +91,8 @@ describe("planCatalogueInstall", () => {
       "matt-pocock",
     ]);
     expect(plan.installSkills).toContain("grill-me");
-    expect(plan.addArgvs[1][1]).toBe(
-      `https://github.com/mattpocock/skills/tree/${matt?.ref}`,
-    );
+    expect(matt?.ref).toBeUndefined();
+    expect(plan.addArgvs[1][1]).toBe("https://github.com/mattpocock/skills");
     expect(plan.addArgvs[1]).toContain("--copy");
   });
 
@@ -121,7 +120,8 @@ describe("formatInstallPlan", () => {
     expect(text).toContain("skills@1.7.2");
     expect(text).toContain("First-party source(s):");
     expect(text).toMatch(/SKIPPED; re-run with --include-third-party/);
-    expect(text).toContain(`mattpocock/skills/tree/${matt?.ref}`);
+    expect(text).toContain("from https://github.com/mattpocock/skills");
+    expect(text).not.toContain("mattpocock/skills/tree/");
   });
 
   it("labels opted-in third-party sources", () => {

@@ -17,7 +17,8 @@ node skills/rheged-skills-setup/scripts/initialise.mjs --install --include-third
 ```
 
 `--install` reads the catalogue vendored at `assets/skill-catalogue.json`, runs a
-pinned `skills` CLI, and installs each source at its pinned ref. See
+pinned `skills` CLI, installs the Rheged skills at a pinned release tag, and
+installs opted-in third-party packs from their default branch. See
 [`SKILL.md`](SKILL.md#scope-and-safeguards).
 
 **Reconcile only:**

@@ -2,9 +2,11 @@
 // Validates infrastructure/skill-catalogue.json against the local skills/ tree (R-1904)
 // and the pinned install trust chain (R-2871):
 //
-//   - every source parses with a pinned `ref` (parseCatalogue enforces the shape);
+//   - every first-party source parses with a pinned `ref` (parseCatalogue
+//     enforces the shape);
 //   - a third-party source (any repo outside the rheged-studio org) is marked
-//     `thirdParty: true` and pins a full commit SHA, since a third party can move
+//     `thirdParty: true`. It may omit `ref` to track its default branch; if it
+//     does pin, the ref must be a full commit SHA, since a third party can move
 //     its own tags;
 //   - the Rheged source pins a `v<semver>` release tag no newer than this repo's
 //     root package.json version (a tag ahead of it can't exist yet);
@@ -103,9 +105,9 @@ export function validateCatalogue(input) {
       );
     }
 
-    if (!firstParty && !isCommitSha(source.ref)) {
+    if (!firstParty && source.ref !== undefined && !isCommitSha(source.ref)) {
       errors.push(
-        `third-party source '${source.id}' must pin a full 40-hex commit SHA, not ${JSON.stringify(source.ref)} (R-2871)`,
+        `third-party source '${source.id}' must pin a full 40-hex commit SHA or omit 'ref', not ${JSON.stringify(source.ref)} (R-2871)`,
       );
     }
   }
@@ -217,10 +219,17 @@ function selfTest() {
   });
 
   const noRef = base();
-  delete noRef.sources[1].ref;
+  delete noRef.sources[0].ref;
   cases.push({
-    name: "a source without a ref fails",
+    name: "a first-party source without a ref fails",
     ok: run(noRef).some((message) => message.includes("pinned 'ref'")),
+  });
+
+  const trackingThirdParty = base();
+  delete trackingThirdParty.sources[1].ref;
+  cases.push({
+    name: "a third-party source without a ref passes",
+    ok: run(trackingThirdParty).length === 0,
   });
 
   const branchRef = base();

@@ -66,7 +66,7 @@ export const LEGACY_COMMAND_SHIM_NAMES = ["initialise-skills"];
 
 /**
  * @param {string | object} json
- * @returns {{ version: number, sources: Array<{ id: string, url: string, ref: string, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }> }}
+ * @returns {{ version: number, sources: Array<{ id: string, url: string, ref: string | undefined, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }> }}
  */
 export function parseCatalogue(json) {
   let catalogue = json;
@@ -93,7 +93,7 @@ export function parseCatalogue(json) {
   }
 
   const seenSkills = new Set();
-  /** @type {Array<{ id: string, url: string, ref: string, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }>} */
+  /** @type {Array<{ id: string, url: string, ref: string | undefined, skills: string[], skipWhenSourceRepo: boolean, thirdParty: boolean }>} */
   const sources = [];
   for (const entry of catalogue.sources) {
     if (!entry || typeof entry !== "object") {
@@ -114,18 +114,22 @@ export function parseCatalogue(json) {
       );
     }
 
-    if (!isPinnedRef(entry.ref)) {
-      throw new Error(
-        `catalogue source '${entry.id}' needs a pinned 'ref': a full 40-hex commit SHA or a v<major>.<minor>.<patch> tag (got ${JSON.stringify(entry.ref)})`,
-      );
-    }
-
     if (
       entry.thirdParty !== undefined &&
       typeof entry.thirdParty !== "boolean"
     ) {
       throw new Error(
         `catalogue source '${entry.id}' thirdParty must be boolean`,
+      );
+    }
+
+    // A third-party source may omit `ref` to track its default branch: it is
+    // opt-in, and its upstream moves outside our control. First-party sources
+    // must pin. Any ref that is set must be immutable (R-2871).
+    const refOptional = entry.thirdParty === true && entry.ref === undefined;
+    if (!refOptional && !isPinnedRef(entry.ref)) {
+      throw new Error(
+        `catalogue source '${entry.id}' needs a pinned 'ref': a full 40-hex commit SHA or a v<major>.<minor>.<patch> tag (got ${JSON.stringify(entry.ref)})`,
       );
     }
 
@@ -339,7 +343,7 @@ export function rhegedSourceRef(catalogue) {
 }
 
 /**
- * The install URL for a pinned source: `https://github.com/<owner>/<repo>/tree/<ref>`.
+ * The install URL for a source: `https://github.com/<owner>/<repo>/tree/<ref>`.
  * skills 1.7.2 parses a `/tree/<ref>` URL with no subpath into `{ url, ref }`,
  * clones with `--branch <ref>`, and falls back to a fetch by SHA for a commit
  * SHA (R-2871). With no ref, the bare repo URL is returned (default branch).
