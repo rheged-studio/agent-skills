@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "rheged",
+      "url": "https://github.com/rheged-studio/agent-skills",
+      "ref": "v1.13.2",
+      "skipWhenSourceRepo": true,
+      "skills": [
+        "send-it",
+        "commit",
+        "preflight",
+        "changelog",
+        "linear-sync",
+        "cleanup-repo",
+        "rheged-skills-setup",
+        "triage-pr",
+        "release-status",
+        "pr"
+      ]
+    },
+    {
+      "id": "matt-pocock",
+      "url": "https://github.com/mattpocock/skills",
+      "thirdParty": true,
+      "skills": [
+        "ask-matt",
+        "code-review",
+        "codebase-design",
+        "diagnosing-bugs",
+        "domain-modeling",
+        "grill-with-docs",
+        "implement",
+        "implement-spec",
+        "improve-codebase-architecture",
+        "prototype",
+        "research",
+        "retro",
+        "setup-matt-pocock-skills",
+        "tdd",
+        "to-spec",
+        "to-tickets",
+        "triage",
+        "wayfinder",
+        "wizard",
+        "grill-me",
+        "grilling",
+        "handoff",
+        "teach",
+        "to-questionnaire",
+        "wait-what",
+        "writing-for-agents"
+      ]
+    }
+  ]
+}
