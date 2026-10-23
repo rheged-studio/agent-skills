@@ -2,10 +2,10 @@
 title: bundle tested wait scripts in triage-pr and send-it
 release_note: triage-pr and send-it now wait on CI and review bots with bundled, tested scripts instead of hand-written shell poll loops.
 created_at: "2026-10-23T12:35:06Z"
-merged_at:
+merged_at: "2026-10-23T13:31:39Z"
 branch: r-2925-bundle-tested-wait-scripts-in-triage-pr-and-send-it-instead
-pr:
-commit:
+pr: 226
+commit: f2d33cb
 author: rob@rheged.studio
 co_authors: []
 category: feature
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - R-2925
 stats:
-  loc_added:
-  loc_removed:
-  files_changed:
+  loc_added: 2621
+  loc_removed: 111
+  files_changed: 14
 version:
 ---
 
