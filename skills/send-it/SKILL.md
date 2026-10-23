@@ -91,8 +91,9 @@ handles those. The only gate it runs is the change-gated `preflight` lint.
 > Step 13 report, its human envelope (`humanEnvelope: true`), or a documented stop
 > (Phase-A early stop, hard blocker, budget exhaustion) — or you printed an explicit
 > skip/degraded line with a stated reason (`ℹ️ triage chain skipped …` for
-> `--skip-triage` / `triage: false`, or `⚠️ triage-pr not installed …` when the
-> sibling is absent). Reporting a draft PR URL as the final outcome without one of
+> `--skip-triage` / `triage: false`, `⚠️ triage-pr not installed …` when the
+> sibling is absent, or `⚠️ triage-pr predates 0.20.0 …` when it is too old to
+> carry `scripts/wait-checks.mjs`). Reporting a draft PR URL as the final outcome without one of
 > those lines is a failed run.
 
 ## Scope and safeguards
@@ -143,7 +144,8 @@ the open PR, with no triage-pr commits, pushes, or ready flip. State the reason
 relative path (`../<name>/SKILL.md`). Each declares its own `allowed-tools`, and
 send-it trusts whatever copy sits beside it. Install all seven from one
 `agent-skills` release tag (see the install note above), and update them
-together. Nothing checks this at runtime yet. Each sibling's `metadata.version` in
+together. The only runtime check is in Step 11.3, which requires
+`triage-pr/scripts/wait-checks.mjs` (triage-pr 0.20.0 and later). Each sibling's `metadata.version` in
 `SKILL.md` shows which bundle versions are installed.
 
 ## Untrusted input
