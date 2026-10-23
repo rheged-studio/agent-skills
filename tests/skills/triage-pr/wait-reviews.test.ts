@@ -325,5 +325,7 @@ describe("cli", () => {
     const { deps } = harness([]);
     expect(await cli([], deps)).toBe(EXIT.usage);
     expect(await cli(["7", "--interval", "0"], deps)).toBe(EXIT.usage);
+    expect(await cli(["7", "--interval", "Infinity"], deps)).toBe(EXIT.usage);
+    expect(await cli(["7", "--max-minutes", "NaN"], deps)).toBe(EXIT.usage);
   });
 });

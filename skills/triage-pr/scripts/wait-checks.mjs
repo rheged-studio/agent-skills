@@ -152,35 +152,66 @@ export function classifyContext(name, nodes, nowMs, cancelGraceMs) {
     };
   }
 
-  const unfinished = matching.find((node) => isUnfinished(node));
-  if (unfinished) {
-    return describe(
-      unfinished,
-      "pending",
-      `${contextName(unfinished)} ${unfinished.status ?? unfinished.state}`,
-    );
-  }
-
-  const latest = matching.toSorted(
-    (a, b) => (contextTime(b) ?? 0) - (contextTime(a) ?? 0),
-  )[0];
-  const outcome = outcomeOf(latest);
-  if (PASSING.has(outcome)) {
-    return describe(latest, "pass", `${contextName(latest)} ${outcome}`);
-  }
-
-  if (outcome === "CANCELLED") {
-    const cancelledAt = contextTime(latest) ?? nowMs;
-    if (nowMs - cancelledAt < cancelGraceMs) {
+  // A required context can match several distinct checks (`build` matches both
+  // `build` and `build / docker`). "Latest wins" only holds between reruns of
+  // the same check, so judge each check on its own, then fold: any pending
+  // check keeps the context pending, else any failure fails it.
+  const results = [...groupByCheck(matching).values()].map((runs) => {
+    const unfinished = runs.find((node) => isUnfinished(node));
+    if (unfinished) {
       return describe(
-        latest,
+        unfinished,
         "pending",
-        `${contextName(latest)} CANCELLED — waiting for a superseding run`,
+        `${contextName(unfinished)} ${unfinished.status ?? unfinished.state}`,
       );
     }
+
+    const latest = runs.toSorted(
+      (a, b) => (contextTime(b) ?? 0) - (contextTime(a) ?? 0),
+    )[0];
+    const outcome = outcomeOf(latest);
+    if (PASSING.has(outcome)) {
+      return describe(latest, "pass", `${contextName(latest)} ${outcome}`);
+    }
+
+    if (outcome === "CANCELLED") {
+      const cancelledAt = contextTime(latest) ?? nowMs;
+      if (nowMs - cancelledAt < cancelGraceMs) {
+        return describe(
+          latest,
+          "pending",
+          `${contextName(latest)} CANCELLED — waiting for a superseding run`,
+        );
+      }
+    }
+
+    return describe(latest, "fail", `${contextName(latest)} ${outcome}`);
+  });
+
+  return (
+    results.find((result) => result.state === "pending") ??
+    results.find((result) => result.state === "fail") ??
+    results[0]
+  );
+}
+
+/**
+ * Group rollup nodes by check identity — a status context, or a workflow's
+ * check run — so reruns of one check share a group.
+ * @param {object[]} nodes normalised rollup nodes
+ * @returns {Map<string, object[]>}
+ */
+function groupByCheck(nodes) {
+  const groups = new Map();
+  for (const node of nodes) {
+    const key =
+      node.__typename === "StatusContext"
+        ? `status\u0000${node.context}`
+        : `check\u0000${node.checkSuite?.workflowRun?.workflow?.name ?? ""}\u0000${node.name}`;
+    groups.set(key, [...(groups.get(key) ?? []), node]);
   }
 
-  return describe(latest, "fail", `${contextName(latest)} ${outcome}`);
+  return groups;
 }
 
 /**

@@ -109,13 +109,19 @@ export function removeFile(path) {
 }
 
 /**
- * Parse a strictly positive number for `flag`; throws on anything else.
+ * Parse a finite, strictly positive number for `flag`; throws on anything else
+ * (including `Infinity`, which would overflow a timer into a busy loop).
  * @param {string} flag
  * @param {string|undefined} value
  */
 export function parsePositive(flag, value) {
   const number = Number(value);
-  if (value === undefined || value.startsWith("--") || !(number > 0)) {
+  if (
+    value === undefined ||
+    value.startsWith("--") ||
+    !Number.isFinite(number) ||
+    number <= 0
+  ) {
     throw new Error(`${flag} requires a positive number`);
   }
 
@@ -164,10 +170,14 @@ export function runCommand(command, args) {
 /**
  * The real clock and sleep for the CLI entry points.
  */
+// setTimeout treats a delay above 2^31-1 ms as 1 ms; clamp so a huge interval
+// can never turn the poll loop into a busy loop.
+const MAX_TIMER_MS = 2_147_483_647;
+
 export const realDeps = {
   now: () => Date.now(),
   sleep: (ms) =>
     new Promise((resolve) => {
-      setTimeout(resolve, ms);
+      setTimeout(resolve, Math.min(ms, MAX_TIMER_MS));
     }),
 };

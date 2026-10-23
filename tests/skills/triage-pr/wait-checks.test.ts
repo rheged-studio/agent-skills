@@ -184,6 +184,34 @@ describe("classifyChecks — the Step 2 green test", () => {
     ).toBe("green");
   });
 
+  it("never lets a later pass of a different check mask a failed one", () => {
+    // `build` prefix-matches both `build` and `build / docker`; latest-wins
+    // applies only between reruns of the same check.
+    expect(
+      judge(
+        ["build"],
+        [
+          checkRun("build", "COMPLETED", "FAILURE", T0),
+          checkRun("build / docker", "COMPLETED", "SUCCESS", T0 + MINUTE),
+        ],
+        T0 + 10 * MINUTE,
+      ),
+    ).toBe("failed");
+  });
+
+  it("keeps a context pending while another check it matches is still running", () => {
+    expect(
+      judge(
+        ["build"],
+        [
+          checkRun("build", "COMPLETED", "FAILURE", T0),
+          checkRun("build / docker", "IN_PROGRESS"),
+        ],
+        T0 + 10 * MINUTE,
+      ),
+    ).toBeNull();
+  });
+
   it("keeps a context pending while any of its runs is unfinished", () => {
     expect(
       judge(
