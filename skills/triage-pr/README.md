@@ -35,7 +35,8 @@ in [`SKILL.md`](SKILL.md) and [`references/follow-up-routing.md`](references/fol
 - `gh` CLI, authenticated (`gh auth status` must pass) — used for checks, logs,
   review threads, and thread resolution.
 - `git`.
-- Node.js >=22 (ES-module support), for the bundled review-thread fetcher.
+- Node.js >=22 (ES-module support), for the bundled review-thread fetcher and the
+  `wait-checks.mjs` / `wait-reviews.mjs` wait scripts.
 
 ## What it does
 
@@ -44,9 +45,10 @@ Two phases, chosen from the PR's draft state:
 1. **Phase A — while the PR is a draft.** Inspect failing checks with `gh`, pull
    the failing GitHub Actions logs, and fix failures **in PR scope only** — never
    weakening CI config to greenwash. Gated lint-surface failures are reported, never
-   applied. Loop until CI is green or report blockers.
+   applied. Loop until CI is green (judged by the bundled `wait-checks.mjs`) or
+   report blockers.
 2. **Phase B — after the PR is ready-for-review.** Wait for configured
-   `reviewBots`, verify-then-propose dispositions, then follow
+   `reviewBots` to settle (the bundled `wait-reviews.mjs`), verify-then-propose dispositions, then follow
    [`references/phase-b-envelope.md`](references/phase-b-envelope.md) or
    [`references/phase-b-unattended.md`](references/phase-b-unattended.md).
 

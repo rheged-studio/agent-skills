@@ -22,7 +22,7 @@ compatibility: >-
   silently; missing `triage-pr` warns and stops at the open PR (not a successful
   default run — install it).
 metadata:
-  version: 0.12.3
+  version: 0.13.0
   author: Rob Easthope
 allowed-tools: Write, Read, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(pnpm:*), Bash(node:*), Bash(npx:*), mcp__linear-server__get_issue, mcp__linear-server__save_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects
 ---
@@ -556,9 +556,10 @@ Skip silently if `linear-sync` or the Linear MCP server is unavailable.
 
 > **Completion gate.** Do **not** treat the Step 9 PR URL as the final report and
 > stop. Steps 9–10 are mid-pipeline. Continue into this step unless the opt-out in
-> sub-step 1 applies, or sub-step 2 finds `triage-pr` missing (and you print the
-> corresponding skip/degraded line with a reason). A draft-only report without
-> `ℹ️ triage chain skipped …` or `⚠️ triage-pr not installed …` is a failed
+> sub-step 1 applies, or sub-step 2 or 3 finds `triage-pr` missing or too old (and you
+> print the corresponding skip/degraded line with a reason). A draft-only report
+> without `ℹ️ triage chain skipped …`, `⚠️ triage-pr not installed …` or
+> `⚠️ triage-pr predates 0.20.0 …` is a failed
 > `/send-it` run (R-1645).
 
 send-it opens the PR; [`triage-pr`](../triage-pr/SKILL.md) takes it the rest of the
@@ -604,42 +605,40 @@ runs **after** Step 10 so linked issues are already In Review before triage begi
    moments ago, so GitHub Actions may not have registered a single check yet. An empty
    `statusCheckRollup` handed to a cold `triage-pr` reads as "nothing failing", and with
    `promoteOnGreen` on (its default) that would flip the draft to ready **before CI ever
-   ran**. triage-pr's "no failures yet is not green" rule guards its own watch loop, not
-   a cold entry — so send-it proves at least one check exists before handing off. Poll
-   every **10 seconds** for up to **3 minutes**, in a **single** shell loop (not 18
-   separate calls — a foreground `sleep` between tool calls is slow and some harnesses
-   refuse it). Stay quiet while polling; no interim "still waiting" pings:
-
-   Capture `gh`'s exit status separately from the count — a failed call returns an
-   empty string, and treating that as "zero checks" would silently convert an auth or
-   API error into a full-window wait and a bogus "CI never started" verdict:
+   ran**. triage-pr's "no failures yet is not green" rule guards its own wait, not a
+   cold entry — so send-it proves at least one check exists before handing off. Run
+   triage-pr's bundled, tested wait script in its cold-start mode. Use the `triage-pr`
+   directory that sub-step 2 found beside this bundle; the script ships in triage-pr
+   0.20.0 and later. Don't write your own poll loop. If
+   `<triage-pr dir>/scripts/wait-checks.mjs` is missing, the installed triage-pr is
+   too old. Print
+   `⚠️ triage-pr predates 0.20.0 (no scripts/wait-checks.mjs) — re-vendor it to chain`
+   and stop at the open PR. Like sub-step 2's warning, this is an accepted degraded
+   outcome.
 
    ```bash
-   for _ in $(seq 1 18); do
-     if ! checks=$(gh pr view <number> --json statusCheckRollup --jq '[.statusCheckRollup[]?] | length'); then
-       echo "gh pr view failed — cannot verify CI has started" >&2
-       exit 1
-     fi
-     [ "$checks" -gt 0 ] && break
-     sleep 10
-   done
+   node <triage-pr dir>/scripts/wait-checks.mjs <number> --registered
    ```
 
-   **Run the loop the way the host can sustain it** (the same pattern as triage-pr's
-   [Waiting on long operations](../triage-pr/SKILL.md#waiting-on-long-operations)).
-   On **Claude Code**, a bare foreground `sleep` is blocked, so run the whole loop as
-   a **background command** (`run_in_background`) and continue when the harness
-   reports it has exited — or use the Monitor tool with an until-loop on the same
-   check-count condition. On **Cursor**, run it as the single bounded command shown
-   (three minutes is well inside the terminal timeout). Read the loop's exit status
-   and output the same way in every host.
+   It polls every **10 seconds** for up to **3 minutes**, parses everything in Node,
+   and prints one verdict line. It keeps a `gh` failure apart from an empty rollup:
+   treating a failed call as "zero checks" would turn an auth or API error into a
+   full-window wait and a false "CI never started" verdict.
 
-   - **At least one check registered** → continue to sub-step 4.
-   - **`gh` itself fails** → stop and surface the error (authentication, rate limit, a
-     deleted PR). Do **not** fall through to the no-checks branch: an unverifiable
-     state is not the same as a verified-empty one, and only the latter is safe to
-     hand off.
-   - **Still `0` when the window expires** → CI never started for this PR (a repo with
+   **Run it the way the host can sustain it** (triage-pr's
+   [Waiting on long operations](../triage-pr/SKILL.md#waiting-on-long-operations)).
+   On **Claude Code**, run it as a **background command** (`run_in_background`) and
+   continue when the harness reports it has exited. On **Cursor**, run it as a single
+   command; three minutes is well inside the terminal timeout. Stay quiet while it
+   runs; no interim "still waiting" pings. Act on its exit status:
+
+   - **Exit `0` (`ci=registered`)** → at least one check registered; continue to
+     sub-step 4.
+   - **Exit `1` (`gh` failed)** → stop and surface the error (authentication, rate
+     limit, a deleted PR). Do **not** fall through to the no-checks branch: an
+     unverifiable state is not the same as a verified-empty one, and only the latter
+     is safe to hand off.
+   - **Exit `5` (`ci=no-checks`), nothing registered in the window** → CI never started for this PR (a repo with
      no workflows, a `paths`-filtered or `draft == false`-gated workflow this PR doesn't
      match, or a stalled Actions queue). Report
      `⚠️ no checks registered within 3 minutes — handing off with --no-promote` and add
@@ -785,8 +784,11 @@ runs **after** Step 10 so linked issues are already In Review before triage begi
   pushed.
 - **`triage-pr` isn't installed** — warn and finish at the open PR (Step 11). A
   missing sibling never fails a send-it run.
-- **No checks register within the cold-start window** — hand off with `--no-promote`
-  and say why. An empty `statusCheckRollup` must never be read as green.
+- **No checks register within the cold-start window** (`wait-checks.mjs --registered`
+  exits `5`) — hand off with `--no-promote` and say why. An empty
+  `statusCheckRollup` must never be read as green.
+- **The installed `triage-pr` predates 0.20.0** (no `scripts/wait-checks.mjs`) — warn,
+  stop at the open PR, and ask for a re-vendor (Step 11.3).
 - **The triage chain fails, is aborted, or the envelope is declined** — the commits,
   changelog entry, PR, and Linear transitions from Steps 3–10 all stand. Re-run
   `/triage-pr <number>` directly rather than re-running the whole of send-it.
