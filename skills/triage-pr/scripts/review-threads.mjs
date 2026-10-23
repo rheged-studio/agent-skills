@@ -340,7 +340,7 @@ function isAfter(timestamp, threshold) {
  * @param {object} node
  * @param {string} key
  */
-function contextMatches(node, key) {
+export function contextMatches(node, key) {
   const wanted = key.trim().toLowerCase();
   if (node.__typename === "StatusContext") {
     return String(node.context ?? "").toLowerCase() === wanted;
@@ -455,7 +455,7 @@ function normaliseCheckSpec(spec) {
  * @param {object} node
  * @returns {number|null}
  */
-function contextTime(node) {
+export function contextTime(node) {
   if (node.__typename === "StatusContext") {
     return toMs(node.createdAt);
   }

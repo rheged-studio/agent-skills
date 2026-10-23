@@ -27,4 +27,4 @@ stats:
 
 ## Changed
 
-- **send-it patch-bumped to 0.12.4.**
+- **send-it patch-bumped to 0.13.1.**

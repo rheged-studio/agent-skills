@@ -17,11 +17,11 @@ description: >-
 license: MIT
 compatibility: >-
   Requires the `gh` CLI (authenticated — `gh auth status` must pass) and `git`.
-  The bundled review-thread fetcher needs Node.js >=22 (ES modules).
+  The bundled review-thread fetcher and wait scripts need Node.js >=22 (ES modules).
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.19.2
+  version: 0.20.0
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_issue_labels
 ---
@@ -139,23 +139,36 @@ triage-pr --auto-apply
 ## Waiting on long operations
 
 Phase A's CI watch and Phase B's review wait routinely run for 10–30 minutes.
-Wait in a way the host can sustain, and stay quiet while doing it:
+Both waits are **bundled, tested scripts** (paths relative to this skill's own
+directory). **Run them; never write your own poll loop**, `gh pr checks --watch`
+re-check, or `echo "$json" | node -e …` pipeline in their place. Hand-written loops
+have mis-parsed JSON and reported "settled" on a failed fetch (R-2925).
+
+| Wait | Command | Verdict and exit code |
+| --- | --- | --- |
+| CI (Steps 2 and 6) | `node scripts/wait-checks.mjs <pr>` | `ci=green` 0, `ci=failed` 3, `ci=timeout` 4, `ci=no-checks` 5 |
+| Reviews (Step 7) | `node scripts/wait-reviews.mjs <pr>` | `settled=all` or `settled=idle` 0, `settled=maxwait` 4 |
+
+Each script prints **one verdict line** and writes its full JSON report to the
+`out=` path on that line. Two exit codes are shared:
+
+- **Exit 1** means `gh` or the fetcher failed repeatedly, or returned data the
+  script couldn't trust. Surface the error. It is never a verdict: don't read it
+  as green, settled or "no checks".
+- **Exit 6** means a `--run-minutes` slice ended before a verdict.
+
+Run them the way the host can sustain, and stay quiet while doing it:
 
 - **Claude Code.** A foreground command is capped at 10 minutes and a bare
-  `sleep` is blocked, so never chain foreground sleeps or rely on one long
-  foreground `--watch`. Run the wait as a **background command**
-  (`run_in_background`): the harness re-invokes you when it exits. For the CI
-  watch, background `gh pr checks <pr> --watch --required`. For the Step 7 poll,
-  background one bounded shell loop that re-runs the fetcher every 60 seconds and
-  exits when the settle rule holds or the max wait expires (or use the Monitor
-  tool with an until-loop on the same condition). Re-read the result when you are
-  re-invoked; do not poll with repeated short foreground calls.
-- **Cursor.** Run each wait as **one bounded shell command** that finishes inside
-  the terminal timeout (for example `timeout 540 gh pr checks <pr> --watch
-  --required`, or a loop of at most ~9 minutes), then re-issue it until the
-  condition holds or the budget runs out.
-- **Either host.** No interim "still waiting" messages; a wait that ends without
-  its condition (timeout, budget) is reported at the next natural stopping point.
+  `sleep` is blocked. Run the script as a **background command**
+  (`run_in_background`); the harness re-invokes you when it exits. Then read its
+  verdict line and exit status. Do not poll with repeated short foreground calls.
+- **Cursor.** Add `--run-minutes 9` so each invocation ends inside the terminal
+  timeout. On exit 6, re-issue the **same** command plus `--resume`, which carries
+  the wait's clocks over from the saved state, until it exits with a verdict.
+- **Either host.** No interim "still waiting" messages. A wait that ends without
+  its condition (`timeout`, `maxwait`) is reported at the next natural stopping
+  point.
 
 ## Process
 
@@ -180,32 +193,41 @@ gh pr view <pr> --json number,isDraft,state,headRefName,baseRefName,mergeable,me
 ### Step 2 — Phase A: inspect failing checks
 
 ```bash
-gh api repos/<owner>/<repo>/rules/branches/<base> \
-  --jq '.[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
-gh pr checks <pr> --required
+node scripts/wait-checks.mjs <pr>
 ```
 
+Run it with the host pattern in
+[Waiting on long operations](#waiting-on-long-operations). It implements the green
+test below, so read its verdict rather than re-deriving the rule from
+`gh pr checks`.
+
 **Green means required checks only.** The merge gate is the base branch's required
-status checks, so CI is judged on those alone. Read the **required contexts** from
-the branch rules (first command above; repeat for legacy branch protection with
-`gh api repos/<owner>/<repo>/branches/<base>/protection/required_status_checks --jq
-'.contexts[]'` if the rules list none). CI is **green** only when **every** required
-context is present on the head commit **and** terminal-successful (success, or
-skipped). `gh pr checks <pr> --required` (exit `0` passed, `8` pending, `1` failed)
-is a quick view, but it only sees required checks that have **already registered**:
-a gating job (e.g. a "Detect Changes" step) can still be about to create the rest,
-and "no required checks reported" straight after a push means the same thing. So a
+status checks, so CI is judged on those alone. The script reads the **required
+contexts** from the branch rulesets, and from legacy branch protection when the
+rulesets list none. CI is **green** only when **every** required context is present
+on the head commit **and** terminal-successful (success, skipped or neutral). A
+gating job (e.g. a "Detect Changes" step) can still be about to create the rest, and
+"no required checks reported" straight after a push means the same thing. So a
 required context that is **missing** from the rollup is **pending**, never green.
+So is a context with any unfinished run (a rerun is coming), and so is a context
+whose latest run was **cancelled**, for a short grace window
+(`--cancel-grace-minutes`, default 3) in which the superseding run registers. After
+the window it counts as failed.
 
 Non-required checks — a shadow CI lane (e.g. a Buildkite mirror), an AI-review
 workflow such as a cancelled `claude-review`, any other advisory status — are
 **informational**: list a red one in the Step 13 report, but never fix it, never
-let it block promotion, and never spend a `maxCiRounds` round on it. Only when the
-repo genuinely has no required checks (both lookups empty) fall back to the full
-rollup minus the `reviewBotChecks` contexts, and say so in the report.
+let it block promotion, and never spend a `maxCiRounds` round on it. The report's
+`advisory` array lists the ones that aren't passing. Only when the repo genuinely
+has no required checks does the script fall back to the full rollup minus the
+`reviewBotChecks` contexts (`basis=rollup-fallback`); say so in the report. With no
+required checks and an empty rollup it exits `5` (`no-checks`) after
+`--empty-grace-minutes` (default 3) rather than waiting out the budget.
 
-For each failed **required** Actions check, resolve its run ID from the check's `detailsUrl`
-(in `statusCheckRollup`) and read the failing step's logs:
+On `ci=failed` (exit 3), the report's `contexts` array gives each red required
+context's `name`, `conclusion` and `detailsUrl`. For each failed **required**
+Actions check, resolve its run ID from that `detailsUrl` and read the failing step's
+logs:
 
 ```bash
 gh run view <run-id> --log-failed
@@ -279,30 +301,33 @@ git merge origin/<base>      # or rebase, per the repo's convention
 ### Step 6 — Phase A: re-watch CI until green or budget exhausted
 
 ```bash
-gh pr checks <pr> --watch --required
+node scripts/wait-checks.mjs <pr>
 ```
 
-Run the watch with the host pattern in
+Run the wait with the host pattern in
 [Waiting on long operations](#waiting-on-long-operations) — it can outlast a
-foreground command limit.
+foreground command limit. Its budget is `--max-minutes` (default 30).
 
-- After each push, watch the **required** checks to completion. Still red → loop
-  back to Step 2 — **unless** every remaining red check is a Step 3 **gated** item, which
-  ends Phase A immediately (see the gated-exit rule below).
+- After each push, wait for the **required** checks to finish, then act on the
+  verdict:
+  - `ci=green` (exit 0) → the promotion and phase rules below.
+  - `ci=failed` (exit 3) → loop back to Step 2 with the report's red contexts —
+    **unless** every remaining red check is a Step 3 **gated** item, which ends
+    Phase A immediately (see the gated-exit rule below).
+  - `ci=timeout` (exit 4) → required checks still pending at the budget. Report
+    them as blockers (the `waiting=` list); never treat them as green.
+  - `ci=no-checks` (exit 5) → no required checks and nothing registered. Report it;
+    there is no green to promote on.
+  - Exit 1 → a `gh` failure. Surface it and stop. It is not a CI verdict.
 - **No early "done".** Do not tell the user the run is complete, green, or ready
-  for attention until `gh pr checks --watch --required` (or an equivalent fresh required-check
-  rollup) has **exited** and every required check is **terminal** (success or
-  failure). Non-required checks still running or red do not hold this up. Queued,
-  pending, or in-progress checks are non-terminal — "no failures yet", an empty
-  rollup, or mixed pending+pass is **not** proven green and **not** a completion
-  signal (same discipline as the promotion gate below, applied to every end-of-run
-  claim). **Re-check after the watch exits:** a second workflow run on the same head
-  (a re-push, or an `edited` / `ready_for_review` event) can cancel the first, and
-  `--watch` may exit `0` in the gap between them, or before a gating job has created
-  the remaining required checks. Re-apply the Step 2 test — every required context
-  present and successful on the head — before calling it green; a
-  required check that shows as failed because its run was **cancelled** and
-  superseded is not a failure — wait for the superseding run.
+  for attention until `wait-checks.mjs` has **exited** with `ci=green` or
+  `ci=failed` for the current head. Non-required checks still running or red do not
+  hold this up. Queued, pending, or in-progress checks are non-terminal: "no
+  failures yet", an empty rollup, or mixed pending+pass is **not** proven green and
+  **not** a completion signal (same discipline as the promotion gate below, applied
+  to every end-of-run claim). The script already treats a missing required context,
+  an unfinished rerun, and a freshly **cancelled** run that a newer run is
+  superseding as pending. Don't second-guess it with `gh pr checks`.
 - **Stay quiet while watching.** Prefer a silent wait / background watch over
   interim "still waiting" pings that interrupt other work. Surface the human only
   at a **natural stopping point**: the **human envelope** (Step 10 — actionable
@@ -351,12 +376,27 @@ foreground command limit.
 ### Step 7 — Phase B: hybrid wait for AI reviewers
 
 Stay in the same session. After the ready flip (or when entering Phase B on an
-already-ready PR), poll the fetcher until reviews settle — or until the hard cap
-forces the slow-bot micro-gate. Resolve the skill directory as in Step 8.
+already-ready PR), wait for reviews to settle, or for the hard cap that leads to the
+slow-bot micro-gate. Resolve the skill directory as in Step 8.
 
 ```bash
-node scripts/review-threads.mjs <pr> --bots "<config.reviewBots joined by commas>" --bot-checks '<config.reviewBotChecks as JSON>'
+node scripts/wait-reviews.mjs <pr>
 ```
+
+Run it with the host pattern in
+[Waiting on long operations](#waiting-on-long-operations). It polls
+`review-threads.mjs` every 60 seconds with this bundle's `config.json`
+(`reviewBots`, `reviewBotChecks`, `reviewIdleMinutes`, `reviewWaitMaxMinutes`) and
+applies the settle rule below. It then prints a one-line verdict, for example
+`settled=idle head=abc1234 reported=claude skipped=- missing=coderabbitai
+out=<file>`, and writes the last fetcher JSON to `out`. Exit codes:
+
+- `0` for `settled=all` or `settled=idle`.
+- `4` for `settled=maxwait`, which leads to the slow-bot handling below.
+- `1` when the fetcher failed or returned malformed JSON several times in a row.
+  Surface it as an error. It is never "settled".
+
+The fields below are what the fetcher reports and the script evaluates.
 
 Every settle field is scoped to the **current head commit** (`headRefOid`) and to
 activity **after the ready flip** (`readyAt`). Nothing posted while the PR was a
@@ -395,10 +435,9 @@ counts either.
    has not changed for `reviewIdleMinutes`, **or**
 3. **Max wait** — `reviewWaitMaxMinutes` since Phase B wait started.
 
-Poll quietly (e.g. every 60s) using the host pattern in
-[Waiting on long operations](#waiting-on-long-operations); do **not** ping the
-human while waiting unless the slow-bot gate fires. Name `skipped` bots in the
-Step 13 report so a cancelled review is visible, not silent.
+Wait quietly; do **not** ping the human while waiting unless the slow-bot gate
+fires. Name `skipped` bots in the Step 13 report so a cancelled review is visible,
+not silent.
 
 **Slow-bot micro-gate** — only when `humanEnvelope` is `true` **and** max wait
 expires with `botsMissing` non-empty. When unattended (`humanEnvelope: false` /
@@ -424,8 +463,8 @@ Proceed with what we have / wait longer / abort? [proceed|wait|abort]
 
 - **Proceed** → continue to Step 8 with the findings so far (note missing bots in
   the envelope report).
-- **Wait** → reset the max-wait clock (or extend by another `reviewWaitMaxMinutes`)
-  and return to the poll loop.
+- **Wait** → run `wait-reviews.mjs <pr>` again **without** `--resume`. That starts a
+  fresh `reviewWaitMaxMinutes` window.
 - **Abort** → stop; leave threads untouched; no disposition envelope.
 
 Do **not** open the disposition envelope until this gate is answered (or reviews
@@ -547,7 +586,8 @@ node scripts/respond-threads.mjs summary --pr <pr> --findings '[{"title":"…","
 ```
 
 Then re-fetch (Step 8). **Any push in Phase B moves the head** — record the new
-`headRefOid`, reset the Step 7 wait clocks, and return to **Step 7** before deciding
+`headRefOid`, re-run `wait-reviews.mjs` fresh (no `--resume`, which resets the Step 7
+wait clocks), and return to **Step 7** before deciding
 there are no new findings. If new bot findings appear, continue Step 7 → Step 9 and
 follow the path file's Step 12 section (re-envelope or re-plan). Bound by
 `maxReviewRounds`. If CI is terminal green, bots have settled on the current head,
