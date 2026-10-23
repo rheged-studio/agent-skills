@@ -2,10 +2,10 @@
 title: wait for newer workflow runs before calling CI green
 release_note: triage-pr's wait-checks.mjs no longer reports CI green while a newer run of the same workflow is still running on the head commit.
 created_at: "2026-10-23T13:41:43Z"
-merged_at:
+merged_at: "2026-10-23T14:26:06Z"
 branch: r-2925-wait-checks-wait-for-newer-workflow-runs
-pr:
-commit:
+pr: 227
+commit: fea324d
 author: rob@rheged.studio
 co_authors: []
 category: fix
@@ -13,9 +13,9 @@ breaking: false
 issues:
   - R-2925
 stats:
-  loc_added:
-  loc_removed:
-  files_changed:
+  loc_added: 320
+  loc_removed: 18
+  files_changed: 5
 version:
 ---
 
