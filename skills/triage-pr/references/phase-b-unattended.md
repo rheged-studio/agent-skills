@@ -40,7 +40,7 @@ without a Yes/No gate or a second prompt before Linear creates.
 
 ## Slow bots
 
-If max wait expires with bots still missing, **do not** run the Proceed / Wait / Abort
+If max wait expires with bots still missing (`wait-reviews.mjs` exits `4`, `settled=maxwait`), **do not** run the Proceed / Wait / Abort
 micro-gate. Continue with whoever has reported; name missing bots in the Step 13 report.
 
 ## Step 11 — apply after plan is posted
