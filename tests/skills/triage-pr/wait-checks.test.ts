@@ -4,6 +4,7 @@ import {
   cli,
   EXIT,
   fetchRequiredContexts,
+  fetchWorkflowRuns,
   parsePrView,
 } from "../../../skills/triage-pr/scripts/wait-checks.mjs";
 // Imports the BUNDLE script directly. The poll loop and the whole CLI are driven
@@ -27,12 +28,13 @@ function checkRun(
   status: string,
   conclusion: null | string = null,
   atMs = T0,
+  runId = 1,
 ) {
   return {
     __typename: "CheckRun",
     completedAt: status === "COMPLETED" ? iso(atMs) : "0001-01-01T00:00:00Z",
     conclusion: conclusion ?? "",
-    detailsUrl: `https://github.com/acme/repo/actions/runs/1/job/${name.length}`,
+    detailsUrl: `https://github.com/acme/repo/actions/runs/${runId}/job/${name.length}`,
     name,
     startedAt: status === "QUEUED" ? "0001-01-01T00:00:00Z" : iso(atMs),
     status,
@@ -56,12 +58,25 @@ function prView(rollup: null | unknown[]) {
 const RULES_PREFIX = "gh api repos/acme/repo/rules/branches/main";
 const LEGACY_PREFIX =
   "gh api repos/acme/repo/branches/main/protection/required_status_checks";
+const RUNS_PREFIX =
+  "gh api repos/acme/repo/actions/runs?head_sha=abcdef1234567890";
+
+function workflowRuns(...runs: Array<[number, string, string]>) {
+  return JSON.stringify(
+    runs.map(([id, name, status]) => ({ id, name, status })),
+  );
+}
 
 type Handler = (() => string) | Array<() => string>;
 
 // A fake `gh` runner keyed by command prefix (longest wins). An array handler
-// replays one response per call, repeating the last.
-function harness(handlers: Record<string, Handler>, startMs = T0) {
+// replays one response per call, repeating the last. The Actions runs lookup
+// defaults to "no workflow runs" unless a test supplies it.
+function harness(overrides: Record<string, Handler>, startMs = T0) {
+  const handlers: Record<string, Handler> = {
+    [RUNS_PREFIX]: () => "[]",
+    ...overrides,
+  };
   let clock = startMs;
   const calls: string[] = [];
   const logs: string[] = [];
@@ -275,6 +290,100 @@ describe("classifyChecks — the Step 2 green test", () => {
   });
 });
 
+describe("classifyChecks — newer workflow runs on the same head", () => {
+  // Captured from PR #220: editing the PR body fired `edited`, which started a
+  // second Validate run on the same head. Its GO/NO GO job didn't exist yet, so
+  // only the first run's GO/NO GO (SUCCESS) was in the rollup.
+  const rollup = [
+    checkRun("GO/NO GO", "COMPLETED", "SUCCESS", T0, 39_962_144_338),
+    checkRun("lint / Lint", "IN_PROGRESS", null, T0, 39_962_165_296),
+  ];
+  function classify(runs: Array<{ id: number; name: string; status: string }>) {
+    return ciVerdict(
+      classifyChecks({
+        botCheckNames: [],
+        cancelGraceMs: 0,
+        nowMs: T0 + MINUTE,
+        required: ["GO/NO GO"],
+        rollup,
+        workflowRuns: runs,
+      }),
+    );
+  }
+
+  it("keeps a required check pending while a newer run of its workflow is in progress", () => {
+    expect(
+      classify([
+        { id: 39_962_144_338, name: "Validate", status: "completed" },
+        { id: 39_962_165_296, name: "Validate", status: "in_progress" },
+      ]),
+    ).toBeNull();
+  });
+
+  it("counts a queued newer run too, even before it has any jobs", () => {
+    expect(
+      classify([{ id: 39_962_165_296, name: "Validate", status: "queued" }]),
+    ).toBeNull();
+  });
+
+  it("ignores newer runs of other workflows and older runs of its own", () => {
+    expect(
+      classify([
+        {
+          id: 39_962_165_268,
+          name: "Validate PR title",
+          status: "in_progress",
+        },
+        { id: 39_962_100_000, name: "Validate", status: "in_progress" },
+      ]),
+    ).toBe("green");
+  });
+
+  it("goes green once the newer run has completed", () => {
+    expect(
+      classify([{ id: 39_962_165_296, name: "Validate", status: "completed" }]),
+    ).toBe("green");
+  });
+});
+
+describe("fetchWorkflowRuns", () => {
+  it("reads the runs on the head commit", () => {
+    const { calls, deps } = harness({
+      [RUNS_PREFIX]: () => workflowRuns([2, "Validate", "in_progress"]),
+    });
+    expect(
+      fetchWorkflowRuns(deps.run, "acme/repo", "abcdef1234567890"),
+    ).toEqual([{ id: 2, name: "Validate", status: "in_progress" }]);
+    expect(calls[0]).toContain("actions/runs?head_sha=abcdef1234567890");
+  });
+
+  it("treats a 404 (no Actions) as no runs", () => {
+    const { deps } = harness({
+      [RUNS_PREFIX]: () => {
+        throw new Error("HTTP 404: Not Found");
+      },
+    });
+    expect(
+      fetchWorkflowRuns(deps.run, "acme/repo", "abcdef1234567890"),
+    ).toEqual([]);
+  });
+
+  it("throws on any other failure or on malformed output", () => {
+    const failing = harness({
+      [RUNS_PREFIX]: () => {
+        throw new Error("HTTP 502");
+      },
+    });
+    expect(() =>
+      fetchWorkflowRuns(failing.deps.run, "acme/repo", "abcdef1234567890"),
+    ).toThrow(/502/);
+    const malformed = harness({ [RUNS_PREFIX]: () => '[{"id":"x"}]' });
+    expect(() =>
+      fetchWorkflowRuns(malformed.deps.run, "acme/repo", "abcdef1234567890"),
+    ).toThrow(/malformed/);
+  });
+});
+
 describe("parsePrView", () => {
   it("reads a null rollup as empty", () => {
     expect(parsePrView(prView(null)).rollup).toEqual([]);
@@ -381,6 +490,57 @@ describe("cli — default (green) mode", () => {
       pr: 7,
       verdict: "green",
     });
+  });
+
+  it("waits for a newer run of the same workflow before calling it green (PR #220)", async () => {
+    const first = checkRun("GO/NO GO", "COMPLETED", "SUCCESS", T0, 100);
+    const second = checkRun(
+      "GO/NO GO",
+      "COMPLETED",
+      "SUCCESS",
+      T0 + MINUTE,
+      200,
+    );
+    const { deps, elapsedMinutes, logs } = harness({
+      "gh pr view": [
+        () => prView([first]),
+        () => prView([first]),
+        () => prView([first, second]),
+      ],
+      [RULES_PREFIX]: () => "GO/NO GO\n",
+      [RUNS_PREFIX]: [
+        () =>
+          workflowRuns(
+            [100, "Validate", "completed"],
+            [200, "Validate", "queued"],
+          ),
+        () =>
+          workflowRuns(
+            [100, "Validate", "completed"],
+            [200, "Validate", "in_progress"],
+          ),
+        () =>
+          workflowRuns(
+            [100, "Validate", "completed"],
+            [200, "Validate", "completed"],
+          ),
+      ],
+    });
+    expect(await cli(["7", "--out", out], deps)).toBe(EXIT.green);
+    expect(elapsedMinutes()).toBe(1);
+    expect(logs[0]).toMatch(/^ci=green/);
+  });
+
+  it("exits 1 when the workflow-runs lookup keeps failing", async () => {
+    const { deps } = harness({
+      "gh pr view": () =>
+        prView([checkRun("GO/NO GO", "COMPLETED", "SUCCESS")]),
+      [RULES_PREFIX]: () => "GO/NO GO\n",
+      [RUNS_PREFIX]: () => {
+        throw new Error("HTTP 500");
+      },
+    });
+    expect(await cli(["7", "--out", out], deps)).toBe(EXIT.error);
   });
 
   it("reports failed with exit 3 once nothing is pending", async () => {
