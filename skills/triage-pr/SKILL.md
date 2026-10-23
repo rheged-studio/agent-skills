@@ -21,7 +21,7 @@ compatibility: >-
   Designed for repositories whose AI review runs only on
   ready-for-review PRs (draft-gated), so Phase A and Phase B do not overlap.
 metadata:
-  version: 0.20.0
+  version: 0.20.1
   author: Rob Easthope
 allowed-tools: AskUserQuestion, Read, Edit, Write, Glob, Grep, Bash(gh:*), Bash(git:*), Bash(node:*), Bash(pnpm:*), Bash(npx:*), mcp__linear-server__save_issue, mcp__linear-server__get_issue, mcp__linear-server__list_issue_statuses, mcp__linear-server__list_projects, mcp__linear-server__list_issue_labels
 ---
@@ -212,7 +212,11 @@ required context that is **missing** from the rollup is **pending**, never green
 So is a context with any unfinished run (a rerun is coming), and so is a context
 whose latest run was **cancelled**, for a short grace window
 (`--cancel-grace-minutes`, default 3) in which the superseding run registers. After
-the window it counts as failed.
+the window it counts as failed. A passing check from an older workflow run is also
+**pending** while a newer run of the same workflow is still queued or in progress on
+the head. That newer run may not have created the job yet: editing the PR body or
+flipping it to ready (`edited` / `ready_for_review`) re-runs the workflow on the
+same commit, and GitHub's merge gate waits for the newer run.
 
 Non-required checks — a shadow CI lane (e.g. a Buildkite mirror), an AI-review
 workflow such as a cancelled `claude-review`, any other advisory status — are

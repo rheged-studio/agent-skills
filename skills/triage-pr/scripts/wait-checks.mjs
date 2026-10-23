@@ -13,6 +13,10 @@
 // commit and terminal-successful (success, skipped or neutral). Per context:
 //   - not in the rollup yet      → pending (a gating job may still create it);
 //   - any matching run unfinished → pending (a rerun or second run is coming);
+//   - a newer run of the same workflow still in progress on the head commit
+//                                 → pending, even before it has created the job
+//                                   (an `edited` / `ready_for_review` event
+//                                   re-runs the workflow on the same head);
 //   - latest run cancelled        → pending for --cancel-grace-minutes, so a
 //                                   superseding run can register; then failed;
 //   - latest run otherwise red    → failed.
@@ -126,11 +130,15 @@ function contextName(node) {
  * Classify one context against the (normalised) rollup. Pure.
  * @param {string} name
  * @param {object[]} nodes normalised rollup nodes
- * @param {number} nowMs
- * @param {number} cancelGraceMs
+ * @param {{ nowMs: number, cancelGraceMs: number, workflowRuns?: { id: number, name: string, status: string }[] }} options
+ *   `workflowRuns` are the Actions runs on the head commit (see `fetchWorkflowRuns`).
  * @returns {{ name: string, state: "pass"|"pending"|"fail", conclusion: string|null, detailsUrl: string|null, evidence: string }}
  */
-export function classifyContext(name, nodes, nowMs, cancelGraceMs) {
+export function classifyContext(
+  name,
+  nodes,
+  { cancelGraceMs, nowMs, workflowRuns = [] },
+) {
   const matching = nodes.filter((node) => contextMatches(node, name));
   if (matching.length === 0) {
     return {
@@ -169,6 +177,15 @@ export function classifyContext(name, nodes, nowMs, cancelGraceMs) {
     const latest = runs.toSorted(
       (a, b) => (contextTime(b) ?? 0) - (contextTime(a) ?? 0),
     )[0];
+    const newer = supersedingRun(latest, workflowRuns);
+    if (newer) {
+      return describe(
+        latest,
+        "pending",
+        `${contextName(latest)} — a newer "${newer.name}" run (${newer.id}) is ${newer.status}`,
+      );
+    }
+
     const outcome = outcomeOf(latest);
     if (PASSING.has(outcome)) {
       return describe(latest, "pass", `${contextName(latest)} ${outcome}`);
@@ -196,6 +213,38 @@ export function classifyContext(name, nodes, nowMs, cancelGraceMs) {
 }
 
 /**
+ * The Actions run a check-run node came from, parsed from its `detailsUrl`.
+ * @param {object} node
+ * @returns {number|null}
+ */
+function runIdOf(node) {
+  const match = String(node.detailsUrl ?? "").match(/\/actions\/runs\/(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * A newer, unfinished run of the same workflow as `node`'s run, if any. Such a
+ * run supersedes `node`'s result even before it has created the matching job
+ * (GitHub's merge gate waits on it), so the check stays pending until it ends.
+ * @param {object} node normalised check-run node
+ * @param {{ id: number, name: string, status: string }[]} workflowRuns
+ */
+function supersedingRun(node, workflowRuns) {
+  const runId = runIdOf(node);
+  const workflow = node.checkSuite?.workflowRun?.workflow?.name;
+  if (node.__typename === "StatusContext" || runId === null || !workflow) {
+    return null;
+  }
+
+  return (
+    workflowRuns.find(
+      (run) =>
+        run.name === workflow && run.id > runId && run.status !== "completed",
+    ) ?? null
+  );
+}
+
+/**
  * Group rollup nodes by check identity — a status context, or a workflow's
  * check run — so reruns of one check share a group.
  * @param {object[]} nodes normalised rollup nodes
@@ -216,7 +265,7 @@ function groupByCheck(nodes) {
 
 /**
  * Apply the Step 2 green test to a rollup. Pure.
- * @param {{ required: string[], rollup: object[], nowMs: number, cancelGraceMs: number, botCheckNames: string[] }} input
+ * @param {{ required: string[], rollup: object[], nowMs: number, cancelGraceMs: number, botCheckNames: string[], workflowRuns?: { id: number, name: string, status: string }[] }} input
  */
 export function classifyChecks({
   botCheckNames,
@@ -224,8 +273,10 @@ export function classifyChecks({
   nowMs,
   required,
   rollup,
+  workflowRuns = [],
 }) {
   const nodes = rollup.map((node) => normaliseRollupNode(node));
+  const options = { cancelGraceMs, nowMs, workflowRuns };
 
   if (required.length > 0) {
     const advisoryNodes = nodes.filter(
@@ -233,14 +284,10 @@ export function classifyChecks({
     );
     return {
       advisory: distinctNames(advisoryNodes)
-        .map((name) =>
-          classifyContext(name, advisoryNodes, nowMs, cancelGraceMs),
-        )
+        .map((name) => classifyContext(name, advisoryNodes, options))
         .filter((context) => context.state !== "pass"),
       basis: "required",
-      contexts: required.map((name) =>
-        classifyContext(name, nodes, nowMs, cancelGraceMs),
-      ),
+      contexts: required.map((name) => classifyContext(name, nodes, options)),
     };
   }
 
@@ -251,7 +298,7 @@ export function classifyChecks({
     advisory: [],
     basis: "rollup-fallback",
     contexts: distinctNames(judged).map((name) =>
-      classifyContext(name, judged, nowMs, cancelGraceMs),
+      classifyContext(name, judged, options),
     ),
   };
 }
@@ -367,9 +414,50 @@ export function fetchRequiredContexts(run, repo, base) {
 }
 
 /**
+ * The GitHub Actions workflow runs on a commit, as `{ id, name, status }`. A
+ * repo without Actions (404) has none; any other `gh` failure throws.
+ * @param {(cmd: string, args: string[]) => string} run
+ * @param {string} repo owner/name
+ * @param {string} sha full head commit SHA
+ * @returns {{ id: number, name: string, status: string }[]}
+ */
+export function fetchWorkflowRuns(run, repo, sha) {
+  let stdout;
+  try {
+    stdout = run("gh", [
+      "api",
+      `repos/${repo}/actions/runs?head_sha=${sha}&per_page=100`,
+      "--jq",
+      "[.workflow_runs[] | { id, name, status }]",
+    ]);
+  } catch (error) {
+    if (/HTTP 404/.test(error.message)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  const runs = JSON.parse(stdout);
+  if (
+    !Array.isArray(runs) ||
+    runs.some(
+      (entry) =>
+        !Number.isInteger(entry?.id) ||
+        typeof entry.name !== "string" ||
+        typeof entry.status !== "string",
+    )
+  ) {
+    throw new Error("gh api actions/runs output is malformed");
+  }
+
+  return runs;
+}
+
+/**
  * Poll until a verdict, the slice ends, or `gh` fails more than `retries` times
  * in a row.
- * @param {{ mode: "green"|"registered", fetchPr: () => string, fetchRequired: (repo: string, base: string) => string[], botCheckNames: string[], intervalMs: number, maxMs: number, cancelGraceMs: number, emptyGraceMs: number, retries: number, runMs: number|null, state: { startedAt: number } }} options
+ * @param {{ mode: "green"|"registered", fetchPr: () => string, fetchRequired: (repo: string, base: string) => string[], fetchRuns: (repo: string, sha: string) => { id: number, name: string, status: string }[], botCheckNames: string[], intervalMs: number, maxMs: number, cancelGraceMs: number, emptyGraceMs: number, retries: number, runMs: number|null, state: { startedAt: number } }} options
  * @param {{ now: () => number, sleep: (ms: number) => Promise<void> }} deps
  */
 export async function waitForChecks(options, { now, sleep }) {
@@ -381,10 +469,12 @@ export async function waitForChecks(options, { now, sleep }) {
 
   for (;;) {
     let pr = null;
+    let workflowRuns = [];
     try {
       const fetched = parsePrView(options.fetchPr());
       if (mode === "green") {
         required ??= options.fetchRequired(fetched.repo, fetched.baseRefName);
+        workflowRuns = options.fetchRuns(fetched.repo, fetched.headRefOid);
       }
 
       pr = fetched;
@@ -418,6 +508,7 @@ export async function waitForChecks(options, { now, sleep }) {
         nowMs: now(),
         required,
         rollup: pr.rollup,
+        workflowRuns,
       });
       report = {
         ...classified,
@@ -615,6 +706,7 @@ export async function cli(argv, deps) {
       fetchPr: () => deps.run("gh", prArgs),
       fetchRequired: (repo, base) =>
         fetchRequiredContexts(deps.run, repo, base),
+      fetchRuns: (repo, sha) => fetchWorkflowRuns(deps.run, repo, sha),
       intervalMs:
         (options.intervalSeconds ?? DEFAULTS[mode].intervalSeconds) * 1000,
       maxMs: maxMinutes * MINUTE,
@@ -718,6 +810,24 @@ function selfTest() {
           checkRun("GO/NO GO", "QUEUED", null),
         ],
         now + 10 * MINUTE,
+      ) === null,
+  });
+  const fromRun100 = {
+    ...checkRun("GO/NO GO", "COMPLETED", "SUCCESS"),
+    detailsUrl: "https://github.com/a/b/actions/runs/100/job/1",
+  };
+  cases.push({
+    name: "a newer in-progress run of the same workflow keeps a pass pending",
+    ok:
+      ciVerdict(
+        classifyChecks({
+          botCheckNames: [],
+          cancelGraceMs: 0,
+          nowMs: now,
+          required: ["GO/NO GO"],
+          rollup: [fromRun100],
+          workflowRuns: [{ id: 200, name: "Validate", status: "in_progress" }],
+        }),
       ) === null,
   });
   cases.push({
