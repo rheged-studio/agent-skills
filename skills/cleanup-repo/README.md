@@ -30,7 +30,7 @@ branches start with, or branch issue-IDs won't match, and set
 | `linearTeamName` | **Fallback** Linear team **name**, used only when an issue carries no team; the `Done` state is otherwise resolved per issue's own team. Stable across team-key renames. | `"Rheged Studio"` |
 | `issueKeys` | Team-key prefixes that may lead a branch name; the anchored issue-ID regex is built from these. | `["R"]` |
 | `mainBranch` | Trunk a branch must be merged into to count as merged; both passes diff against `origin/<mainBranch>`. Set it for repos whose trunk isn't `main` (`master`, `develop`, …). | `"main"` |
-| `protectedBranches` | Branches never deleted, locally or remotely. | `["main"]` |
+| `protectedBranches` | Branches never deleted, locally or remotely. `mainBranch` is always protected as well. | `["main"]` |
 | `linearWritebackDefault` | Seeds the yes/no default of the Step 10 Linear `Done` writeback prompt (`"yes"` / `"no"`); the interactive gate always stays, so it never auto-applies. Absent or unrecognised → `"no"`. | `"no"` |
 
 > **Base branch.** The trunk defaults to `origin/main`; set the `mainBranch`
@@ -53,7 +53,10 @@ Two passes, confirmed separately (accept or decline each; `--branches-only` /
    (guarding ones with uncommitted changes), deletes merged local and remote
    branches using two-pass detection (`git branch --merged origin/main` plus
    `gh pr list … --state merged` for squash-merges), optionally writes linked
-   Linear issues back to `Done` (default no).
+   Linear issues back to `Done` (default no). It reads only PR numbers and head
+   commits, and only the ID, state and team of Linear issues — never titles or
+   descriptions. See SKILL.md's _Scope and safeguards_ and _Untrusted input_
+   sections.
 2. **Filesystem-hygiene pass** — removes top-most recursively-empty directories
    (placeholder-only `.gitkeep` / `.gitignore` directories are left alone; `.git/`
    is hard-protected) and orphaned `node_modules/` directories (those whose parent
