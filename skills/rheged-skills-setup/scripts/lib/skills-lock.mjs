@@ -4,7 +4,7 @@
 // consumer has installed, plus the `source` repo + `ref` they were installed from:
 //
 //   { "source": "https://github.com/rheged-studio/agent-skills",
-//     "ref": "main",
+//     "ref": "v1.13.2",
 //     "skills": { "changelog": "1.2.0", "send-it": "2.1.3", … } }
 //
 // It is the foundation for WS3's push fleet-update orchestrator (R-617): given a
@@ -12,7 +12,7 @@
 // behind.
 //
 // Provenance is FACTS-ONLY. skills.sh records nowhere where a consumer's skills
-// came from (no `--ref` flag; installs track the source's default branch), and
+// came from (no `--ref` flag; a ref rides in a `/tree/<ref>` source URL), and
 // this reconciler is generic/shippable — it must not hardcode or guess the
 // rheged-studio URL. So `source`/`ref` are supplied by the SKILL.md
 // orchestration as stdin facts (`lockSource`/`lockRef`), exactly like the Linear
@@ -64,8 +64,8 @@ export function resolveSource(existingLock, facts) {
 
 /**
  * Resolve the `ref` the skills were installed from: supplied fact wins, else the
- * existing lock's value, else null (the SKILL.md orchestration defaults this to
- * `main` — the fleet convention — when prompting; the script stays explicit).
+ * existing lock's value, else null. `--install` supplies the catalogue's pinned
+ * Rheged ref through `facts.lockRef` (R-2871); there is no `main` fallback.
  * @param {{ ref?: unknown } | null} existingLock
  * @param {Record<string, unknown>} facts
  * @returns {string | null}

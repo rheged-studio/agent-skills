@@ -8,11 +8,18 @@ npx skills add https://github.com/rheged-studio/agent-skills \
   --skill rheged-skills-setup --agent claude-code --agent cursor --copy
 ```
 
-**Estate install (Rheged + Matt Pocock packs):**
+**Estate install (Rheged ship set; Matt Pocock packs opt-in):**
 
 ```bash
-node skills/rheged-skills-setup/scripts/initialise.mjs --install --write
+node skills/rheged-skills-setup/scripts/initialise.mjs --install            # preview
+node skills/rheged-skills-setup/scripts/initialise.mjs --install --write    # first-party only
+node skills/rheged-skills-setup/scripts/initialise.mjs --install --include-third-party --write
 ```
+
+`--install` reads the catalogue vendored at `assets/skill-catalogue.json`, runs a
+pinned `skills` CLI, installs the Rheged skills at a pinned release tag, and
+installs opted-in third-party packs from their default branch. See
+[`SKILL.md`](SKILL.md#scope-and-safeguards).
 
 **Reconcile only:**
 

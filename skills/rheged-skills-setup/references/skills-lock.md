@@ -11,7 +11,7 @@ decide which repos are behind.
 ```json
 {
   "source": "https://github.com/rheged-studio/agent-skills",
-  "ref": "main",
+  "ref": "v1.13.2",
   "skills": {
     "changelog": "0.9.1",
     "send-it": "0.6.1",
@@ -23,13 +23,13 @@ decide which repos are behind.
 | Field | Meaning |
 | --- | --- |
 | `source` | The source repo the skills were installed from. Provenance the script can't derive, so it is **supplied explicitly** as `facts.lockSource`. `null` until supplied. |
-| `ref` | The git ref installed from — `main` by convention, or a pinned tag/SHA. Supplied as `facts.lockRef`. `null` until supplied. |
+| `ref` | The git ref installed from: a pinned release tag or commit SHA. `--install` defaults it to the catalogue's pinned Rheged `ref` (R-2871); otherwise supplied as `facts.lockRef`. `null` until supplied. |
 | `skills` | Every installed bundle → its version, read from each `SKILL.md` `metadata.version` (package.json `version` fallback). A full inventory, including `preflight` and `rheged-skills-setup`. Keys are sorted; a version that can't be read is recorded as `null`. |
 
 ### Why provenance is explicit, not derived
 
 skills.sh records nowhere where a consumer installed from (the CLI has no `--ref`
-flag; installs track the source's default branch), and this reconciler is generic
+flag; a ref rides in a `/tree/<ref>` source URL), and this reconciler is generic
 and shippable — it must not hardcode or guess the source URL. So `source`/`ref` are
 supplied by the orchestration as stdin `facts`, exactly like the Linear team
 name / workspace slug the script already can't detect. An existing lock's values

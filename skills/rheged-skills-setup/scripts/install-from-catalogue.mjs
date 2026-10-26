@@ -1,21 +1,42 @@
 // Catalogue install path (R-1904): vendor estate skills via skills.sh, restore configs, optional reconcile.
+// The trust chain is pinned (R-2871): the catalogue is read from the copy
+// vendored in this bundle, first-party sources carry a pinned ref, the skills CLI
+// runs at an exact version, and third-party sources need --include-third-party.
+// A third-party source with no ref tracks its default branch.
 
 import {
+  buildPinnedSkillsCliArgv,
   buildSkillsAddArgsForSource,
-  DEFAULT_CATALOGUE_URL,
   LEGACY_COMMAND_SHIM_NAMES,
   mattSkillNames,
   parseCatalogue,
+  pinnedSourceUrl,
   resolveInstallSkills,
   resolveInstallSources,
   resolveWipeTargetsWithLegacy,
   RHEGED_AGENT_SKILLS_PACKAGE,
+  rhegedSourceRef,
   rhegedSourceUrl,
+  selectInstallSources,
+  SKILLS_CLI_VERSION,
 } from "./lib/catalogue.mjs";
 import { parseClobberedConfigs } from "./lib/git.mjs";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+
+/**
+ * The catalogue vendored inside this bundle — a byte-identical copy of the
+ * source repo's `infrastructure/skill-catalogue.json` (CI's
+ * `validate-catalogue.mjs` fails on drift). Reading it locally means
+ * `--install` makes no network fetch for the catalogue (R-2871).
+ */
+export const VENDORED_CATALOGUE_PATH = join(
+  import.meta.dirname,
+  "..",
+  "assets",
+  "skill-catalogue.json",
+);
 
 export const CONSUMER_SKILL_DIRS = [
   ".claude/skills",
@@ -52,11 +73,19 @@ export function isAgentSkillsSourceRepo(repoRoot) {
 }
 
 /**
+ * The catalogue text: the bundle's vendored copy by default (no network), or an
+ * explicit `--catalogue <url-or-path>` override for advanced use. An override is
+ * still parsed strictly, so every first-party source in it must carry a pinned ref.
  * @param {string} repoRoot
  * @param {string | undefined} catalogueOverride
+ * @param {string} [vendoredPath]
  * @returns {Promise<string>}
  */
-export async function loadCatalogueText(repoRoot, catalogueOverride) {
+export async function loadCatalogueText(
+  repoRoot,
+  catalogueOverride,
+  vendoredPath = VENDORED_CATALOGUE_PATH,
+) {
   if (catalogueOverride) {
     if (/^https?:\/\//i.test(catalogueOverride)) {
       const catalogueResponse = await fetch(catalogueOverride);
@@ -77,19 +106,22 @@ export async function loadCatalogueText(repoRoot, catalogueOverride) {
     return readFileSync(path, "utf8");
   }
 
-  const local = join(repoRoot, "infrastructure", "skill-catalogue.json");
-  if (existsSync(local)) {
-    return readFileSync(local, "utf8");
-  }
-
-  const response = await fetch(DEFAULT_CATALOGUE_URL);
-  if (!response.ok) {
+  if (!existsSync(vendoredPath)) {
     throw new Error(
-      `could not fetch default catalogue: HTTP ${response.status}`,
+      `vendored catalogue not found: ${vendoredPath} (re-install rheged-skills-setup, or pass --catalogue <path>)`,
     );
   }
 
-  return await response.text();
+  return readFileSync(vendoredPath, "utf8");
+}
+
+/**
+ * The `npx` invocation for one pinned skills CLI run (R-2871).
+ * @param {string[]} skillsArgs
+ * @returns {{ command: string, args: string[] }}
+ */
+export function buildSkillsCliInvocation(skillsArgs) {
+  return { args: buildPinnedSkillsCliArgv(skillsArgs), command: "npx" };
 }
 
 function run(command, args, cwd, environment) {
@@ -125,8 +157,11 @@ function restoreAllClobberedConfigs(repoRoot) {
 }
 
 function runSkillsAdd(repoRoot, args) {
-  console.log(`rheged-skills-setup: skills ${args.join(" ")}`);
-  run("npx", ["skills", ...args], repoRoot, skillsAddEnvironment());
+  const invocation = buildSkillsCliInvocation(args);
+  console.log(
+    `rheged-skills-setup: ${invocation.command} ${invocation.args.join(" ")}`,
+  );
+  run(invocation.command, invocation.args, repoRoot, skillsAddEnvironment());
 }
 
 function wipeBeforeInstall(repoRoot, installSkills) {
@@ -194,8 +229,92 @@ export function findMissingMattBundles(repoRoot, mattSkills) {
 }
 
 /**
- * @param {{ repoRoot: string, agents?: string[], cataloguePath?: string, profile?: object, dryRun?: boolean }} options
- * @returns {Promise<{ catalogue: object, installSkills: string[], lockSource: string }>}
+ * The install plan for a parsed catalogue (pure — no I/O): which sources install,
+ * which third-party sources are skipped without `--include-third-party`, the
+ * skill names the pre-install wipe targets, and the `skills add` argv per source.
+ * Skipped third-party skills are left out of the wipe set, so a default run never
+ * deletes a third-party bundle it won't re-install.
+ * @param {ReturnType<typeof parseCatalogue>} catalogue
+ * @param {{ agents?: string[], includeThirdParty?: boolean, isAgentSkillsSourceRepo?: boolean, profile?: object }} [options]
+ */
+export function planCatalogueInstall(catalogue, options = {}) {
+  const profile = options.profile ?? { repoType: "single" };
+  const agents = options.agents ?? DEFAULT_AGENTS;
+  const sources = resolveInstallSources(catalogue, {
+    isAgentSkillsSourceRepo: options.isAgentSkillsSourceRepo === true,
+    profile,
+  });
+  const { install, skippedThirdParty } = selectInstallSources(sources, {
+    includeThirdParty: options.includeThirdParty,
+  });
+  const skippedSkills = new Set(
+    skippedThirdParty.flatMap((source) => source.skills),
+  );
+  const installSkills = resolveInstallSkills(profile, catalogue).filter(
+    (skill) => !skippedSkills.has(skill),
+  );
+
+  return {
+    addArgvs: install.map((source) =>
+      buildSkillsAddArgsForSource(
+        source.url,
+        source.skills,
+        agents,
+        source.ref,
+      ),
+    ),
+    install,
+    installSkills,
+    lockRef: rhegedSourceRef(catalogue),
+    lockSource: rhegedSourceUrl(catalogue),
+    skippedThirdParty,
+  };
+}
+
+/**
+ * @param {{ id: string, url: string, ref?: string, skills: string[] }} source
+ * @returns {string}
+ */
+function describeSource(source) {
+  return `  ${source.id}: ${source.skills.length} skill(s) from ${pinnedSourceUrl(source.url, source.ref)}`;
+}
+
+/**
+ * Dry-run lines for an install plan: first-party sources, then third-party ones
+ * listed separately — as opted in, or as skipped with the flag that adds them.
+ * @param {ReturnType<typeof planCatalogueInstall>} plan
+ * @returns {string[]}
+ */
+export function formatInstallPlan(plan) {
+  const firstParty = plan.install.filter((source) => !source.thirdParty);
+  const thirdParty = plan.install.filter((source) => source.thirdParty);
+  const lines = [
+    `rheged-skills-setup: would install ${plan.installSkills.length} skill(s) from ${plan.install.length} source(s) with skills@${SKILLS_CLI_VERSION}.`,
+  ];
+  if (firstParty.length > 0) {
+    lines.push("First-party source(s):", ...firstParty.map(describeSource));
+  }
+
+  if (thirdParty.length > 0) {
+    lines.push(
+      "Third-party source(s), opted in with --include-third-party:",
+      ...thirdParty.map(describeSource),
+    );
+  }
+
+  if (plan.skippedThirdParty.length > 0) {
+    lines.push(
+      "Third-party source(s) SKIPPED; re-run with --include-third-party to install them:",
+      ...plan.skippedThirdParty.map(describeSource),
+    );
+  }
+
+  return lines;
+}
+
+/**
+ * @param {{ repoRoot: string, agents?: string[], cataloguePath?: string, profile?: object, dryRun?: boolean, includeThirdParty?: boolean }} options
+ * @returns {Promise<{ catalogue: object, installSkills: string[], lockRef: string | undefined, lockSource: string, skippedThirdParty: object[] }>}
  */
 export async function runCatalogueInstall(options) {
   const repoRoot = resolve(options.repoRoot);
@@ -205,37 +324,37 @@ export async function runCatalogueInstall(options) {
 
   const text = await loadCatalogueText(repoRoot, options.cataloguePath);
   const catalogue = parseCatalogue(text);
-  const profile = options.profile ?? { repoType: "single" };
-  const agents = options.agents ?? DEFAULT_AGENTS;
-  const installSkills = resolveInstallSkills(profile, catalogue);
-  const sources = resolveInstallSources(catalogue, {
+  const plan = planCatalogueInstall(catalogue, {
+    agents: options.agents,
+    includeThirdParty: options.includeThirdParty,
     isAgentSkillsSourceRepo: isAgentSkillsSourceRepo(repoRoot),
-    profile,
+    profile: options.profile,
   });
+  const result = {
+    catalogue,
+    installSkills: plan.installSkills,
+    lockRef: plan.lockRef,
+    lockSource: plan.lockSource,
+    skippedThirdParty: plan.skippedThirdParty,
+  };
 
   if (options.dryRun) {
-    console.log(
-      `rheged-skills-setup: would install ${installSkills.length} skill(s) from ${sources.length} source(s).`,
-    );
-    for (const source of sources) {
-      console.log(
-        `  ${source.id}: ${source.skills.length} skill(s) from ${source.url}`,
-      );
+    for (const line of formatInstallPlan(plan)) {
+      console.log(line);
     }
 
-    return {
-      catalogue,
-      installSkills,
-      lockSource: rhegedSourceUrl(catalogue),
-    };
+    return result;
   }
 
-  wipeBeforeInstall(repoRoot, installSkills);
-  for (const source of sources) {
-    runSkillsAdd(
-      repoRoot,
-      buildSkillsAddArgsForSource(source.url, source.skills, agents),
+  if (plan.skippedThirdParty.length > 0) {
+    console.log(
+      `rheged-skills-setup: skipping third-party source(s) ${plan.skippedThirdParty.map((source) => source.id).join(", ")}; pass --include-third-party to install them.`,
     );
+  }
+
+  wipeBeforeInstall(repoRoot, plan.installSkills);
+  for (const addArgs of plan.addArgvs) {
+    runSkillsAdd(repoRoot, addArgs);
   }
 
   const restored = restoreAllClobberedConfigs(repoRoot);
@@ -243,19 +362,17 @@ export async function runCatalogueInstall(options) {
     `rheged-skills-setup: restored ${restored.length} config.json from HEAD (R-706).`,
   );
 
-  const missingMatt = findMissingMattBundles(
-    repoRoot,
-    mattSkillNames(catalogue),
-  );
-  if (missingMatt.length > 0) {
-    throw new Error(
-      `Matt pack install incomplete — missing bundles: ${missingMatt.join(", ")}`,
+  if (plan.install.some((source) => source.id === "matt-pocock")) {
+    const missingMatt = findMissingMattBundles(
+      repoRoot,
+      mattSkillNames(catalogue),
     );
+    if (missingMatt.length > 0) {
+      throw new Error(
+        `Matt pack install incomplete — missing bundles: ${missingMatt.join(", ")}`,
+      );
+    }
   }
 
-  return {
-    catalogue,
-    installSkills,
-    lockSource: rhegedSourceUrl(catalogue),
-  };
+  return result;
 }

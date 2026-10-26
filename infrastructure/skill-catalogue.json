@@ -4,6 +4,7 @@
     {
       "id": "rheged",
       "url": "https://github.com/rheged-studio/agent-skills",
+      "ref": "v1.13.2",
       "skipWhenSourceRepo": true,
       "skills": [
         "send-it",
@@ -21,6 +22,7 @@
     {
       "id": "matt-pocock",
       "url": "https://github.com/mattpocock/skills",
+      "thirdParty": true,
       "skills": [
         "ask-matt",
         "code-review",
