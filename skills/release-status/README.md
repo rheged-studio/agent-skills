@@ -65,6 +65,13 @@ prints a structured report (or `--json`):
    (clean no-op) or is missing (a publish is pending) — the `release.yml`
    version-vs-tag gate.
 
+The output is structured. Each commit is reported as
+`{ hash, type, scope, breaking, bump }` and the release PR as
+`{ number, url, version, requiredCheck }`.
+PR titles, labels and commit messages are read only inside the script to classify
+them, and never appear in the human report or `--json`. See
+[SKILL.md § Output shape](SKILL.md#output-shape).
+
 ```bash
 node scripts/release-status.mjs                    # human-readable report
 node scripts/release-status.mjs --json             # machine-readable JSON
