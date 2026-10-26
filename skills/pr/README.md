@@ -27,11 +27,37 @@ this one.
 
 ## Requirements
 
-- `git`, to read the branch's commits and diff.
-- `gh` (authenticated), to read the current body and publish the new one.
-- **No npm dependencies, no build step, and no `config.json`** — this is a
-  model-driven skill; [`SKILL.md`](SKILL.md) is the source of truth.
+- `git`, to read the branch's commit subjects and diff stat.
+- `gh` (authenticated), to publish the body (and, inside the script, to fetch
+  the current one).
+- Node.js ≥ 22, to run [`scripts/splice-body.mjs`](scripts/splice-body.mjs).
+- **No npm dependencies, no build step, and no `config.json`.**
+  [`SKILL.md`](SKILL.md) is the source of truth.
 - Optional: a root `GLOSSARY.md`, whose terms the body uses when present.
+
+## Keep-region script
+
+`scripts/splice-body.mjs` carries the `<!-- pr:keep -->` region across a
+regeneration, so the agent never reads the current PR body into its context
+(R-2876). The agent writes the new body, with an empty keep region, to a file.
+The script then fetches the PR's current body itself with `gh pr view` (array
+arguments, no shell), splices its keep regions in verbatim, and writes the file
+back for `gh pr create|edit --body-file`. It prints only metadata, such as
+`keep region: present (3 lines)`, and never the body text.
+
+```bash
+node scripts/splice-body.mjs --new body.md --pr 123   # update: carry PR #123's region
+node scripts/splice-body.mjs --new body.md --no-pr    # create: nothing to carry
+node scripts/splice-body.mjs --new body.md --json     # current branch's PR; JSON metadata
+node scripts/splice-body.mjs --self-test              # offline fixtures, no gh
+node scripts/splice-body.mjs --help
+```
+
+An unclosed opening marker fails safe: everything below it is carried and a
+closing marker is added, with a warning. A new body that lacks exactly one empty
+keep region is refused (exit 2) and nothing is written. A `gh` failure other
+than "no PR" exits 1. [`SKILL.md` § The keep region](SKILL.md#the-keep-region)
+lists every case.
 
 ## Credits
 
