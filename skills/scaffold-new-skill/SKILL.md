@@ -14,7 +14,7 @@ license: MIT
 compatibility: >-
   Requires Node.js ≥22 for the bundled generator script. No network access.
 metadata:
-  version: 0.1.2
+  version: 0.2.0
   author: Rob Easthope
 allowed-tools: Read, Bash(node:*), Bash(pnpm:*)
 ---
@@ -45,7 +45,11 @@ Given a kebab-case `--name=<name>`, the generator writes:
 
 - `skills/<name>/SKILL.md` — frontmatter with `name: <name>`,
   `metadata.version: 0.1.0`, and `metadata.author`, plus a `## Process` /
-  `## Scripts` body skeleton with `TODO` placeholders.
+  `## Scripts` body skeleton with `TODO` placeholders. It also carries the
+  shared `## Untrusted input` section, with placeholder ingestion points to fill
+  in or, if the skill reads no outsider-authored text, delete. The wording and
+  the reasons for it are in the
+  [skill conventions](https://github.com/rheged-studio/agent-skills/blob/main/docs/skill-conventions.md).
 - `skills/<name>/package.json` — `name: @rheged-studio/skill-<name>`,
   `private: true`, `version: 0.1.0`, and `repository.directory: "skills/<name>"`.
 - `skills/<name>/config.json` + `skills/<name>/config.example.json` — generated
@@ -87,7 +91,9 @@ Given a kebab-case `--name=<name>`, the generator writes:
    ```
 
 5. **Fill in the `TODO`s.** Replace the placeholder `description`, body, config
-   keys, entry-script logic, and the test stub with the real skill. Bump the
+   keys, entry-script logic, and the test stub with the real skill. In
+   `## Untrusted input`, list every source of outsider-authored text the skill
+   reads, or delete the section if there is none. Bump the
    version in lockstep (`package.json` `version` + `SKILL.md` `metadata.version`)
    as the skill grows, per the repo's by-hand skill-versioning rule.
 
@@ -100,6 +106,7 @@ Node generator. It supports the standard dispatch flags:
 - `--dry-run` — print the files it would write, create nothing.
 - `--self-test` — run built-in offline assertions (name validation, that the
   generated skeleton passes the `validate-skills` rules, config/example key
-  parity, that the dry-run path writes nothing, a real write, and the
+  parity, that the generated `SKILL.md` carries the `## Untrusted input`
+  section, that the dry-run path writes nothing, a real write, and the
   clobber-refusal guard) against a temp directory. No network, no writes outside
   the temp dir.
