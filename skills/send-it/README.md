@@ -28,8 +28,13 @@ the open PR only when the chain cannot work; say why. send-it never arms auto-me
 From any consumer repo:
 
 ```bash
-npx skills add https://github.com/rheged-studio/agent-skills --skill send-it --agent claude-code --agent cursor --copy
+npx --yes skills@1.7.2 add https://github.com/rheged-studio/agent-skills/tree/<release-tag> --skill send-it --agent claude-code --agent cursor --copy
 ```
+
+`<release-tag>` is a `vX.Y.Z` tag from the repo's
+[Releases](https://github.com/rheged-studio/agent-skills/releases); `main` tracks
+unreleased work. `rheged-skills-setup --install` is the managed, pinned install
+path for the whole catalogue.
 
 `--copy` writes real files so the bundle is portable. Don't use `-g` / `--global`
 — the install should live in the consumer repo.
@@ -37,10 +42,11 @@ npx skills add https://github.com/rheged-studio/agent-skills --skill send-it --a
 **Install the sibling skills too.** send-it delegates to `commit`, `preflight`,
 `changelog`, `pr`, `linear-sync`, and `triage-pr`; install them alongside it (the
 changelog, PR-body, Linear, and triage steps degrade gracefully if a sibling is
-absent, but the flow assumes they are present):
+absent, but the flow assumes they are present). Use the same `<release-tag>`, so
+every delegated skill comes from the same release:
 
 ```bash
-npx skills add https://github.com/rheged-studio/agent-skills --skill commit --skill preflight --skill changelog --skill pr --skill linear-sync --skill triage-pr --agent claude-code --agent cursor --copy
+npx --yes skills@1.7.2 add https://github.com/rheged-studio/agent-skills/tree/<release-tag> --skill commit --skill preflight --skill changelog --skill pr --skill linear-sync --skill triage-pr --agent claude-code --agent cursor --copy
 ```
 
 ## Configure
@@ -95,6 +101,9 @@ which send-it's delegated steps read.
   fallback body (Summary, release note, keep region, Related Issues).
 
 ## What it does not do
+
+The full list of what a run does unattended, and what it never does, is in
+[`SKILL.md` → Scope and safeguards](SKILL.md#scope-and-safeguards).
 
 - It does **not** run typecheck, tests, or format checks — CI handles those. The
   only gate it runs is the change-gated `preflight` lint.
